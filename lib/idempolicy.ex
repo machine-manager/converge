@@ -29,17 +29,21 @@ end
 
 defprotocol Converge do
 	@doc "Returns true if the current state is the desired state"
-	def met?(_)
+	def met?(p)
 
 	@doc "Changes some state in a way that would satisfy met?"
-	def meet(_)
+	def meet(p)
 end
 
 defimpl Converge, for: FilePresent do
-	def met?(f) do
-		case File.open(f.filename, [:read]) do
-			{:ok, file} -> true
-			{:error, reason} -> false
+	def met?(p) do
+		case File.open(p.filename, [:read]) do
+			# TODO: guard against giant files
+			{:ok, file} -> case File.read(p.filename) do
+				{:ok, existing} -> p.contents == existing
+				{:error, _} -> false
+			end
+			{:error, _} -> false
 		end
 	end
 
