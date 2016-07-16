@@ -1,5 +1,5 @@
 # Things to implement:
-# File with contents + user owner + group owner + permissions
+# File with content + user owner + group owner + permissions
 # Package installed
 # Package uninstalled
 # User exists
@@ -20,7 +20,7 @@ defmodule UserExists do
 end
 
 defmodule FilePresent do
-	defstruct filename: nil, contents: nil
+	defstruct filename: nil, content: nil
 end
 
 defmodule FileMissing do
@@ -40,15 +40,18 @@ defimpl Converge, for: FilePresent do
 		case File.open(p.filename, [:read]) do
 			# TODO: guard against giant files
 			{:ok, file} -> case File.read(p.filename) do
-				{:ok, existing} -> p.contents == existing
+				{:ok, existing} -> p.content == existing
 				{:error, _} -> false
 			end
 			{:error, _} -> false
 		end
 	end
 
-	def meet(f) do
-		File.touch(f.filename)
+	def meet(p) do
+		f = File.open!(p.filename, [:write])
+		:ok = IO.binwrite(f, p.content)
+		# TODO: close even if above throws
+		:ok = File.close(f)
 	end
 end
 
@@ -64,7 +67,7 @@ defmodule Idempolicy do
 	end
 
 	def example() do
-		f1 = %FilePresent{filename: "deleteme", contents: "Hello world"}
+		f1 = %FilePresent{filename: "deleteme", content: "Hello world"}
 		converge(f1)
 
 		f2 = %FilePresent{filename: "deleteme"}
