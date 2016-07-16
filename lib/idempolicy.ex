@@ -7,12 +7,12 @@
 # File/directory exists, else run command to fix it
 # Git URL cloned and checked out to a specific revision
 
-defmodule PackageInstalled do
-	defstruct name: nil
+defmodule PackagesInstalled do
+	defstruct names: nil
 end
 
-defmodule PackageMissing do
-	defstruct name: nil
+defmodule PackagesMissing do
+	defstruct names: nil
 end
 
 defmodule UserExists do
@@ -78,7 +78,7 @@ defmodule Idempolicy do
 		converge(f1)
 
 		f2 = %FilePresent{filename: "deleteme"}
-		p = %PackageInstalled{name: "git"}
+		p = %PackagesInstalled{names: ["git"]}
 		IO.puts(inspect(f1))
 		IO.puts(inspect(f2))
 		IO.puts(inspect(p))
@@ -86,4 +86,8 @@ defmodule Idempolicy do
 	end
 end
 
-Idempolicy.example()
+defmodule Idempolicy.CLI do
+	def main(args \\ []) do
+		Idempolicy.example()
+	end
+end
