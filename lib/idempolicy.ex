@@ -35,13 +35,18 @@ defprotocol Converge do
 	def meet(p)
 end
 
+defmodule Utils do
+	def check({:error, term}), do: raise term
+	def check(:ok), do: :ok
+end
+
 defimpl Converge, for: FilePresent do
 	def met?(p) do
 		case File.open(p.filename, [:read]) do
 			# TODO: guard against giant files
-			{:ok, file} -> case File.read(p.filename) do
-				{:ok, existing} -> p.content == existing
+			{:ok, file} -> case IO.binread(file, :all) do
 				{:error, _} -> false
+				existing -> p.content == existing
 			end
 			{:error, _} -> false
 		end
@@ -49,9 +54,11 @@ defimpl Converge, for: FilePresent do
 
 	def meet(p) do
 		f = File.open!(p.filename, [:write])
-		:ok = IO.binwrite(f, p.content)
-		# TODO: close even if above throws
-		:ok = File.close(f)
+		try do
+			Utils.check(IO.binwrite(f, p.content))
+		after
+			File.close(f)
+		end
 	end
 end
 
