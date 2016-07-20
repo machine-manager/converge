@@ -28,7 +28,7 @@ defimpl Converge, for: AlreadyConvergedPolicy do
 end
 
 defmodule SilentReporter do
-	def running(p) do end
+	def running(_) do end
 	def converged(_) do end
 	def failed(_) do end
 end
