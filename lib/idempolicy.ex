@@ -71,26 +71,45 @@ defmodule Reporter do
 		IO.puts("#{inspect p}... ")
 	end
 
-	def converged(_) do
-		IO.puts("OK")
+	def meeting(_) do
+		IO.puts("meet... ")
+	end
+
+	def already_met(_) do
+		IO.puts("OK-already-met")
+	end
+
+	def just_met(_) do
+		IO.puts("OK-just-met")
 	end
 
 	def failed(_) do
-		IO.puts("FAIL")
+		IO.puts("FAILED")
+	end
+
+	def done(_) do
+		IO.puts("\n")
 	end
 end
 
 defmodule Idempolicy do
 	def converge(p, rep) do
 		apply(rep, :running, [p])
-		if not Converge.met?(p) do
-			Converge.meet(p)
-			if not Converge.met?(p) do
-				apply(rep, :failed, [p])
-				raise ConvergeError, message: "Failed to converge: #{inspect p}"
+		try do
+			if Converge.met?(p) do
+				apply(rep, :already_met, [p])
+			else
+				apply(rep, :meeting, [p])
+				Converge.meet(p)
+				if Converge.met?(p) do
+					apply(rep, :just_met, [p])
+				else
+					apply(rep, :failed, [p])
+					raise ConvergeError, message: "Failed to converge: #{inspect p}"
+				end
 			end
-		else
-			apply(rep, :converged, [p])
+		after
+			apply(rep, :done, [p])
 		end
 	end
 
@@ -109,7 +128,7 @@ defmodule Idempolicy do
 end
 
 defmodule Idempolicy.CLI do
-	def main(args \\ []) do
+	def main(_ \\ []) do
 		Idempolicy.example()
 	end
 end
