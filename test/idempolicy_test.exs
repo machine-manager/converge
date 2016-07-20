@@ -40,7 +40,7 @@ defmodule IdempolicyTest do
 	test "Idempolicy.converge raises ConvergeError if policy fails to converge" do
 		ftc = %FailsToConvergePolicy{}
 		rep = SilentReporter
-		assert_raise(ConvergeError, ~r/Failed to converge: /, fn -> Idempolicy.converge(ftc, rep) end)
+		assert_raise(ConvergeError, ~r/^Failed to converge: /, fn -> Idempolicy.converge(ftc, rep) end)
 	end
 
 	test "Idempolicy.converge doesn't call meet() if met? returns true" do
