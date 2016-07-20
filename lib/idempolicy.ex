@@ -35,6 +35,10 @@ defprotocol Converge do
 	def meet(p)
 end
 
+defmodule ConvergeError do
+	defexception message: "met? returned false after running meet"
+end
+
 defmodule Utils do
 	def check({:error, term}), do: raise term
 	def check(:ok), do: :ok
@@ -62,20 +66,38 @@ defimpl Converge, for: FilePresent do
 	end
 end
 
+defmodule Reporter do
+	def running(p) do
+		IO.puts("#{inspect p}... ")
+	end
+
+	def converged(_) do
+		IO.puts("OK")
+	end
+
+	def failed(_) do
+		IO.puts("FAIL")
+	end
+end
+
 defmodule Idempolicy do
-	def converge(p) do
-		IO.puts(inspect(p))
+	def converge(p, rep) do
+		apply(rep, :running, [p])
 		if not Converge.met?(p) do
-			IO.puts("Not met, calling meet()...")
 			Converge.meet(p)
+			if not Converge.met?(p) do
+				apply(rep, :failed, [p])
+				raise ConvergeError, message: "Failed to converge: #{inspect p}"
+			end
 		else
-			IO.puts("Already met")
+			apply(rep, :converged, [p])
 		end
 	end
 
 	def example() do
 		f1 = %FilePresent{filename: "deleteme", content: "Hello world"}
-		converge(f1)
+		rep = Reporter
+		converge(f1, rep)
 
 		f2 = %FilePresent{filename: "deleteme"}
 		p = %PackagesInstalled{names: ["git"]}
