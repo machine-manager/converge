@@ -38,17 +38,21 @@ defmodule ConvergeablePolicy do
 	end
 
 	def get_met_count(p) do
-		Agent.get(p.pid, fn({has_met, met_count}) -> met_count end)
+		Agent.get(p.pid, fn({_, met_count}) -> met_count end)
 	end
 end
 
 defimpl Converge, for: ConvergeablePolicy do
 	def met?(p) do
-		Agent.get_and_update(p.pid, fn({has_met, met_count}) -> {has_met, {has_met, met_count + 1}} end)
+		Agent.get_and_update(p.pid, fn({has_met, met_count}) ->
+			{has_met, {has_met, met_count + 1}}
+		end)
 	end
 
 	def meet(p) do
-		Agent.update(p.pid, fn({has_met, met_count}) -> {true, met_count} end)
+		Agent.update(p.pid, fn({_, met_count}) ->
+			{true, met_count}
+		end)
 	end
 end
 
