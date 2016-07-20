@@ -27,19 +27,25 @@ defimpl Converge, for: AlreadyConvergedPolicy do
 	end
 end
 
+defmodule SilentReporter do
+	def running(p) do end
+	def converged(_) do end
+	def failed(_) do end
+end
+
 defmodule IdempolicyTest do
 	use ExUnit.Case
 	doctest Idempolicy
 
 	test "Idempolicy.converge raises ConvergeError if policy fails to converge" do
 		ftc = %FailsToConvergePolicy{}
-		rep = Reporter
+		rep = SilentReporter
 		assert_raise(ConvergeError, ~r/Failed to converge: /, fn -> Idempolicy.converge(ftc, rep) end)
 	end
 
 	test "Idempolicy.converge doesn't call meet() if met? returns true" do
 		acp = %AlreadyConvergedPolicy{}
-		rep = Reporter
+		rep = SilentReporter
 		Idempolicy.converge(acp, rep)
 	end
 end
