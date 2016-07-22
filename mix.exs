@@ -19,11 +19,11 @@ defmodule Idempolicy.Mixfile do
 	# Configuration for the OTP application
 	# Type "mix help compile.app" for more information
 	def application do
-		[applications: [:logger]]
+		[applications: [:logger, :porcelain]]
 	end
 
 	defp deps do
-		[]
+		[{:porcelain, "~> 2.0"}]
 	end
 
 	def escript do

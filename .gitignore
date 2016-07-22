@@ -1,7 +1,6 @@
 /_build
 /rel
 /cover
-/deps
 /doc
 /mix.lock
 /idempolicy
