@@ -17,27 +17,27 @@ end
 
 defmodule Reporter do
 	def running(p) do
-		IO.puts("#{inspect p}... ")
+		IO.write("#{inspect p}... ")
 	end
 
 	def meeting(_) do
-		IO.puts("meet... ")
+		IO.write("meet()... ")
 	end
 
 	def already_met(_) do
-		IO.puts("OK-already-met")
+		IO.write("OK-already-met")
 	end
 
 	def just_met(_) do
-		IO.puts("OK-just-met")
+		IO.write("OK-just-met")
 	end
 
 	def failed(_) do
-		IO.puts("FAILED")
+		IO.write("FAILED")
 	end
 
 	def done(_) do
-		IO.puts("\n")
+		IO.write("\n")
 	end
 end
 
