@@ -1,4 +1,4 @@
-defprotocol Converge do
+defprotocol Unit do
 	@doc "Returns true if the current state is the desired state"
 	def met?(p)
 
@@ -6,7 +6,7 @@ defprotocol Converge do
 	def meet(p)
 end
 
-defmodule ConvergeError do
+defmodule UnitError do
 	defexception message: "met? returned false after running meet"
 end
 
@@ -41,20 +41,20 @@ defmodule Reporter do
 	end
 end
 
-defmodule Idempolicy do
+defmodule Converge do
 	def converge(p, rep) do
 		apply(rep, :running, [p])
 		try do
-			if Converge.met?(p) do
+			if Unit.met?(p) do
 				apply(rep, :already_met, [p])
 			else
 				apply(rep, :meeting, [p])
-				Converge.meet(p)
-				if Converge.met?(p) do
+				Unit.meet(p)
+				if Unit.met?(p) do
 					apply(rep, :just_met, [p])
 				else
 					apply(rep, :failed, [p])
-					raise ConvergeError, message: "Failed to converge: #{inspect p}"
+					raise UnitError, message: "Failed to converge: #{inspect p}"
 				end
 			end
 		after
@@ -76,8 +76,8 @@ defmodule Idempolicy do
 	end
 end
 
-defmodule Idempolicy.CLI do
+defmodule Converge.CLI do
 	def main(_ \\ []) do
-		Idempolicy.example()
+		Converge.example()
 	end
 end

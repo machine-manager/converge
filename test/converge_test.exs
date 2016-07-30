@@ -4,7 +4,7 @@ defmodule FailsToConvergePolicy do
 	defstruct []
 end
 
-defimpl Converge, for: FailsToConvergePolicy do
+defimpl Unit, for: FailsToConvergePolicy do
 	def met?(_) do
 		false
 	end
@@ -18,7 +18,7 @@ defmodule AlreadyConvergedPolicy do
 	defstruct []
 end
 
-defimpl Converge, for: AlreadyConvergedPolicy do
+defimpl Unit, for: AlreadyConvergedPolicy do
 	def met?(_) do
 		true
 	end
@@ -42,7 +42,7 @@ defmodule ConvergeablePolicy do
 	end
 end
 
-defimpl Converge, for: ConvergeablePolicy do
+defimpl Unit, for: ConvergeablePolicy do
 	def met?(p) do
 		Agent.get_and_update(p.pid, fn({has_met, met_count}) ->
 			{has_met, {has_met, met_count + 1}}
@@ -57,26 +57,26 @@ defimpl Converge, for: ConvergeablePolicy do
 end
 
 
-defmodule IdempolicyTest do
+defmodule ConvergeTest do
 	use ExUnit.Case
-	doctest Idempolicy
+	doctest Converge
 
-	test "Idempolicy.converge raises ConvergeError if policy fails to converge" do
+	test "Converge.converge raises UnitError if policy fails to converge" do
 		ftc = %FailsToConvergePolicy{}
 		rep = SilentReporter
-		assert_raise(ConvergeError, ~r/^Failed to converge: /, fn -> Idempolicy.converge(ftc, rep) end)
+		assert_raise(UnitError, ~r/^Failed to converge: /, fn -> Converge.converge(ftc, rep) end)
 	end
 
-	test "Idempolicy.converge doesn't call meet() if met? returns true" do
+	test "Converge.converge doesn't call meet() if met? returns true" do
 		acp = %AlreadyConvergedPolicy{}
 		rep = SilentReporter
-		Idempolicy.converge(acp, rep)
+		Converge.converge(acp, rep)
 	end
 
-	test "Idempolicy.converge calls met? again after calling meet" do
+	test "Converge.converge calls met? again after calling meet" do
 		cp = ConvergeablePolicy.new
 		rep = SilentReporter
-		Idempolicy.converge(cp, rep)
+		Converge.converge(cp, rep)
 		assert ConvergeablePolicy.get_met_count(cp) == 2
 	end
 end

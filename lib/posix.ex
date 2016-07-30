@@ -26,7 +26,7 @@ defmodule FilePresent do
 	defstruct filename: nil, content: nil
 end
 
-defimpl Converge, for: FilePresent do
+defimpl Unit, for: FilePresent do
 	def met?(p) do
 		case File.open(p.filename, [:read]) do
 			# TODO: guard against giant files
@@ -52,4 +52,3 @@ end
 defmodule FileMissing do
 	defstruct filename: nil
 end
-

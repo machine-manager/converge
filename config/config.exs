@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure for your application as:
 #
-#     config :idempolicy, key: :value
+#     config :converge, key: :value
 #
 # And access this configuration in your application as:
 #
-#     Application.get_env(:idempolicy, :key)
+#     Application.get_env(:converge, :key)
 #
 # Or configure a 3rd-party app:
 #

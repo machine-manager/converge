@@ -3,6 +3,6 @@
 /cover
 /doc
 /mix.lock
-/idempolicy
+/converge
 erl_crash.dump
 *.ez

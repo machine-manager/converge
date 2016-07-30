@@ -5,6 +5,6 @@ defmodule POSIXTest do
 
 	test "FilePresent" do
 		fp = %FilePresent{filename: "deleteme", content: "multiple\nlines"}
-		Idempolicy.converge(fp, SilentReporter)
+		Converge.converge(fp, SilentReporter)
 	end
 end
