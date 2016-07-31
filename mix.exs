@@ -12,7 +12,7 @@ defmodule Converge.Mixfile do
 			# implementations.
 			consolidate_protocols: Mix.env == :prod,
 			escript: escript(),
-			deps: deps()
+			deps: deps(),
 		]
 	end
 

@@ -67,7 +67,7 @@ defmodule Converge do
 		rep = Reporter
 		converge(f1, rep)
 
-		f2 = %FilePresent{filename: "deleteme"}
+		f2 = %FilePresent{filename: "deleteme", content: "Stuff"}
 		p = %PackagesInstalled{names: ["git"]}
 		IO.puts(inspect(f1))
 		IO.puts(inspect(f2))

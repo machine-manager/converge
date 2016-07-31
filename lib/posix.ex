@@ -8,21 +8,25 @@
 # Git URL cloned and checked out to a specific revision
 
 defmodule PackagesInstalled do
+	@enforce_keys [:names]
 	defstruct names: nil
 end
 
 
 defmodule PackagesMissing do
+	@enforce_keys [:names]
 	defstruct names: nil
 end
 
 
 defmodule UserExists do
+	@enforce_keys [:name]
 	defstruct name: nil
 end
 
 
 defmodule FilePresent do
+	@enforce_keys [:filename, :content]
 	defstruct filename: nil, content: nil
 end
 
@@ -50,5 +54,6 @@ end
 
 
 defmodule FileMissing do
+	@enforce_keys [:filename]
 	defstruct filename: nil
 end

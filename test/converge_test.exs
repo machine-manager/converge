@@ -1,10 +1,13 @@
 import ExUnit.Assertions, only: [assert: 1, assert: 2]
 
-defmodule FailsToConvergePolicy do
+defmodule FailsToConvergeUnit do
+	@moduledoc """
+	A unit that doesn't converge, always returning met?() -> false
+	"""
 	defstruct []
 end
 
-defimpl Unit, for: FailsToConvergePolicy do
+defimpl Unit, for: FailsToConvergeUnit do
 	def met?(_) do
 		false
 	end
@@ -14,11 +17,14 @@ defimpl Unit, for: FailsToConvergePolicy do
 end
 
 
-defmodule AlreadyConvergedPolicy do
+defmodule AlreadyConvergedUnit do
+	@moduledoc """
+	A unit that is already converged, so meet() should not be called.
+	"""
 	defstruct []
 end
 
-defimpl Unit, for: AlreadyConvergedPolicy do
+defimpl Unit, for: AlreadyConvergedUnit do
 	def met?(_) do
 		true
 	end
@@ -29,12 +35,16 @@ defimpl Unit, for: AlreadyConvergedPolicy do
 end
 
 
-defmodule ConvergeablePolicy do
+defmodule ConvergeableUnit do
+	@moduledoc """
+	A unit that returns met?() -> false until meet() is called.  Used
+	for testing that met?() is called a second time after meet().
+	"""
 	defstruct pid: nil
 
 	def new do
 		{:ok, pid} = Agent.start_link(fn -> {false, 0} end)
-		%ConvergeablePolicy{pid: pid}
+		%ConvergeableUnit{pid: pid}
 	end
 
 	def get_met_count(p) do
@@ -42,7 +52,7 @@ defmodule ConvergeablePolicy do
 	end
 end
 
-defimpl Unit, for: ConvergeablePolicy do
+defimpl Unit, for: ConvergeableUnit do
 	def met?(p) do
 		Agent.get_and_update(p.pid, fn({has_met, met_count}) ->
 			{has_met, {has_met, met_count + 1}}
@@ -61,22 +71,22 @@ defmodule ConvergeTest do
 	use ExUnit.Case
 	doctest Converge
 
-	test "Converge.converge raises UnitError if policy fails to converge" do
-		ftc = %FailsToConvergePolicy{}
+	test "Converge.converge raises UnitError if Unit fails to converge" do
+		ftc = %FailsToConvergeUnit{}
 		rep = SilentReporter
 		assert_raise(UnitError, ~r/^Failed to converge: /, fn -> Converge.converge(ftc, rep) end)
 	end
 
 	test "Converge.converge doesn't call meet() if met? returns true" do
-		acp = %AlreadyConvergedPolicy{}
+		acp = %AlreadyConvergedUnit{}
 		rep = SilentReporter
 		Converge.converge(acp, rep)
 	end
 
 	test "Converge.converge calls met? again after calling meet" do
-		cp = ConvergeablePolicy.new
+		cp = ConvergeableUnit.new
 		rep = SilentReporter
 		Converge.converge(cp, rep)
-		assert ConvergeablePolicy.get_met_count(cp) == 2
+		assert ConvergeableUnit.get_met_count(cp) == 2
 	end
 end
