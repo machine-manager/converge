@@ -39,9 +39,12 @@ defmodule Porcelain.Driver.Common do
 
   @common_options [:binary, :use_stdio, :exit_status, :hide]
   def port_options(opts) do
-    @common_options
-    ++ (if env=opts[:env], do: [{:env, env}], else: [])
-    ++ (if opts[:in] && !(opts[:out] || opts[:err]), do: [:in], else: [])
+    ret = @common_options
+    if env=opts[:env],
+      do: ret = [{:env, env}|ret]
+    if opts[:in] && !(opts[:out] || opts[:err]),
+      do: ret = [:in|ret]
+    ret
   end
 
 
@@ -162,7 +165,7 @@ defmodule Porcelain.Driver.Common do
   end
 
   defp send_result(out, err, opt, result) do
-    result = if opt == :discard, do: result = nil, else: result
+    if opt == :discard, do: result = nil
     msg = {self(), :result, result}
 
     out_ret = case out do

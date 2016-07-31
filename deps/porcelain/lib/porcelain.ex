@@ -302,11 +302,10 @@ defmodule Porcelain do
   end
 
   defp apply_exec_defaults(options, good) do
-    if Keyword.has_key?(options, :out) do
-      good
-    else
-      Keyword.put(good, :out, {:string, ""})
+    if not Keyword.has_key?(options, :out) do
+      good = Keyword.put(good, :out, {:string, ""})
     end
+    good
   end
 
 
@@ -337,17 +336,16 @@ defmodule Porcelain do
   end
 
   defp apply_spawn_defaults(options, good) do
-    if Keyword.has_key?(options, :result) do
-      good
-    else
+    if not Keyword.has_key?(options, :result) do
       default =
         if keep_result?(good[:out]) or keep_result?(good[:err]) do
           :keep
         else
           :discard
         end
-      Keyword.put(good, :result, default)
+      good = Keyword.put(good, :result, default)
     end
+    good
   end
 
   defp keep_result?({:string, _}), do: true

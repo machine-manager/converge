@@ -58,16 +58,17 @@ defmodule Porcelain.Driver.Goon do
     opts = Common.compile_options(opts)
     exe = find_executable(prog, opts, shell_flag)
 
-    {out_opt, out_ret} = case opts[:out] do
+    out_opt = opts[:out]
+    out_ret = case out_opt do
       :stream ->
         {:ok, server} = StreamServer.start()
-        {{:stream, server}, Stream.unfold(server, &Common.read_stream/1)}
+        out_opt = {:stream, server}
+        Stream.unfold(server, &Common.read_stream/1)
 
-      {atom, ""} = opt when atom in [:string, :iodata] ->
-        {opt, atom}
+      {atom, ""} when atom in [:string, :iodata] ->
+        atom
 
-      other ->
-        {other, other}
+      _ -> out_opt
     end
 
     pid = spawn(fn ->
@@ -118,23 +119,24 @@ defmodule Porcelain.Driver.Goon do
   end
 
   defp goon_options(opts) do
-    out_opts = Enum.reduce(opts, [], fn
-     {:in, _}, acc -> ["-in"|acc]
-     {:out, _}, acc -> ["-out"|acc]
-     {:err, :out}, acc -> ["-err", "out" | acc]
-     {:err, other}, acc when not is_nil(other) -> ["-err", "err" | acc]
-     {:dir, dir}, acc -> ["-dir", dir | acc]
-     _, acc -> acc
-    end)
-    out_opts = case Application.fetch_env(:porcelain, :goon_driver_log) do
-      :error -> out_opts
-      {:ok, val} -> ["-log", val | out_opts]
+    ret = []
+    if opts[:in], do: ret = ["-in"|ret]
+    if opts[:out], do: ret = ["-out"|ret]
+    case opts[:err] do
+      :out -> ret = ["-err", "out"|ret]
+      nil -> nil
+      _ -> ret = ["-err", "err"|ret]
     end
-    ["-proto", @proto_version | out_opts]
+    if dir=opts[:dir], do: ret = ["-dir", dir|ret]
+    case Application.fetch_env(:porcelain, :goon_driver_log) do
+      :error -> nil
+      {:ok, val} -> ret = ["-log", val|ret]
+    end
+    ["-proto", @proto_version|ret]
   end
 
   defp common_port_options(opts) do
-    [{:packet,2} | Common.port_options(opts)]
+    [{:packet,2}|Common.port_options(opts)]
   end
 
   ###

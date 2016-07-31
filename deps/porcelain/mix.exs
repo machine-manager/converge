@@ -22,7 +22,7 @@ defmodule Porcelain.Mixfile do
 
   def docs do
     [
-      extras: [{"README.md", title: "Readme"}],
+      extras: ["README.md"],
     ]
   end
 
