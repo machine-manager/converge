@@ -63,11 +63,11 @@ defmodule Converge do
 	end
 
 	def example() do
-		f1 = %FilePresent{filename: "deleteme", content: "Hello world"}
+		f1 = %FilePresent{filename: "deleteme", content: "Hello world", mode: 0o600}
 		rep = Reporter
 		converge(f1, rep)
 
-		f2 = %FilePresent{filename: "deleteme", content: "Stuff"}
+		f2 = %FilePresent{filename: "deleteme", content: "Stuff", mode: 0o600}
 		p = %PackagesInstalled{names: ["git"]}
 		IO.puts(inspect(f1))
 		IO.puts(inspect(f2))
