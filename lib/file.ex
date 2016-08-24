@@ -63,11 +63,11 @@ defmodule Converge.FileMissing do
 end
 
 defimpl Unit, for: Converge.FileMissing do
-	def met?(_) do
-
+	def met?(p) do
+		not File.exists?(p.filename)
 	end
 
-	def meet(_) do
-
+	def meet(p) do
+		Util.rm_f(p.filename)
 	end
 end
