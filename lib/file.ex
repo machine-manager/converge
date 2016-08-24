@@ -42,14 +42,14 @@ defimpl Unit, for: Converge.FilePresent do
 		# It's safer to unlink the file first, because it may be a shell script, and
 		# shells handle modified scripts very poorly.  If unlinked first, the shell
 		# will continue running the old (unlinked) script instead of crashing.
-		Util.rm_f(p.filename)
+		Util.rm_f!(p.filename)
 
 		# After opening, must chmod before writing possibly-secret content
 		f = File.open!(p.filename, [:write])
 		File.chmod!(p.filename, p.mode)
 
 		try do
-			Util.check(IO.binwrite(f, p.content))
+			Util.binwrite!(f, p.content)
 		after
 			File.close(f)
 		end
@@ -68,6 +68,6 @@ defimpl Unit, for: Converge.FileMissing do
 	end
 
 	def meet(p) do
-		Util.rm_f(p.filename)
+		Util.rm_f!(p.filename)
 	end
 end
