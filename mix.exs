@@ -23,7 +23,7 @@ defmodule Converge.Mixfile do
 	end
 
 	defp deps do
-		[{:porcelain, "~> 2.0"}]
+		[{:porcelain, "~> 2.0.2"}]
 	end
 
 	def escript do
