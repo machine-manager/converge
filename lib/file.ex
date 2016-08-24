@@ -1,39 +1,14 @@
-# Things to implement:
-# File with content + user owner + group owner + permissions
-# Package installed
-# Package uninstalled
-# User exists
-# File-matches-regexp + edit operation to fix it
-# File/directory exists, else run command to fix it
-# Git URL cloned and checked out to a specific revision
+alias Converge.{Unit, Util}
 
-import Record, only: [defrecordp: 2, extract: 2]
-
-defmodule PackagesInstalled do
-	@enforce_keys [:names]
-	defstruct names: nil
-end
-
-
-defmodule PackagesMissing do
-	@enforce_keys [:names]
-	defstruct names: nil
-end
-
-
-defmodule UserExists do
-	@enforce_keys [:name]
-	defstruct name: nil
-end
-
-
-defmodule FilePresent do
+defmodule Converge.FilePresent do
 	@enforce_keys [:filename, :content, :mode]
 	defstruct filename: nil, content: nil, mode: nil
 end
 
-defimpl Unit, for: FilePresent do
+defimpl Unit, for: Converge.FilePresent do
 	use Bitwise
+
+	import Record, only: [defrecordp: 2, extract: 2]
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 
 	defp met_contents?(p) do
@@ -64,11 +39,17 @@ defimpl Unit, for: FilePresent do
 	end
 
 	def meet(p) do
+		# It's safer to unlink the file first, because it may be a shell script, and
+		# shells handle modified scripts very poorly.  If unlinked first, the shell
+		# will continue running the old (unlinked) script instead of crashing.
+		Util.rm_f(p.filename)
+
+		# After opening, must chmod before writing possibly-secret content
 		f = File.open!(p.filename, [:write])
-		# Must chmod before writing possibly-secret content
 		File.chmod!(p.filename, p.mode)
+
 		try do
-			Utils.check(IO.binwrite(f, p.content))
+			Util.check(IO.binwrite(f, p.content))
 		after
 			File.close(f)
 		end
@@ -76,7 +57,17 @@ defimpl Unit, for: FilePresent do
 end
 
 
-defmodule FileMissing do
+defmodule Converge.FileMissing do
 	@enforce_keys [:filename]
 	defstruct filename: nil
+end
+
+defimpl Unit, for: Converge.FileMissing do
+	def met?(_) do
+
+	end
+
+	def meet(_) do
+
+	end
 end

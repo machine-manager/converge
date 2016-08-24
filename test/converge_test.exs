@@ -1,13 +1,14 @@
 import ExUnit.Assertions, only: [assert: 1, assert: 2]
+alias Converge.Unit
 
-defmodule FailsToConvergeUnit do
+defmodule Converge.TestHelpers.FailsToConvergeUnit do
 	@moduledoc """
 	A unit that doesn't converge, always returning met?() -> false
 	"""
 	defstruct []
 end
 
-defimpl Unit, for: FailsToConvergeUnit do
+defimpl Unit, for: Converge.TestHelpers.FailsToConvergeUnit do
 	def met?(_) do
 		false
 	end
@@ -17,14 +18,14 @@ defimpl Unit, for: FailsToConvergeUnit do
 end
 
 
-defmodule AlreadyConvergedUnit do
+defmodule Converge.TestHelpers.AlreadyConvergedUnit do
 	@moduledoc """
 	A unit that is already converged, so meet() should not be called.
 	"""
 	defstruct []
 end
 
-defimpl Unit, for: AlreadyConvergedUnit do
+defimpl Unit, for: Converge.TestHelpers.AlreadyConvergedUnit do
 	def met?(_) do
 		true
 	end
@@ -35,7 +36,7 @@ defimpl Unit, for: AlreadyConvergedUnit do
 end
 
 
-defmodule ConvergeableUnit do
+defmodule Converge.TestHelpers.ConvergeableUnit do
 	@moduledoc """
 	A unit that returns met?() -> false until meet() is called.  Used
 	for testing that met?() is called a second time after meet().
@@ -44,7 +45,7 @@ defmodule ConvergeableUnit do
 
 	def new do
 		{:ok, pid} = Agent.start_link(fn -> {false, 0} end)
-		%ConvergeableUnit{pid: pid}
+		%Converge.TestHelpers.ConvergeableUnit{pid: pid}
 	end
 
 	def get_met_count(p) do
@@ -52,7 +53,7 @@ defmodule ConvergeableUnit do
 	end
 end
 
-defimpl Unit, for: ConvergeableUnit do
+defimpl Unit, for: Converge.TestHelpers.ConvergeableUnit do
 	def met?(p) do
 		Agent.get_and_update(p.pid, fn({has_met, met_count}) ->
 			{has_met, {has_met, met_count + 1}}
@@ -67,26 +68,27 @@ defimpl Unit, for: ConvergeableUnit do
 end
 
 
-defmodule ConvergeTest do
+defmodule Converge.Runner.RunnerTest do
 	use ExUnit.Case
-	doctest Converge
+	alias Converge.{Runner, UnitError}
+	alias Converge.TestHelpers.{SilentReporter, FailsToConvergeUnit, AlreadyConvergedUnit, ConvergeableUnit}
 
-	test "Converge.converge raises UnitError if Unit fails to converge" do
+	test "Runner.converge raises UnitError if Unit fails to converge" do
 		ftc = %FailsToConvergeUnit{}
 		rep = SilentReporter
-		assert_raise(UnitError, ~r/^Failed to converge: /, fn -> Converge.converge(ftc, rep) end)
+		assert_raise(UnitError, ~r/^Failed to converge: /, fn -> Runner.converge(ftc, rep) end)
 	end
 
-	test "Converge.converge doesn't call meet() if met? returns true" do
+	test "Runner.converge doesn't call meet() if met? returns true" do
 		acp = %AlreadyConvergedUnit{}
 		rep = SilentReporter
-		Converge.converge(acp, rep)
+		Runner.converge(acp, rep)
 	end
 
-	test "Converge.converge calls met? again after calling meet" do
+	test "Runner.converge calls met? again after calling meet" do
 		cp = ConvergeableUnit.new
 		rep = SilentReporter
-		Converge.converge(cp, rep)
+		Runner.converge(cp, rep)
 		assert ConvergeableUnit.get_met_count(cp) == 2
 	end
 end

@@ -1,4 +1,4 @@
-defmodule SilentReporter do
+defmodule Converge.TestHelpers.SilentReporter do
 	def running(_) do end
 	def meeting(_) do end
 	def already_met(_) do end
