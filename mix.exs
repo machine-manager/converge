@@ -23,7 +23,10 @@ defmodule Converge.Mixfile do
 	end
 
 	defp deps do
-		[{:porcelain, "~> 2.0.2"}]
+		[
+			{:porcelain, "~> 2.0.2"},
+			{:debpress, git: "../../../debpress"}
+		]
 	end
 
 	def escript do
