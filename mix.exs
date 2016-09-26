@@ -19,13 +19,12 @@ defmodule Converge.Mixfile do
 	# Configuration for the OTP application
 	# Type "mix help compile.app" for more information
 	def application do
-		[applications: [:logger, :porcelain]]
+		[applications: [:logger, :debpress]]
 	end
 
 	defp deps do
 		[
-			{:porcelain, "~> 2.0.2"},
-			{:debpress, git: "../../../debpress"}
+			{:debpress, "0.1.0"}
 		]
 	end
 
