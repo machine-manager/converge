@@ -29,5 +29,5 @@ use Mix.Config
 #
 #     import_config "#{Mix.env}.exs"
 
-config :porcelain,
-  driver: Porcelain.Driver.Basic
+#config :porcelain,
+#  driver: Porcelain.Driver.Basic
