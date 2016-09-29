@@ -24,6 +24,7 @@ defmodule Converge.Mixfile do
 
 	defp deps do
 		[
+			{:gears, "0.1.0"},
 			{:debpress, "0.1.0"}
 		]
 	end
