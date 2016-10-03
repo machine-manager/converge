@@ -57,8 +57,9 @@ defimpl Unit, for: Converge.PackagesInstalled do
 	end
 
 	defp met_marked_as_manual?() do
-		# TODO
-		true
+		{out, 0} = System.cmd("apt-mark", ["showmanual"])
+		installed_manual = out |> String.split("\n") |> Enum.into(MapSet.new())
+		installed_manual |> MapSet.member?("converge-packages-installed")
 	end
 
 	@doc """
@@ -86,8 +87,15 @@ defimpl Unit, for: Converge.PackagesInstalled do
 
 	def meet(p) do
 		deb = make_deb()
-		{_, 0} = System.cmd("dpkg", ["-i", deb])
-		{_, 0} = System.cmd("apt-get", ["--fix-broken", "install"])
+		{_, 0} = System.cmd("apt-get", ["install", deb])
 		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge"])
 	end
 end
+
+# TODO: EarlyPackagesInstalled for things like etckeeper
+#
+# met? returns true whether they are installed manually or auto
+#
+# Allow passing EarlyPackagesInstalled units into PackagesInstalled,
+# which will mark them auto-installed, so that future removals of
+# EarlyPackagesInstalled will remove the packages.
