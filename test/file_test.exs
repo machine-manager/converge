@@ -1,5 +1,3 @@
-import ExUnit.Assertions, only: [assert: 1, assert: 2]
-
 alias Converge.{FilePresent, FileMissing, Runner}
 alias Converge.TestHelpers.{SilentReporter}
 alias Gears.FileUtil
