@@ -26,18 +26,22 @@ defimpl Unit, for: Converge.PackagesInstalled do
 	defp make_deb(p) do
 		temp = FileUtil.temp_dir("converge-packages-installed")
 		control_tar_gz = Path.join(temp, "control.tar.gz")
+
+		data_tar_xz = Path.join(temp, "data.tar.xz")
+		{_, 0} = System.cmd("tar", ["-cJf", data_tar_xz, "--files-from=/dev/null"])
+
 		deb = Path.join(temp, "converge-packages-installed.deb")
 		Debpress.write_control_tar_gz(control_tar_gz, Debpress.control_file(make_control(p)), %{})
-		Debpress.write_deb(deb, control_tar_gz)
+		Debpress.write_deb(deb, control_tar_gz, data_tar_xz)
 		deb
 	end
 
-	defp get_control_line(s, name) do
-		s
-			|> Enum.filter(&(String.starts_with?(&1, "#{name}: ")))
-			|> List.first
-			|> String.split(": ", parts: 2)
-			|> List.last
+	defp get_control_line(lines, name) do
+		match = lines |> Enum.filter(&(String.starts_with?(&1, "#{name}: "))) |> List.first
+		case match do
+			nil -> nil
+			_   -> match |> String.split(": ", parts: 2) |> List.last
+		end
 	end
 
 	defp met_identical_package_installed?(p) do
@@ -89,8 +93,15 @@ defimpl Unit, for: Converge.PackagesInstalled do
 
 	def meet(p) do
 		deb = make_deb(p)
-		{_, 0} = System.cmd("apt-get", ["install", deb])
-		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge"])
+		env = [
+			{"DEBIAN_FRONTEND",          "noninteractive"},
+			{"APT_LISTCHANGES_FRONTEND", "none"},
+			{"APT_LISTBUGS_FRONTEND",    "none"}
+		]
+		dpkg_opts = ["-o", "Dpkg::Options::=--force-confdef", "-o", "Dpkg::Options::=--force-confold"]
+		# TODO: --allow-downgrades a good idea here?
+		{_, 0} = System.cmd("apt-get", ["install", "-y", "--allow-downgrades"] ++ dpkg_opts ++ [deb], env: env)
+		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y", "--allow-downgrades"], env: env)
 	end
 end
 
