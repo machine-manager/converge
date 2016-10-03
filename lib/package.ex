@@ -41,17 +41,21 @@ defimpl Unit, for: Converge.PackagesInstalled do
 	end
 
 	defp met_identical_package_installed?(p) do
-		{out, 0} = System.cmd("dpkg-query", "--status", "converge-packages-installed")
-		control = out |> String.split("\n")
-		depends = get_control_line(control, "Depends")
-		# https://github.com/endlessm/dpkg/blob/3340fdbf6169224a63246b508917f531880de433/lib/dpkg/pkg-namevalue.c#L52-L77
-		# http://manpages.ubuntu.com/manpages/precise/man1/dpkg.1.html
-		status = get_control_line(control, "Status")
-		met = case status do
-			"install ok installed" -> true
-			_                      -> false
+		{out, status} = System.cmd("dpkg-query", ["--status", "converge-packages-installed"])
+		case status do
+			0 ->
+				control = out |> String.split("\n")
+				depends = get_control_line(control, "Depends")
+				# https://github.com/endlessm/dpkg/blob/3340fdbf6169224a63246b508917f531880de433/lib/dpkg/pkg-namevalue.c#L52-L77
+				# http://manpages.ubuntu.com/manpages/precise/man1/dpkg.1.html
+				status = get_control_line(control, "Status")
+				met = case status do
+					"install ok installed" -> true
+					_                      -> false
+				end
+				met and depends == p.depends |> Enum.join(", ")
+			_ -> false
 		end
-		met and depends == p.depends |> Enum.join(", ")
 	end
 
 	defp met_marked_as_manual?() do
