@@ -1,4 +1,4 @@
-alias Converge.Unit
+alias Converge.{Unit, UnitError}
 alias Gears.{FileUtil, IOUtil}
 
 use Bitwise
@@ -29,9 +29,23 @@ defimpl Unit, for: Converge.DirectoryPresent do
 		File.dir?(p.path) and met_mode?(p)
 	end
 
+	defp as_octal_string(num) do
+		inspect(num, base: :octal) |> String.split("o") |> List.last
+	end
+
 	def meet(p) do
-		File.mkdir_p!(p.path)
-		File.chmod!(p.path, p.mode)
+		# Use cmd("mkdir", ...) because File.mkdir* can't syscall mkdir with a mode.
+		{out, status} = System.cmd("mkdir", ["--mode=#{as_octal_string(p.mode)}", "--", p.path], stderr_to_stdout: true)
+		case status do
+			0 -> nil
+			_ ->
+				# mkdir may have failed because the directory already existed, but
+				# we still need to fix the mode.
+				case File.dir?(p.path) do
+					true  -> File.chmod!(p.path, p.mode)
+					false -> raise UnitError, message: "mkdir failed to create a directory: #{out}"
+				end
+		end
 	end
 end
 
