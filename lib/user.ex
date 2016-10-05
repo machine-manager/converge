@@ -1,5 +1,5 @@
 defmodule Converge.UserUtil do
-	defp line_to_tuple(line) do
+	defp passwd_line_to_tuple(line) do
 		[name, "x", uid_s, gid_s, comment, home, shell] = String.split(line, ":")
 		{uid, ""} = Integer.parse(uid_s)
 		{gid, ""} = Integer.parse(gid_s)
@@ -10,7 +10,7 @@ defmodule Converge.UserUtil do
 		File.read!("/etc/passwd")
 			|> String.trim_trailing("\n")
 			|> String.split("\n")
-			|> Enum.map(&line_to_tuple/1)
+			|> Enum.map(&passwd_line_to_tuple/1)
 			|> Enum.into(%{})
 	end
 end
