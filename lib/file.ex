@@ -10,8 +10,42 @@ defmodule Converge.ThingPresent do
 	@moduledoc false
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 
+	def make_mutable(p) do
+		{_, 0} = System.cmd("chattr", ["-i", "--", p.path])
+	end
+
+	def maybe_make_immutable(p) do
+		if p.immutable do
+			{_, 0} = System.cmd("chattr", ["+i", "--", p.path])
+		end
+	end
+
+	def meet_user_group_owner(p) do
+		want_user  = get_user_info(p.user)
+		want_group = get_group_info(p.group)
+
+		{_, 0} = System.cmd("chown",
+			["--no-dereference", "#{want_user.uid}:#{want_group.gid}", "--", p.path])
+	end
+
 	def mode_without_type(mode) do
 		mode &&& 0o7777
+	end
+
+	defp get_attrs(path) do
+		{out, 0} = System.cmd("lsattr", ["-d", "--", path])
+		lines = out |> String.trim_trailing("\n") |> String.split("\n")
+		if length(lines) != 1 do
+			raise UnitError, message: "Expected 1 line from lsattr but got #{inspect lines}"
+		end
+		attrs = lines |> hd |> String.split(" ") |> hd
+		attrs
+	end
+
+	def met_mutability?(p) do
+		attrs = get_attrs(p.path)
+		has_i = String.match?(attrs, ~r"i")
+		has_i == p.immutable
 	end
 
 	def met_user_group_mode?(p) do
@@ -48,26 +82,18 @@ end
 
 defmodule Converge.DirectoryPresent do
 	@enforce_keys [:path, :mode]
-	defstruct path: nil, mode: nil, user: "root", group: "root"
+	defstruct path: nil, mode: nil, immutable: false, user: "root", group: "root"
 end
 
 defimpl Unit, for: Converge.DirectoryPresent do
 	import Converge.ThingPresent
 
 	def met?(p) do
-		File.dir?(p.path) and met_user_group_mode?(p)
+		File.dir?(p.path) and met_user_group_mode?(p) and met_mutability?(p)
 	end
 
 	defp as_octal_string(num) do
 		inspect(num, base: :octal) |> String.split("o") |> List.last
-	end
-
-	def meet_user_group_owner(p) do
-		want_user  = get_user_info(p.user)
-		want_group = get_group_info(p.group)
-
-		File.chown!(p.path, want_user.uid)
-		File.chgrp!(p.path, want_group.gid)
 	end
 
 	def meet(p) do
@@ -77,13 +103,16 @@ defimpl Unit, for: Converge.DirectoryPresent do
 		case status do
 			0 ->
 				meet_user_group_owner(p)
+				maybe_make_immutable(p)
 			_ ->
 				# mkdir may have failed because the directory already existed, but
 				# we still need to fix the mode/user/group.
 				case File.dir?(p.path) do
 					true  ->
+						make_mutable(p)
 						File.chmod!(p.path, p.mode)
 						meet_user_group_owner(p)
+						maybe_make_immutable(p)
 					false ->
 						raise UnitError, message: "mkdir failed to create a directory: #{out}"
 				end
@@ -94,7 +123,7 @@ end
 
 defmodule Converge.FilePresent do
 	@enforce_keys [:path, :content, :mode]
-	defstruct path: nil, content: nil, mode: nil, user: "root", group: "root"
+	defstruct path: nil, content: nil, mode: nil, immutable: false, user: "root", group: "root"
 end
 
 defimpl Unit, for: Converge.FilePresent do
@@ -112,13 +141,10 @@ defimpl Unit, for: Converge.FilePresent do
 	end
 
 	def met?(p) do
-		met_user_group_mode?(p) and met_contents?(p)
+		met_user_group_mode?(p) and met_mutability?(p) and met_contents?(p)
 	end
 
 	def meet(p) do
-		want_user  = get_user_info(p.user)
-		want_group = get_group_info(p.group)
-
 		# It's safer to unlink the file first, because it may be a shell script, and
 		# shells handle modified scripts very poorly.  If unlinked first, the shell
 		# will continue running the old (unlinked) script instead of crashing.
@@ -130,11 +156,10 @@ defimpl Unit, for: Converge.FilePresent do
 		f = File.open!(p.path, [:write])
 		try do
 			# After opening, chmod before writing possibly-secret content
-			# TODO: combine chmod/chown/chgrp into one :file.set_file_info
 			File.chmod!(p.path, p.mode)
-			File.chown!(p.path, want_user.uid)
-			File.chgrp!(p.path, want_group.gid)
+			meet_user_group_owner(p)
 			IOUtil.binwrite!(f, p.content)
+			maybe_make_immutable(p)
 		after
 			File.close(f)
 		end
@@ -174,14 +199,6 @@ defimpl Unit, for: Converge.SymlinkPresent do
 
 	def met?(p) do
 		met_symlink_to_dest?(p) and met_user_group?(p)
-	end
-
-	def meet_user_group_owner(p) do
-		want_user  = get_user_info(p.user)
-		want_group = get_group_info(p.group)
-
-		{_, 0} = System.cmd("chown",
-			["--no-dereference", "#{want_user.uid}:#{want_group.gid}", "--", p.path])
 	end
 
 	def meet(p) do

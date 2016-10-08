@@ -27,6 +27,24 @@ defmodule Converge.DirectoryPresentTest do
 		p = %DirectoryPresent{path: @deleteme, mode: 0o666, user: "nobody", group: "daemon"}
 		Runner.converge(p, SilentReporter)
 	end
+
+	test "immutable directory" do
+		d = Path.join(@dir, "immutable")
+
+		p = %DirectoryPresent{path: d, mode: 0o777, immutable: true}
+		Runner.converge(p, SilentReporter)
+		assert_raise(File.Error, fn -> File.touch!(Path.join(d, "file")) end)
+
+		# remove +i attr, make sure we can change the mode, make sure we can
+		# touch a file in directory
+		p = %DirectoryPresent{path: d, mode: 0o770}
+		Runner.converge(p, SilentReporter)
+		File.touch!(Path.join(d, "file"))
+
+		p = %DirectoryPresent{path: d, mode: 0o776, immutable: true}
+		Runner.converge(p, SilentReporter)
+		assert_raise(File.Error, fn -> File.touch!(Path.join(d, "file")) end)
+	end
 end
 
 defmodule Converge.FilePresentTest do
