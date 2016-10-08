@@ -33,17 +33,17 @@ defmodule Converge.DirectoryPresentTest do
 
 		p = %DirectoryPresent{path: d, mode: 0o777, immutable: true}
 		Runner.converge(p, SilentReporter)
-		assert_raise(File.Error, fn -> File.touch!(Path.join(d, "file")) end)
+		assert_raise(File.Error, fn -> File.touch!(Path.join(d, "file-1")) end)
 
 		# remove +i attr, make sure we can change the mode, make sure we can
 		# touch a file in directory
 		p = %DirectoryPresent{path: d, mode: 0o770}
 		Runner.converge(p, SilentReporter)
-		File.touch!(Path.join(d, "file"))
+		File.touch!(Path.join(d, "file-2"))
 
 		p = %DirectoryPresent{path: d, mode: 0o776, immutable: true}
 		Runner.converge(p, SilentReporter)
-		assert_raise(File.Error, fn -> File.touch!(Path.join(d, "file")) end)
+		assert_raise(File.Error, fn -> File.touch!(Path.join(d, "file-3")) end)
 	end
 end
 
