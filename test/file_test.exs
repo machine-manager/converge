@@ -36,7 +36,7 @@ defmodule Converge.DirectoryPresentTest do
 		assert_raise(File.Error, fn -> File.touch!(Path.join(d, "file-1")) end)
 
 		# remove +i attr, make sure we can change the mode, make sure we can
-		# touch a file in directory
+		# touch a file in the now-mutable directory
 		p = %DirectoryPresent{path: d, mode: 0o770}
 		Runner.converge(p, SilentReporter)
 		File.touch!(Path.join(d, "file-2"))
