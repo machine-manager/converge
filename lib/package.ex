@@ -88,15 +88,11 @@ defimpl Unit, for: Converge.PackagesInstalled do
 			0 ->
 				control = out |> String.split("\n")
 				depends = get_control_line(control, "Depends") || ""
-				# https://github.com/endlessm/dpkg/blob/3340fdbf6169224a63246b508917f531880de433/lib/dpkg/pkg-namevalue.c#L52-L77
+				# https://anonscm.debian.org/cgit/dpkg/dpkg.git/tree/lib/dpkg/pkg-namevalue.c#n52
 				# http://manpages.ubuntu.com/manpages/precise/man1/dpkg.1.html
-				status = get_control_line(control, "Status")
-				met = case status do
-					"install ok installed" -> true
-					_                      -> false
-				end
-				#IO.inspect([depends, p.depends |> Enum.join(", ")])
-				met and depends == p.depends |> Enum.join(", ")
+				installed = get_control_line(control, "Status") == "install ok installed"
+				same_depends = depends == p.depends |> Enum.join(", ")
+				installed and same_depends
 			_ -> false
 		end
 	end
