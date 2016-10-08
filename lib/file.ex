@@ -180,7 +180,7 @@ defimpl Unit, for: Converge.SymlinkPresent do
 		want_user  = get_user_info(p.user)
 		want_group = get_group_info(p.group)
 
-		{out, 0} = System.cmd("chown",
+		{_, 0} = System.cmd("chown",
 			["--no-dereference", "#{want_user.uid}:#{want_group.gid}", "--", p.path])
 	end
 

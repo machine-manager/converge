@@ -1,5 +1,15 @@
-alias Converge.{PackagesInstalled, Runner}
+alias Converge.{PackagesInstalled, PackageIndexUpdated, Runner}
 alias Converge.TestHelpers.{SilentReporter}
+
+defmodule Converge.PackageIndexUpdatedTest do
+	use ExUnit.Case
+
+	test "PackageIndexUpdated" do
+		p = %PackageIndexUpdated{}
+		Runner.converge(p, SilentReporter)
+	end
+end
+
 
 defmodule Converge.PackagesInstalledTest do
 	use ExUnit.Case

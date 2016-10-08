@@ -1,6 +1,23 @@
 alias Gears.FileUtil
 alias Converge.Unit
 
+defmodule Converge.PackageIndexUpdated do
+	defstruct max_age: 3600
+end
+
+defimpl Unit, for: Converge.PackageIndexUpdated do
+	def meet(_) do
+		{_, 0} = System.cmd("apt-get", ["update"])
+	end
+
+	def met?(p) do
+		updated = File.stat!("/var/cache/apt/pkgcache.bin", time: :posix).mtime
+		now     = :os.system_time(:second)
+		updated > now - p.max_age
+	end
+end
+
+
 defmodule Converge.PackagesInstalled do
 	@enforce_keys [:depends]
 	defstruct depends: []
