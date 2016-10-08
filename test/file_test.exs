@@ -34,6 +34,16 @@ defmodule Converge.FilePresentTest do
 		fp = %FilePresent{path: @deleteme, content: "multiple\nlines", mode: 0o666}
 		Runner.converge(fp, SilentReporter)
 	end
+
+	test "file with user nobody" do
+		fp = %FilePresent{path: @deleteme, content: "multiple\nlines", mode: 0o666, user: "nobody"}
+		Runner.converge(fp, SilentReporter)
+	end
+
+	test "file with user nobody and group daemon" do
+		fp = %FilePresent{path: @deleteme, content: "multiple\nlines", mode: 0o666, user: "nobody", group: "daemon"}
+		Runner.converge(fp, SilentReporter)
+	end
 end
 
 defmodule Converge.FileMissingTest do

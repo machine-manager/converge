@@ -1,4 +1,4 @@
-alias Converge.{Unit, UnitError}
+alias Converge.{Unit, UnitError, UserUtil, GroupUtil}
 alias Gears.{FileUtil, IOUtil}
 
 use Bitwise
@@ -7,7 +7,7 @@ import Record, only: [defrecordp: 2, extract: 2]
 
 defmodule Converge.DirectoryPresent do
 	@enforce_keys [:path, :mode]
-	defstruct path: nil, mode: nil
+	defstruct path: nil, mode: nil, user: "root", group: "root"
 end
 
 defimpl Unit, for: Converge.DirectoryPresent do
@@ -52,7 +52,7 @@ end
 
 defmodule Converge.FilePresent do
 	@enforce_keys [:path, :content, :mode]
-	defstruct path: nil, content: nil, mode: nil
+	defstruct path: nil, content: nil, mode: nil, user: "root", group: "root"
 end
 
 defimpl Unit, for: Converge.FilePresent do
@@ -69,23 +69,48 @@ defimpl Unit, for: Converge.FilePresent do
 		end
 	end
 
+	defp get_user_info(user) do
+		users     = UserUtil.get_users()
+		user_info = users[user]
+		if ! user_info do
+			raise UnitError, message: "OS lacks user #{inspect user}"
+		end
+		user_info
+	end
+
+	defp get_group_info(group) do
+		groups     = GroupUtil.get_groups()
+		group_info = groups[group]
+		if ! group_info do
+			raise UnitError, message: "OS lacks group #{inspect group}"
+		end
+		group_info
+	end
+
 	defp mode_without_type(mode) do
 		mode &&& 0o7777
 	end
 
-	defp met_mode?(p) do
+	defp met_mode_user_group?(p) do
+		want_user  = get_user_info(p.user)
+		want_group = get_group_info(p.group)
 		case :file.read_file_info(p.path) do
-			{:ok, file_info(mode: mode)} ->
-				mode_without_type(mode) == p.mode
+			{:ok, file_info(mode: mode, uid: uid, gid: gid)} ->
+				mode_without_type(mode) == p.mode and
+				uid == want_user.uid and
+				gid == want_group.gid
 			_ -> false
 		end
 	end
 
 	def met?(p) do
-		met_mode?(p) and met_contents?(p)
+		met_mode_user_group?(p) and met_contents?(p)
 	end
 
 	def meet(p) do
+		want_user  = get_user_info(p.user)
+		want_group = get_group_info(p.group)
+
 		# It's safer to unlink the file first, because it may be a shell script, and
 		# shells handle modified scripts very poorly.  If unlinked first, the shell
 		# will continue running the old (unlinked) script instead of crashing.
@@ -93,7 +118,10 @@ defimpl Unit, for: Converge.FilePresent do
 
 		# After opening, must chmod before writing possibly-secret content
 		f = File.open!(p.path, [:write])
+		# TODO: combine these into one :file.set_file_info
 		File.chmod!(p.path, p.mode)
+		File.chown!(p.path, want_user.uid)
+		File.chgrp!(p.path, want_group.gid)
 
 		try do
 			IOUtil.binwrite!(f, p.content)
