@@ -9,6 +9,24 @@ import Record, only: [defrecordp: 2, extract: 2]
 defmodule Converge.ThingPresent do
 	@moduledoc false
 
+	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
+
+	def mode_without_type(mode) do
+		mode &&& 0o7777
+	end
+
+	def met_user_group_mode?(p) do
+		want_user  = get_user_info(p.user)
+		want_group = get_group_info(p.group)
+		case :file.read_file_info(p.path) do
+			{:ok, file_info(mode: mode, uid: uid, gid: gid)} ->
+				mode_without_type(mode) == p.mode and
+				uid == want_user.uid and
+				gid == want_group.gid
+			_ -> false
+		end
+	end
+
 	def get_user_info(user) do
 		users     = UserUtil.get_users()
 		user_info = users[user]
@@ -35,27 +53,22 @@ defmodule Converge.DirectoryPresent do
 end
 
 defimpl Unit, for: Converge.DirectoryPresent do
-	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 	import Converge.ThingPresent
 
-	defp mode_without_type(mode) do
-		mode &&& 0o7777
-	end
-
-	defp met_mode?(p) do
-		case :file.read_file_info(p.path) do
-			{:ok, file_info(mode: mode)} ->
-				mode_without_type(mode) == p.mode
-			_ -> false
-		end
-	end
-
 	def met?(p) do
-		File.dir?(p.path) and met_mode?(p)
+		File.dir?(p.path) and met_user_group_mode?(p)
 	end
 
 	defp as_octal_string(num) do
 		inspect(num, base: :octal) |> String.split("o") |> List.last
+	end
+
+	def meet_user_group_owner(p) do
+		want_user  = get_user_info(p.user)
+		want_group = get_group_info(p.group)
+
+		File.chown!(p.path, want_user.uid)
+		File.chgrp!(p.path, want_group.gid)
 	end
 
 	def meet(p) do
@@ -63,13 +76,17 @@ defimpl Unit, for: Converge.DirectoryPresent do
 		# Use cmd("mkdir", ...) because File.mkdir* can't syscall mkdir with a mode.
 		{out, status} = System.cmd("mkdir", ["--mode=#{as_octal_string(p.mode)}", "--", p.path], stderr_to_stdout: true)
 		case status do
-			0 -> nil
+			0 ->
+				meet_user_group_owner(p)
 			_ ->
 				# mkdir may have failed because the directory already existed, but
-				# we still need to fix the mode.
+				# we still need to fix the mode/user/group.
 				case File.dir?(p.path) do
-					true  -> File.chmod!(p.path, p.mode)
-					false -> raise UnitError, message: "mkdir failed to create a directory: #{out}"
+					true  ->
+						File.chmod!(p.path, p.mode)
+						meet_user_group_owner(p)
+					false ->
+						raise UnitError, message: "mkdir failed to create a directory: #{out}"
 				end
 		end
 	end
@@ -82,7 +99,6 @@ defmodule Converge.FilePresent do
 end
 
 defimpl Unit, for: Converge.FilePresent do
-	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 	import Converge.ThingPresent
 
 	defp met_contents?(p) do
@@ -96,24 +112,8 @@ defimpl Unit, for: Converge.FilePresent do
 		end
 	end
 
-	defp mode_without_type(mode) do
-		mode &&& 0o7777
-	end
-
-	defp met_mode_user_group?(p) do
-		want_user  = get_user_info(p.user)
-		want_group = get_group_info(p.group)
-		case :file.read_file_info(p.path) do
-			{:ok, file_info(mode: mode, uid: uid, gid: gid)} ->
-				mode_without_type(mode) == p.mode and
-				uid == want_user.uid and
-				gid == want_group.gid
-			_ -> false
-		end
-	end
-
 	def met?(p) do
-		met_mode_user_group?(p) and met_contents?(p)
+		met_user_group_mode?(p) and met_contents?(p)
 	end
 
 	def meet(p) do

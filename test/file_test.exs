@@ -17,6 +17,16 @@ defmodule Converge.DirectoryPresentTest do
 		fp = %DirectoryPresent{path: @deleteme, mode: 0o666}
 		Runner.converge(fp, SilentReporter)
 	end
+
+	test "directory with user nobody" do
+		fp = %DirectoryPresent{path: @deleteme, mode: 0o666, user: "nobody"}
+		Runner.converge(fp, SilentReporter)
+	end
+
+	test "directory with user nobody and group daemon" do
+		fp = %DirectoryPresent{path: @deleteme, mode: 0o666, user: "nobody", group: "daemon"}
+		Runner.converge(fp, SilentReporter)
+	end
 end
 
 defmodule Converge.FilePresentTest do
