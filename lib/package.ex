@@ -11,9 +11,30 @@ defimpl Unit, for: Converge.PackageIndexUpdated do
 	end
 
 	def met?(p) do
-		updated = File.stat!("/var/cache/apt/pkgcache.bin", time: :posix).mtime
-		now     = :os.system_time(:second)
+		stat = File.stat("/var/cache/apt/pkgcache.bin", time: :posix)
+		updated = case stat do
+			{:ok, info} -> info.mtime
+			{:error, _} -> 0
+		end
+		now = :os.system_time(:second)
 		updated > now - p.max_age
+	end
+end
+
+
+defmodule Converge.PackageCacheEmptied do
+	defstruct []
+end
+
+defimpl Unit, for: Converge.PackageCacheEmptied do
+	def meet(_) do
+		{_, 0} = System.cmd("apt-get", ["clean"])
+	end
+
+	def met?(p) do
+		empty_archives = Path.wildcard("/var/cache/apt/archives/*.*") == []
+		empty_partial  = Path.wildcard("/var/cache/apt/archives/partial/*.*") == []
+		empty_archives and empty_partial
 	end
 end
 
