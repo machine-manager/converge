@@ -5,6 +5,33 @@ use Bitwise
 
 import Record, only: [defrecordp: 2, extract: 2]
 
+defmodule Converge.ThingPresent do
+	@moduledoc """
+	Functions shared by `DirectoryPresent` and `FilePresent`.
+	"""
+	defmacro __using__(_) do
+		quote do
+			defp get_user_info(user) do
+				users     = UserUtil.get_users()
+				user_info = users[user]
+				if ! user_info do
+					raise UnitError, message: "OS lacks user #{inspect user}"
+				end
+				user_info
+			end
+
+			defp get_group_info(group) do
+				groups     = GroupUtil.get_groups()
+				group_info = groups[group]
+				if ! group_info do
+					raise UnitError, message: "OS lacks group #{inspect group}"
+				end
+				group_info
+			end
+		end
+	end
+end
+
 defmodule Converge.DirectoryPresent do
 	@enforce_keys [:path, :mode]
 	defstruct path: nil, mode: nil, user: "root", group: "root"
@@ -12,6 +39,7 @@ end
 
 defimpl Unit, for: Converge.DirectoryPresent do
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
+	use Converge.ThingPresent
 
 	defp mode_without_type(mode) do
 		mode &&& 0o7777
@@ -34,6 +62,7 @@ defimpl Unit, for: Converge.DirectoryPresent do
 	end
 
 	def meet(p) do
+		# We want the directory to be created with the right mode at creation time.
 		# Use cmd("mkdir", ...) because File.mkdir* can't syscall mkdir with a mode.
 		{out, status} = System.cmd("mkdir", ["--mode=#{as_octal_string(p.mode)}", "--", p.path], stderr_to_stdout: true)
 		case status do
@@ -57,6 +86,7 @@ end
 
 defimpl Unit, for: Converge.FilePresent do
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
+	use Converge.ThingPresent
 
 	defp met_contents?(p) do
 		case File.open(p.path, [:read]) do
@@ -67,24 +97,6 @@ defimpl Unit, for: Converge.FilePresent do
 			end
 			{:error, _} -> false
 		end
-	end
-
-	defp get_user_info(user) do
-		users     = UserUtil.get_users()
-		user_info = users[user]
-		if ! user_info do
-			raise UnitError, message: "OS lacks user #{inspect user}"
-		end
-		user_info
-	end
-
-	defp get_group_info(group) do
-		groups     = GroupUtil.get_groups()
-		group_info = groups[group]
-		if ! group_info do
-			raise UnitError, message: "OS lacks group #{inspect group}"
-		end
-		group_info
 	end
 
 	defp mode_without_type(mode) do
