@@ -5,32 +5,29 @@ use Bitwise
 
 import Record, only: [defrecordp: 2, extract: 2]
 
+# Functions shared by DirectoryPresent, FilePresent
 defmodule Converge.ThingPresent do
-	@moduledoc """
-	Functions shared by `DirectoryPresent` and `FilePresent`.
-	"""
-	defmacro __using__(_) do
-		quote do
-			defp get_user_info(user) do
-				users     = UserUtil.get_users()
-				user_info = users[user]
-				if ! user_info do
-					raise UnitError, message: "OS lacks user #{inspect user}"
-				end
-				user_info
-			end
+	@moduledoc false
 
-			defp get_group_info(group) do
-				groups     = GroupUtil.get_groups()
-				group_info = groups[group]
-				if ! group_info do
-					raise UnitError, message: "OS lacks group #{inspect group}"
-				end
-				group_info
-			end
+	def get_user_info(user) do
+		users     = UserUtil.get_users()
+		user_info = users[user]
+		if ! user_info do
+			raise UnitError, message: "OS lacks user #{inspect user}"
 		end
+		user_info
+	end
+
+	def get_group_info(group) do
+		groups     = GroupUtil.get_groups()
+		group_info = groups[group]
+		if ! group_info do
+			raise UnitError, message: "OS lacks group #{inspect group}"
+		end
+		group_info
 	end
 end
+
 
 defmodule Converge.DirectoryPresent do
 	@enforce_keys [:path, :mode]
@@ -39,7 +36,7 @@ end
 
 defimpl Unit, for: Converge.DirectoryPresent do
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
-	use Converge.ThingPresent
+	import Converge.ThingPresent
 
 	defp mode_without_type(mode) do
 		mode &&& 0o7777
@@ -86,7 +83,7 @@ end
 
 defimpl Unit, for: Converge.FilePresent do
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
-	use Converge.ThingPresent
+	import Converge.ThingPresent
 
 	defp met_contents?(p) do
 		case File.open(p.path, [:read]) do
