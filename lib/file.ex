@@ -123,16 +123,18 @@ defimpl Unit, for: Converge.FilePresent do
 		# It's safer to unlink the file first, because it may be a shell script, and
 		# shells handle modified scripts very poorly.  If unlinked first, the shell
 		# will continue running the old (unlinked) script instead of crashing.
+		#
+		# Removing the file first also avoids the problem of very briefly granting
+		# access to a new user/group that should not be able to see the old file contents.
 		FileUtil.rm_f!(p.path)
 
-		# After opening, must chmod before writing possibly-secret content
 		f = File.open!(p.path, [:write])
-		# TODO: combine these into one :file.set_file_info
-		File.chmod!(p.path, p.mode)
-		File.chown!(p.path, want_user.uid)
-		File.chgrp!(p.path, want_group.gid)
-
 		try do
+			# After opening, chmod before writing possibly-secret content
+			# TODO: combine chmod/chown/chgrp into one :file.set_file_info
+			File.chmod!(p.path, p.mode)
+			File.chown!(p.path, want_user.uid)
+			File.chgrp!(p.path, want_group.gid)
 			IOUtil.binwrite!(f, p.content)
 		after
 			File.close(f)
