@@ -5,10 +5,9 @@ use Bitwise
 
 import Record, only: [defrecordp: 2, extract: 2]
 
-# Functions shared by DirectoryPresent, FilePresent
+# Functions shared by DirectoryPresent, FilePresent, SymlinkPresent
 defmodule Converge.ThingPresent do
 	@moduledoc false
-
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 
 	def mode_without_type(mode) do
@@ -18,7 +17,7 @@ defmodule Converge.ThingPresent do
 	def met_user_group_mode?(p) do
 		want_user  = get_user_info(p.user)
 		want_group = get_group_info(p.group)
-		case :file.read_file_info(p.path) do
+		case :file.read_link_info(p.path) do
 			{:ok, file_info(mode: mode, uid: uid, gid: gid)} ->
 				mode_without_type(mode) == p.mode and
 				uid == want_user.uid and
@@ -138,6 +137,60 @@ defimpl Unit, for: Converge.FilePresent do
 			IOUtil.binwrite!(f, p.content)
 		after
 			File.close(f)
+		end
+	end
+end
+
+
+defmodule Converge.SymlinkPresent do
+	@enforce_keys [:path, :dest]
+	defstruct path: nil, dest: nil, user: "root", group: "root"
+end
+
+defimpl Unit, for: Converge.SymlinkPresent do
+	import Converge.ThingPresent
+	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
+
+	def met_user_group?(p) do
+		want_user  = get_user_info(p.user)
+		want_group = get_group_info(p.group)
+		case :file.read_link_info(p.path) do
+			{:ok, file_info(type: :symlink, uid: uid, gid: gid)} ->
+				uid == want_user.uid and
+				gid == want_group.gid
+			_ -> false
+		end
+	end
+
+	def met_symlink_to_dest?(p) do
+		# read_link_all gives us a list except in cases where the filename
+		# can only be represented as a binary.  If we get a list, convert
+		# it to a binary (Elixir string).
+		case :file.read_link_all(p.path) do
+			{:ok, dest_l} -> IO.chardata_to_string(dest_l) == p.dest
+			_             -> false
+		end
+	end
+
+	def met?(p) do
+		met_symlink_to_dest?(p) and met_user_group?(p)
+	end
+
+	def meet_user_group_owner(p) do
+		want_user  = get_user_info(p.user)
+		want_group = get_group_info(p.group)
+
+		{out, 0} = System.cmd("chown",
+			["--no-dereference", "#{want_user.uid}:#{want_group.gid}", "--", p.path])
+	end
+
+	def meet(p) do
+		FileUtil.rm_f!(p.path)
+		case File.ln_s(p.dest, p.path) do
+			:ok ->
+				meet_user_group_owner(p)
+			{:error, reason} ->
+				raise UnitError, message: "failed to create symlink: #{inspect p.path}; reason: #{reason}"
 		end
 	end
 end
