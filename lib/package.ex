@@ -139,11 +139,3 @@ defimpl Unit, for: Converge.PackagesInstalled do
 		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y", "--allow-downgrades"], env: env)
 	end
 end
-
-# TODO: EarlyPackagesInstalled for things like etckeeper
-#
-# met? returns true whether they are installed manually or auto
-#
-# Allow passing EarlyPackagesInstalled units into PackagesInstalled,
-# which will mark them auto-installed, so that future removals of
-# EarlyPackagesInstalled will remove the packages.
