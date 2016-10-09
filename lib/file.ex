@@ -14,7 +14,7 @@ defmodule Converge.ThingPresent do
 		{_, 0} = System.cmd("chattr", ["-i", "--", p.path])
 	end
 
-	def maybe_make_immutable(p) do
+	def meet_mutability(p) do
 		if p.immutable do
 			{_, 0} = System.cmd("chattr", ["+i", "--", p.path])
 		end
@@ -35,11 +35,10 @@ defmodule Converge.ThingPresent do
 	defp get_attrs(path) do
 		{out, 0} = System.cmd("lsattr", ["-d", "--", path])
 		lines = out |> String.trim_trailing("\n") |> String.split("\n")
-		if length(lines) != 1 do
-			raise UnitError, message: "Expected 1 line from lsattr but got #{inspect lines}"
+		case lines do
+			[line | _] -> line |> String.split(" ") |> hd
+			_          -> raise UnitError, message: "Expected 1 line from lsattr but got #{inspect lines}"
 		end
-		attrs = lines |> hd |> String.split(" ") |> hd
-		attrs
 	end
 
 	def met_mutability?(p) do
@@ -103,7 +102,7 @@ defimpl Unit, for: Converge.DirectoryPresent do
 		case status do
 			0 ->
 				meet_user_group_owner(p)
-				maybe_make_immutable(p)
+				meet_mutability(p)
 			_ ->
 				# mkdir may have failed because the directory already existed, but
 				# we still need to fix the mode/user/group.
@@ -112,7 +111,7 @@ defimpl Unit, for: Converge.DirectoryPresent do
 						make_mutable(p)
 						File.chmod!(p.path, p.mode)
 						meet_user_group_owner(p)
-						maybe_make_immutable(p)
+						meet_mutability(p)
 					false ->
 						raise UnitError, message: "mkdir failed to create a directory: #{out}"
 				end
@@ -159,7 +158,7 @@ defimpl Unit, for: Converge.FilePresent do
 			File.chmod!(p.path, p.mode)
 			meet_user_group_owner(p)
 			IOUtil.binwrite!(f, p.content)
-			maybe_make_immutable(p)
+			meet_mutability(p)
 		after
 			File.close(f)
 		end
