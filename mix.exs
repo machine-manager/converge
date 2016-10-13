@@ -11,7 +11,6 @@ defmodule Converge.Mixfile do
 			# Keep this disabled for tests because our tests define some Unit
 			# implementations.
 			consolidate_protocols: Mix.env == :prod,
-			escript: escript(),
 			deps: deps(),
 		]
 	end
@@ -27,9 +26,5 @@ defmodule Converge.Mixfile do
 			{:gears, "0.1.0"},
 			{:debpress, "0.2.1"}
 		]
-	end
-
-	def escript do
-		[main_module: Converge.CLI]
 	end
 end
