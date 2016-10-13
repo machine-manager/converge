@@ -1,17 +1,21 @@
 #!/usr/bin/fish
 
-# To skip slow tests, run me with: --exclude slow:true
+# Runs the unit tests on another host.  Required because our tests need to
+# run as root, and you probably don't want to do that on your development
+# machine.
+#
+# To skip slow tests, run this with: --exclude slow:true
 
-set machine "sandlin"
+set remote "sandlin"
 
 rsync -av --delete --exclude=_build \
 	/home/at/code/erlang/converge \
 	/home/at/.mix/depmapper.exs \
-	root@$machine:
+	root@$remote:
 
 # Need to rm -rf _build/ or else `mix test` will use stale .beam files
-# when the test machine's clock is in the future.
-and ssh root@$machine "
+# when the remote's clock is in the future.
+and ssh root@$remote "
 mkdir -p .mix &&
 mv depmapper.exs .mix/ &&
 cd converge &&
