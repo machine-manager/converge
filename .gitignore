@@ -7,3 +7,4 @@
 /converge
 erl_crash.dump
 *.ez
+/run_tests
