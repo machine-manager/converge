@@ -31,7 +31,7 @@ defimpl Unit, for: Converge.PackageCacheEmptied do
 		{_, 0} = System.cmd("apt-get", ["clean"])
 	end
 
-	def met?(p) do
+	def met?(_) do
 		empty_archives = Path.wildcard("/var/cache/apt/archives/*.*") == []
 		empty_partial  = Path.wildcard("/var/cache/apt/archives/partial/*.*") == []
 		empty_archives and empty_partial
