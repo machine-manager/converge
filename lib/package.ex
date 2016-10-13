@@ -83,7 +83,7 @@ defimpl Unit, for: Converge.PackagesInstalled do
 	end
 
 	defp met_identical_package_installed?(p) do
-		{out, status} = System.cmd("dpkg-query", ["--status", "converge-packages-installed"])
+		{out, status} = System.cmd("dpkg-query", ["--status", "converge-packages-installed"], stderr_to_stdout: true)
 		case status do
 			0 ->
 				control = out |> String.split("\n")
