@@ -1,0 +1,8 @@
+#!/usr/bin/fish
+
+set machine "sandlin"
+
+rsync -av --delete --exclude=_build /home/at/code/erlang/converge /home/at/.mix/depmapper.exs root@$machine:
+# Need to rm -rf _build or else mix test will use stale .beam files
+# when test machine's clock is in the future
+and ssh root@$machine "mkdir -p .mix && mv depmapper.exs .mix/ && cd converge && rm -rf _build && PATH=/home/at/elixir/bin:\$PATH mix test --trace --color"
