@@ -3,7 +3,7 @@ defprotocol Converge.Unit do
 	def met?(p)
 
 	@doc "Changes some state in a way that would satisfy met?"
-	def meet(p)
+	def meet(p, rep)
 end
 
 defmodule Converge.UnitError do

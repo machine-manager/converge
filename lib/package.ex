@@ -6,18 +6,18 @@ defmodule Converge.PackageIndexUpdated do
 end
 
 defimpl Unit, for: Converge.PackageIndexUpdated do
-	def meet(_) do
+	def meet(_, _) do
 		{_, 0} = System.cmd("apt-get", ["update"])
 	end
 
-	def met?(p) do
+	def met?(u) do
 		stat = File.stat("/var/cache/apt/pkgcache.bin", time: :posix)
 		updated = case stat do
 			{:ok, info} -> info.mtime
 			{:error, _} -> 0
 		end
 		now = :os.system_time(:second)
-		updated > now - p.max_age
+		updated > now - u.max_age
 	end
 end
 
@@ -27,7 +27,7 @@ defmodule Converge.PackageCacheEmptied do
 end
 
 defimpl Unit, for: Converge.PackageCacheEmptied do
-	def meet(_) do
+	def meet(_, _) do
 		{_, 0} = System.cmd("apt-get", ["clean"])
 	end
 
@@ -46,14 +46,14 @@ end
 
 defimpl Unit, for: Converge.PackagesInstalled do
 	@spec make_control(%Converge.PackagesInstalled{}) :: %Debpress.Control{}
-	defp make_control(p) do
+	defp make_control(u) do
 		%Debpress.Control{
 			name:              "converge-packages-installed",
 			version:           "0.1",
 			architecture:      "all",
 			maintainer:        "nobody",
 			installed_size_kb: 0,
-			depends:           p.depends,
+			depends:           u.depends,
 			section:           "metapackages",
 			priority:          :optional,
 			short_description: "Packages listed in a PackagesInstalled unit in a converge script."
@@ -61,7 +61,7 @@ defimpl Unit, for: Converge.PackagesInstalled do
 	end
 
 	@spec make_deb(%Converge.PackagesInstalled{}) :: String.t
-	defp make_deb(p) do
+	defp make_deb(u) do
 		temp = FileUtil.temp_dir("converge-packages-installed")
 		control_tar_gz = Path.join(temp, "control.tar.gz")
 
@@ -69,9 +69,22 @@ defimpl Unit, for: Converge.PackagesInstalled do
 		{_, 0} = System.cmd("tar", ["-cJf", data_tar_xz, "--files-from=/dev/null"])
 
 		deb = Path.join(temp, "converge-packages-installed.deb")
-		Debpress.write_control_tar_gz(control_tar_gz, Debpress.control_file(make_control(p)), %{})
+		Debpress.write_control_tar_gz(control_tar_gz, Debpress.control_file(make_control(u)), %{})
 		Debpress.write_deb(deb, control_tar_gz, data_tar_xz)
 		deb
+	end
+
+	def meet(u, _) do
+		deb = make_deb(u)
+		env = [
+			{"DEBIAN_FRONTEND",          "noninteractive"},
+			{"APT_LISTCHANGES_FRONTEND", "none"},
+			{"APT_LISTBUGS_FRONTEND",    "none"}
+		]
+		dpkg_opts = ["-o", "Dpkg::Options::=--force-confdef", "-o", "Dpkg::Options::=--force-confold"]
+		# TODO: --allow-downgrades a good idea here?
+		{_, 0} = System.cmd("apt-get", ["install", "-y", "--allow-downgrades"] ++ dpkg_opts ++ [deb], env: env)
+		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y", "--allow-downgrades"], env: env)
 	end
 
 	defp get_control_line(lines, name) do
@@ -82,7 +95,7 @@ defimpl Unit, for: Converge.PackagesInstalled do
 		end
 	end
 
-	defp met_identical_package_installed?(p) do
+	defp met_identical_package_installed?(u) do
 		{out, status} = System.cmd("dpkg-query", ["--status", "converge-packages-installed"], stderr_to_stdout: true)
 		case status do
 			0 ->
@@ -91,7 +104,7 @@ defimpl Unit, for: Converge.PackagesInstalled do
 				# https://anonscm.debian.org/cgit/dpkg/dpkg.git/tree/lib/dpkg/pkg-namevalue.c#n52
 				# http://manpages.ubuntu.com/manpages/precise/man1/dpkg.1.html
 				installed = get_control_line(control, "Status") == "install ok installed"
-				same_depends = depends == p.depends |> Enum.join(", ")
+				same_depends = depends == u.depends |> Enum.join(", ")
 				installed and same_depends
 			_ -> false
 		end
@@ -120,22 +133,9 @@ defimpl Unit, for: Converge.PackagesInstalled do
 		met and not need_autoremove
 	end
 
-	def met?(p) do
-		met_identical_package_installed?(p) and
+	def met?(u) do
+		met_identical_package_installed?(u) and
 		met_marked_as_manual?() and
 		met_nothing_to_fix?()
-	end
-
-	def meet(p) do
-		deb = make_deb(p)
-		env = [
-			{"DEBIAN_FRONTEND",          "noninteractive"},
-			{"APT_LISTCHANGES_FRONTEND", "none"},
-			{"APT_LISTBUGS_FRONTEND",    "none"}
-		]
-		dpkg_opts = ["-o", "Dpkg::Options::=--force-confdef", "-o", "Dpkg::Options::=--force-confold"]
-		# TODO: --allow-downgrades a good idea here?
-		{_, 0} = System.cmd("apt-get", ["install", "-y", "--allow-downgrades"] ++ dpkg_opts ++ [deb], env: env)
-		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y", "--allow-downgrades"], env: env)
 	end
 end

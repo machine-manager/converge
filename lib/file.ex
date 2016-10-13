@@ -87,15 +87,11 @@ end
 defimpl Unit, for: Converge.DirectoryPresent do
 	import Converge.ThingPresent
 
-	def met?(p) do
-		File.dir?(p.path) and met_user_group_mode?(p) and met_mutability?(p)
-	end
-
 	defp as_octal_string(num) do
 		inspect(num, base: :octal) |> String.split("o") |> List.last
 	end
 
-	def meet(p) do
+	def meet(p, _) do
 		# We want the directory to be created with the right mode at creation time.
 		# Use cmd("mkdir", ...) because File.mkdir* can't syscall mkdir with a mode.
 		{out, status} = System.cmd("mkdir", ["--mode=#{as_octal_string(p.mode)}", "--", p.path], stderr_to_stdout: true)
@@ -117,6 +113,10 @@ defimpl Unit, for: Converge.DirectoryPresent do
 				end
 		end
 	end
+
+	def met?(p) do
+		File.dir?(p.path) and met_user_group_mode?(p) and met_mutability?(p)
+	end
 end
 
 
@@ -128,22 +128,7 @@ end
 defimpl Unit, for: Converge.FilePresent do
 	import Converge.ThingPresent
 
-	defp met_contents?(p) do
-		case File.open(p.path, [:read]) do
-			# TODO: guard against giant files
-			{:ok, file} -> case IO.binread(file, :all) do
-				{:error, _} -> false
-				existing -> p.content == existing
-			end
-			{:error, _} -> false
-		end
-	end
-
-	def met?(p) do
-		met_user_group_mode?(p) and met_mutability?(p) and met_contents?(p)
-	end
-
-	def meet(p) do
+	def meet(p, _) do
 		# It's safer to unlink the file first, because it may be a shell script, and
 		# shells handle modified scripts very poorly.  If unlinked first, the shell
 		# will continue running the old (unlinked) script instead of crashing.
@@ -163,6 +148,21 @@ defimpl Unit, for: Converge.FilePresent do
 			File.close(f)
 		end
 	end
+
+	defp met_contents?(p) do
+		case File.open(p.path, [:read]) do
+			# TODO: guard against giant files
+			{:ok, file} -> case IO.binread(file, :all) do
+				{:error, _} -> false
+				existing -> p.content == existing
+			end
+			{:error, _} -> false
+		end
+	end
+
+	def met?(p) do
+		met_user_group_mode?(p) and met_mutability?(p) and met_contents?(p)
+	end
 end
 
 
@@ -174,6 +174,16 @@ end
 defimpl Unit, for: Converge.SymlinkPresent do
 	import Converge.ThingPresent
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
+
+	def meet(p, _) do
+		FileUtil.rm_f!(p.path)
+		case File.ln_s(p.dest, p.path) do
+			:ok ->
+				meet_user_group_owner(p)
+			{:error, reason} ->
+				raise UnitError, message: "failed to create symlink: #{inspect p.path}; reason: #{reason}"
+		end
+	end
 
 	def met_user_group?(p) do
 		want_user  = get_user_info(p.user)
@@ -199,16 +209,6 @@ defimpl Unit, for: Converge.SymlinkPresent do
 	def met?(p) do
 		met_symlink_to_dest?(p) and met_user_group?(p)
 	end
-
-	def meet(p) do
-		FileUtil.rm_f!(p.path)
-		case File.ln_s(p.dest, p.path) do
-			:ok ->
-				meet_user_group_owner(p)
-			{:error, reason} ->
-				raise UnitError, message: "failed to create symlink: #{inspect p.path}; reason: #{reason}"
-		end
-	end
 end
 
 
@@ -218,11 +218,11 @@ defmodule Converge.FileMissing do
 end
 
 defimpl Unit, for: Converge.FileMissing do
-	def met?(p) do
-		not File.exists?(p.path)
+	def meet(p, _) do
+		FileUtil.rm_f!(p.path)
 	end
 
-	def meet(p) do
-		FileUtil.rm_f!(p.path)
+	def met?(p) do
+		not File.exists?(p.path)
 	end
 end

@@ -1,6 +1,6 @@
 defmodule Converge.Reporter do
-	def running(p) do
-		IO.write("#{inspect p}... ")
+	def running(u) do
+		IO.write("#{inspect u}... ")
 	end
 
 	def meeting(_) do
@@ -27,23 +27,23 @@ end
 defmodule Converge.Runner do
 	alias Converge.{Unit, UnitError}
 
-	def converge(p, rep) do
-		apply(rep, :running, [p])
+	def converge(u, rep) do
+		apply(rep, :running, [u])
 		try do
-			if Unit.met?(p) do
-				apply(rep, :already_met, [p])
+			if Unit.met?(u) do
+				apply(rep, :already_met, [u])
 			else
-				apply(rep, :meeting, [p])
-				Unit.meet(p)
-				if Unit.met?(p) do
-					apply(rep, :just_met, [p])
+				apply(rep, :meeting, [u])
+				Unit.meet(u, rep)
+				if Unit.met?(u) do
+					apply(rep, :just_met, [u])
 				else
-					apply(rep, :failed, [p])
-					raise UnitError, message: "Failed to converge: #{inspect p}"
+					apply(rep, :failed, [u])
+					raise UnitError, message: "Failed to converge: #{inspect u}"
 				end
 			end
 		after
-			apply(rep, :done, [p])
+			apply(rep, :done, [u])
 		end
 	end
 end
