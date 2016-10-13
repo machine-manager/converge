@@ -87,8 +87,8 @@ end
 defimpl Unit, for: Converge.DirectoryPresent do
 	import Converge.ThingPresent
 
-	defp as_octal_string(num) do
-		inspect(num, base: :octal) |> String.split("o") |> List.last
+	def met?(p) do
+		File.dir?(p.path) and met_user_group_mode?(p) and met_mutability?(p)
 	end
 
 	def meet(p, _) do
@@ -114,8 +114,8 @@ defimpl Unit, for: Converge.DirectoryPresent do
 		end
 	end
 
-	def met?(p) do
-		File.dir?(p.path) and met_user_group_mode?(p) and met_mutability?(p)
+	defp as_octal_string(num) do
+		inspect(num, base: :octal) |> String.split("o") |> List.last
 	end
 end
 
@@ -127,6 +127,10 @@ end
 
 defimpl Unit, for: Converge.FilePresent do
 	import Converge.ThingPresent
+
+	def met?(p) do
+		met_user_group_mode?(p) and met_mutability?(p) and met_contents?(p)
+	end
 
 	def meet(p, _) do
 		# It's safer to unlink the file first, because it may be a shell script, and
@@ -159,10 +163,6 @@ defimpl Unit, for: Converge.FilePresent do
 			{:error, _} -> false
 		end
 	end
-
-	def met?(p) do
-		met_user_group_mode?(p) and met_mutability?(p) and met_contents?(p)
-	end
 end
 
 
@@ -175,6 +175,10 @@ defimpl Unit, for: Converge.SymlinkPresent do
 	import Converge.ThingPresent
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 
+	def met?(p) do
+		met_symlink_to_dest?(p) and met_user_group?(p)
+	end
+
 	def meet(p, _) do
 		FileUtil.rm_f!(p.path)
 		case File.ln_s(p.dest, p.path) do
@@ -182,17 +186,6 @@ defimpl Unit, for: Converge.SymlinkPresent do
 				meet_user_group_owner(p)
 			{:error, reason} ->
 				raise UnitError, message: "failed to create symlink: #{inspect p.path}; reason: #{reason}"
-		end
-	end
-
-	def met_user_group?(p) do
-		want_user  = get_user_info(p.user)
-		want_group = get_group_info(p.group)
-		case :file.read_link_info(p.path) do
-			{:ok, file_info(type: :symlink, uid: uid, gid: gid)} ->
-				uid == want_user.uid and
-				gid == want_group.gid
-			_ -> false
 		end
 	end
 
@@ -206,8 +199,15 @@ defimpl Unit, for: Converge.SymlinkPresent do
 		end
 	end
 
-	def met?(p) do
-		met_symlink_to_dest?(p) and met_user_group?(p)
+	def met_user_group?(p) do
+		want_user  = get_user_info(p.user)
+		want_group = get_group_info(p.group)
+		case :file.read_link_info(p.path) do
+			{:ok, file_info(type: :symlink, uid: uid, gid: gid)} ->
+				uid == want_user.uid and
+				gid == want_group.gid
+			_ -> false
+		end
 	end
 end
 
@@ -218,11 +218,11 @@ defmodule Converge.FileMissing do
 end
 
 defimpl Unit, for: Converge.FileMissing do
-	def meet(p, _) do
-		FileUtil.rm_f!(p.path)
-	end
-
 	def met?(p) do
 		not File.exists?(p.path)
+	end
+
+	def meet(p, _) do
+		FileUtil.rm_f!(p.path)
 	end
 end

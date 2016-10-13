@@ -1,5 +1,3 @@
-import ExUnit.Assertions, only: [assert: 1, assert: 2]
-
 defmodule Converge.Runner.RunnerTest do
 	use ExUnit.Case
 	alias Converge.{Runner, UnitError}

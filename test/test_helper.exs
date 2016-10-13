@@ -9,11 +9,11 @@ defmodule Converge.TestHelpers.FailsToConvergeUnit do
 end
 
 defimpl Unit, for: Converge.TestHelpers.FailsToConvergeUnit do
-	def meet(_, _) do
-	end
-
 	def met?(_) do
 		false
+	end
+
+	def meet(_, _) do
 	end
 end
 
@@ -26,12 +26,12 @@ defmodule Converge.TestHelpers.AlreadyConvergedUnit do
 end
 
 defimpl Unit, for: Converge.TestHelpers.AlreadyConvergedUnit do
-	def meet(_, _) do
-		assert false, "unreachable"
-	end
-
 	def met?(_) do
 		true
+	end
+
+	def meet(_, _) do
+		assert false, "unreachable"
 	end
 end
 
@@ -54,15 +54,15 @@ defmodule Converge.TestHelpers.ConvergeableUnit do
 end
 
 defimpl Unit, for: Converge.TestHelpers.ConvergeableUnit do
-	def meet(u, _) do
-		Agent.update(u.pid, fn({_, met_count}) ->
-			{true, met_count}
-		end)
-	end
-
 	def met?(u) do
 		Agent.get_and_update(u.pid, fn({has_met, met_count}) ->
 			{has_met, {has_met, met_count + 1}}
+		end)
+	end
+
+	def meet(u, _) do
+		Agent.update(u.pid, fn({_, met_count}) ->
+			{true, met_count}
 		end)
 	end
 end

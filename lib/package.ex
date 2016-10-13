@@ -6,10 +6,6 @@ defmodule Converge.PackageIndexUpdated do
 end
 
 defimpl Unit, for: Converge.PackageIndexUpdated do
-	def meet(_, _) do
-		{_, 0} = System.cmd("apt-get", ["update"])
-	end
-
 	def met?(u) do
 		stat = File.stat("/var/cache/apt/pkgcache.bin", time: :posix)
 		updated = case stat do
@@ -19,6 +15,10 @@ defimpl Unit, for: Converge.PackageIndexUpdated do
 		now = :os.system_time(:second)
 		updated > now - u.max_age
 	end
+
+	def meet(_, _) do
+		{_, 0} = System.cmd("apt-get", ["update"])
+	end
 end
 
 
@@ -27,14 +27,14 @@ defmodule Converge.PackageCacheEmptied do
 end
 
 defimpl Unit, for: Converge.PackageCacheEmptied do
-	def meet(_, _) do
-		{_, 0} = System.cmd("apt-get", ["clean"])
-	end
-
 	def met?(_) do
 		empty_archives = Path.wildcard("/var/cache/apt/archives/*.*") == []
 		empty_partial  = Path.wildcard("/var/cache/apt/archives/partial/*.*") == []
 		empty_archives and empty_partial
+	end
+
+	def meet(_, _) do
+		{_, 0} = System.cmd("apt-get", ["clean"])
 	end
 end
 
@@ -45,6 +45,25 @@ defmodule Converge.PackagesInstalled do
 end
 
 defimpl Unit, for: Converge.PackagesInstalled do
+	def met?(u) do
+		met_identical_package_installed?(u) and
+		met_marked_as_manual?() and
+		met_nothing_to_fix?()
+	end
+
+	def meet(u, _) do
+		deb = make_deb(u)
+		env = [
+			{"DEBIAN_FRONTEND",          "noninteractive"},
+			{"APT_LISTCHANGES_FRONTEND", "none"},
+			{"APT_LISTBUGS_FRONTEND",    "none"}
+		]
+		dpkg_opts = ["-o", "Dpkg::Options::=--force-confdef", "-o", "Dpkg::Options::=--force-confold"]
+		# TODO: --allow-downgrades a good idea here?
+		{_, 0} = System.cmd("apt-get", ["install", "-y", "--allow-downgrades"] ++ dpkg_opts ++ [deb], env: env)
+		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y", "--allow-downgrades"], env: env)
+	end
+
 	@spec make_control(%Converge.PackagesInstalled{}) :: %Debpress.Control{}
 	defp make_control(u) do
 		%Debpress.Control{
@@ -72,27 +91,6 @@ defimpl Unit, for: Converge.PackagesInstalled do
 		Debpress.write_control_tar_gz(control_tar_gz, Debpress.control_file(make_control(u)), %{})
 		Debpress.write_deb(deb, control_tar_gz, data_tar_xz)
 		deb
-	end
-
-	def meet(u, _) do
-		deb = make_deb(u)
-		env = [
-			{"DEBIAN_FRONTEND",          "noninteractive"},
-			{"APT_LISTCHANGES_FRONTEND", "none"},
-			{"APT_LISTBUGS_FRONTEND",    "none"}
-		]
-		dpkg_opts = ["-o", "Dpkg::Options::=--force-confdef", "-o", "Dpkg::Options::=--force-confold"]
-		# TODO: --allow-downgrades a good idea here?
-		{_, 0} = System.cmd("apt-get", ["install", "-y", "--allow-downgrades"] ++ dpkg_opts ++ [deb], env: env)
-		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y", "--allow-downgrades"], env: env)
-	end
-
-	defp get_control_line(lines, name) do
-		match = lines |> Enum.filter(&(String.starts_with?(&1, "#{name}: "))) |> List.first
-		case match do
-			nil -> nil
-			_   -> match |> String.split(": ", parts: 2) |> List.last
-		end
 	end
 
 	defp met_identical_package_installed?(u) do
@@ -133,9 +131,11 @@ defimpl Unit, for: Converge.PackagesInstalled do
 		met and not need_autoremove
 	end
 
-	def met?(u) do
-		met_identical_package_installed?(u) and
-		met_marked_as_manual?() and
-		met_nothing_to_fix?()
+	defp get_control_line(lines, name) do
+		match = lines |> Enum.filter(&(String.starts_with?(&1, "#{name}: "))) |> List.first
+		case match do
+			nil -> nil
+			_   -> match |> String.split(": ", parts: 2) |> List.last
+		end
 	end
 end
