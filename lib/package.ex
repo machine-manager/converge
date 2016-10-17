@@ -59,16 +59,15 @@ defimpl Unit, for: Converge.PackagesInstalled do
 			{"APT_LISTBUGS_FRONTEND",    "none"}
 		]
 		dpkg_opts = ["-o", "Dpkg::Options::=--force-confdef", "-o", "Dpkg::Options::=--force-confold"]
-		# TODO: --allow-downgrades a good idea here?
-		{_, 0} = System.cmd("apt-get", ["install", "-y", "--allow-downgrades"] ++ dpkg_opts ++ [deb], env: env)
-		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y", "--allow-downgrades"], env: env)
+		{_, 0} = System.cmd("apt-get", ["install", "-y"] ++ dpkg_opts ++ [deb], env: env)
+		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y"], env: env)
 	end
 
 	@spec make_control(%Converge.PackagesInstalled{}) :: %Debpress.Control{}
 	defp make_control(u) do
 		%Debpress.Control{
 			name:              "converge-packages-installed",
-			version:           "0.1",
+			version:           "1.#{:os.system_time(:millisecond)}",
 			architecture:      "all",
 			maintainer:        "nobody",
 			installed_size_kb: 0,
