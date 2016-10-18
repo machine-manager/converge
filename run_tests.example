@@ -8,7 +8,7 @@
 
 set remote "sandlin"
 
-rsync -av --delete --exclude=_build \
+rsync -av --delete --exclude=_build --exclude=.git \
 	/home/at/code/erlang/converge \
 	/home/at/.mix/depmapper.exs \
 	root@$remote:
