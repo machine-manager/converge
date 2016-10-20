@@ -50,9 +50,9 @@ defmodule Converge.MetaPackageInstalled do
 	@moduledoc """
 	A metapackage (one that just depends on other packages) is installed.
 
-	This is the recommended way to install packages, because after you modify
-	the MetaPackageInstalled `depends` and re-run the unit, packages no-longer
-	depended-on will be removed.
+	This is the recommended way to install packages.  Packages that were listed
+	in a MetaPackageInstalled unit, then removed, will be automatically removed
+	the next time the unit is run.
 	"""
 	@enforce_keys [:name, :depends]
 	defstruct name: nil, depends: []
