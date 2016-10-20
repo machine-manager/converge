@@ -49,12 +49,33 @@ defmodule Converge.GroupUtil do
 	end
 end
 
-defmodule Converge.UserEnabled do
+defmodule Converge.UserPresent do
+	@moduledoc """
+	A user exists and and has a certain uid, gid, comment, home, and shell.
+	"""
 	@enforce_keys [:name, :home, :shell]
 	defstruct name: nil, uid: nil, gid: nil, comment: "", home: nil, shell: nil
 end
 
+defimpl Unit, for: Converge.UserPresent do
+	def met?(u) do
+
+	end
+
+	def meet(u, rep) do
+
+	end
+end
+
+
 defmodule Converge.UserDisabled do
+	@moduledoc """
+	A user is disabled.
+
+	We disable, instead of delete, users that are no longer needed, because
+	adduser and useradd recycle UIDs, and with this recycling, new users gain
+	access to files left behind by deleted users.
+	"""
 	@enforce_keys [:name]
 	defstruct name: nil
 end
@@ -63,11 +84,17 @@ defimpl Unit, for: Converge.UserDisabled do
 	alias Converge.UserUtil
 
 	def met?(u) do
-		%{shell: shell} = UserUtil.get_users()[u.name]
-		shell == "/bin/false"
+		%{shell: shell, crypted_password: crypted_password} = UserUtil.get_users()[u.name]
+		is_locked = crypted_password |> String.starts_with?("!")
+		is_locked and shell == "/bin/false"
 	end
 
 	def meet(u, rep) do
-
+		{0, ""} = System.cmd("usermod", [
+			"--lock",
+			"--shell", "/bin/false",
+			"--comment", "Disabled but kept to prevent UID recycling",
+			u.name
+		])
 	end
 end
