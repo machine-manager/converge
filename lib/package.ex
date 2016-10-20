@@ -2,6 +2,10 @@ alias Gears.FileUtil
 alias Converge.Unit
 
 defmodule Converge.PackageIndexUpdated do
+	@moduledoc """
+	The system package manager's package index was updated within
+	the last `max_age` seconds.
+	"""
 	defstruct max_age: 3600
 end
 
@@ -23,6 +27,9 @@ end
 
 
 defmodule Converge.PackageCacheEmptied do
+	@moduledoc """
+	The system package manager's package cache is empty.
+	"""
 	defstruct []
 end
 
@@ -39,15 +46,22 @@ defimpl Unit, for: Converge.PackageCacheEmptied do
 end
 
 
-defmodule Converge.PackagesInstalled do
-	@enforce_keys [:depends]
-	defstruct depends: []
+defmodule Converge.MetaPackageInstalled do
+	@moduledoc """
+	A metapackage (one that just depends on other packages) is installed.
+
+	This is the recommended way to install packages, because after you modify
+	the MetaPackageInstalled `depends` and re-run the unit, packages no-longer
+	depended-on will be removed.
+	"""
+	@enforce_keys [:name, :depends]
+	defstruct name: nil, depends: []
 end
 
-defimpl Unit, for: Converge.PackagesInstalled do
+defimpl Unit, for: Converge.MetaPackageInstalled do
 	def met?(u) do
 		met_identical_package_installed?(u) and
-		met_marked_as_manual?() and
+		met_marked_as_manual?(u) and
 		met_nothing_to_fix?()
 	end
 
@@ -63,10 +77,10 @@ defimpl Unit, for: Converge.PackagesInstalled do
 		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y"], env: env)
 	end
 
-	@spec make_control(%Converge.PackagesInstalled{}) :: %Debpress.Control{}
+	@spec make_control(%Converge.MetaPackageInstalled{}) :: %Debpress.Control{}
 	defp make_control(u) do
 		%Debpress.Control{
-			name:              "converge-packages-installed",
+			name:              u.name,
 			version:           "1.#{:os.system_time(:millisecond)}",
 			architecture:      "all",
 			maintainer:        "nobody",
@@ -74,13 +88,13 @@ defimpl Unit, for: Converge.PackagesInstalled do
 			depends:           u.depends,
 			section:           "metapackages",
 			priority:          :optional,
-			short_description: "Packages listed in a PackagesInstalled unit in a converge script."
+			short_description: "package depending on packages listed in a Converge.MetaPackageInstalled unit"
 		}
 	end
 
-	@spec make_deb(%Converge.PackagesInstalled{}) :: String.t
+	@spec make_deb(%Converge.MetaPackageInstalled{}) :: String.t
 	defp make_deb(u) do
-		temp = FileUtil.temp_dir("converge-packages-installed")
+		temp = FileUtil.temp_dir(u.name)
 		control_tar_gz = Path.join(temp, "control.tar.gz")
 
 		data_tar_xz = Path.join(temp, "data.tar.xz")
@@ -93,7 +107,7 @@ defimpl Unit, for: Converge.PackagesInstalled do
 	end
 
 	defp met_identical_package_installed?(u) do
-		{out, status} = System.cmd("dpkg-query", ["--status", "converge-packages-installed"], stderr_to_stdout: true)
+		{out, status} = System.cmd("dpkg-query", ["--status", u.name], stderr_to_stdout: true)
 		case status do
 			0 ->
 				control = out |> String.split("\n")
@@ -107,10 +121,10 @@ defimpl Unit, for: Converge.PackagesInstalled do
 		end
 	end
 
-	defp met_marked_as_manual?() do
+	defp met_marked_as_manual?(u) do
 		{out, 0} = System.cmd("apt-mark", ["showmanual"])
 		installed_manual = out |> String.split("\n") |> Enum.into(MapSet.new())
-		installed_manual |> MapSet.member?("converge-packages-installed")
+		installed_manual |> MapSet.member?(u.name)
 	end
 
 	@docp """

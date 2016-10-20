@@ -1,4 +1,4 @@
-alias Converge.{PackageIndexUpdated, PackageCacheEmptied, PackagesInstalled, Runner}
+alias Converge.{PackageIndexUpdated, PackageCacheEmptied, MetaPackageInstalled, Runner}
 alias Converge.TestHelpers.{SilentReporter}
 
 defmodule Converge.PackageIndexUpdatedTest do
@@ -26,18 +26,20 @@ defmodule Converge.PackageCacheEmptiedTest do
 end
 
 
-defmodule Converge.PackagesInstalledTest do
+defmodule Converge.MetaPackageInstalledTest do
 	use ExUnit.Case
 
 	@tag :slow
 	test "packages are installed and removed as needed" do
-		p = %PackagesInstalled{depends: ["fortune", "fortunes-eo"]}
+		name = "converge-meta-package-installed-test"
+
+		p = %MetaPackageInstalled{name: name, depends: ["fortune", "fortunes-eo"]}
 		Runner.converge(p, SilentReporter)
 
-		p = %PackagesInstalled{depends: []}
+		p = %MetaPackageInstalled{name: name, depends: []}
 		Runner.converge(p, SilentReporter)
 
-		p = %PackagesInstalled{depends: []}
+		p = %MetaPackageInstalled{name: name, depends: []}
 		Runner.converge(p, SilentReporter)
 	end
 end
