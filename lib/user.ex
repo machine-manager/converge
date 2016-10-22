@@ -65,6 +65,9 @@ defmodule Converge.UserPresent do
 end
 
 defimpl Unit, for: Converge.UserPresent do
+	import Gears.LangUtil, only: [oper_if: 3]
+	alias Converge.UserUtil
+
 	@docp """
 	Take a map and return a new map without any k/v pairs that have a nil value
 	"""
@@ -93,11 +96,11 @@ defimpl Unit, for: Converge.UserPresent do
 		args = {[], &Kernel.++/2}
 			|> oper_if(u.locked  == true,  ["--lock"])
 			|> oper_if(u.locked  == false, ["--unlock"])
-			|> oper_if(u.comment != nil,   ["--comment", s])
+			|> oper_if(u.comment != nil,   ["--comment", u.comment])
 			|> oper_if(true,               ["--shell", u.shell])
 			|> oper_if(true,               ["--home", u.home])
 			|> elem(0)
-		{0, ""} = System.cmd("usermod", args ++ ["--", u.name])
+		{"", 0} = System.cmd("usermod", args ++ ["--", u.name])
 	end
 
 	defp meet_add(u) do
@@ -109,7 +112,7 @@ defimpl Unit, for: Converge.UserPresent do
 			|> oper_if(true,      ["--home-dir", u.home])
 			|> oper_if(true,      ["--create-home"])
 			|> elem(0)
-		{0, ""} = System.cmd("useradd", args ++ ["--", u.name])
+		{"", 0} = System.cmd("useradd", args ++ ["--", u.name])
 	end
 
 	def meet(u, rep) do
@@ -143,7 +146,7 @@ defimpl Unit, for: Converge.UserDisabled do
 	end
 
 	def meet(u, rep) do
-		{0, ""} = System.cmd("usermod", [
+		{"", 0} = System.cmd("usermod", [
 			"--lock",
 			"--shell", "/bin/false",
 			"--comment", "Disabled but kept to prevent UID recycling",
@@ -175,6 +178,6 @@ defimpl Unit, for: Converge.UserDeleted do
 	end
 
 	def meet(u, rep) do
-		{0, ""} = System.cmd("userdel", ["--", u.name])
+		{"", 0} = System.cmd("userdel", ["--", u.name])
 	end
 end
