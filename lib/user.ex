@@ -148,7 +148,7 @@ defimpl Unit, for: Converge.UserDisabled do
 	def meet(u, rep) do
 		{"", 0} = System.cmd("usermod", [
 			"--lock",
-			"--shell", "/bin/false",
+			"--shell",   "/bin/false",
 			"--comment", "Disabled but kept to prevent UID recycling",
 			u.name
 		])
