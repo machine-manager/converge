@@ -8,9 +8,18 @@
 
 set remote "sandlin"
 
-rsync -av --delete --exclude=_build --exclude=.git \
-	/home/at/code/erlang/converge \
-	/home/at/.mix/depmapper.exs \
+# Compile on local machine, because we want to
+# 1) compile deps/ despite the --no-deps-check used on the test machine,
+#    which we use because it doesn't have the source git repositories
+# 2) get compilation errors faster
+# 3) avoid mix mistakenly not compiling files on the test machine, when
+#    its clock is in the future
+env MIX_ENV=test mix compile
+
+and rsync -av --delete --delete-excluded --exclude=.git \
+	$HOME/opt/elixir \
+	$HOME/code/erlang/converge \
+	$HOME/.mix/depmapper.exs \
 	root@$remote:
 
 # Need to rm -rf _build/ or else `mix test` will use stale .beam files
@@ -19,5 +28,4 @@ and ssh root@$remote "
 mkdir -p .mix &&
 mv depmapper.exs .mix/ &&
 cd converge &&
-rm -rf _build/ &&
-PATH=/home/at/elixir/bin:\$PATH mix test --trace --color $argv"
+PATH=/root/elixir/bin:\$PATH mix test --no-deps-check --trace --color $argv"
