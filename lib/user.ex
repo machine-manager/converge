@@ -98,3 +98,30 @@ defimpl Unit, for: Converge.UserDisabled do
 		])
 	end
 end
+
+
+defmodule Converge.UserDeleted do
+	@moduledoc """
+	A user is deleted.
+
+	Because adduser and useradd recycle UIDs, you should almost never use this,
+	except for testing, or for deleting users that have no files remaining on
+	the the filesystem.
+	"""
+	@enforce_keys [:name]
+	defstruct name: nil
+end
+
+defimpl Unit, for: Converge.UserDeleted do
+	alias Converge.UserUtil
+
+	def met?(u) do
+		UserUtil.get_users()
+			|> Map.has_key?(u.name)
+			|> Kernel.not
+	end
+
+	def meet(u, rep) do
+		{0, ""} = System.cmd("userdel", ["--", u.name])
+	end
+end
