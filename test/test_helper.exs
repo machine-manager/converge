@@ -1,4 +1,4 @@
-import ExUnit.Assertions, only: [assert: 1, assert: 2]
+import ExUnit.Assertions, only: [assert: 2]
 alias Converge.Unit
 
 defmodule Converge.TestHelpers.FailsToConvergeUnit do
