@@ -22,6 +22,14 @@ end
 
 
 defmodule Converge.UserPresent do
+	def "can create a user that doesn't exist" do
+		Runner.converge(%Converge.UserDeleted{name: "converge-test-userpresent"})
+		Runner.converge(%Converge.UserPresent{
+			name:  "converge-test-userpresent",
+			home:  "/home/converge-test-userpresent",
+			shell: "/bin/bash"
+		})
+	end
 	# TODO: test that comment is unchanged if not given
 	# TODO: test that uid and gid is unchanged if not given
 	# TODO: test that uid and gid is unchanged if given (errors out)

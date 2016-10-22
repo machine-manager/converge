@@ -90,38 +90,25 @@ defimpl Unit, for: Converge.UserPresent do
 	defp meet_modify(u) do
 		# Note: we refuse to change uid or gid, because it's just too dangerous
 		# and possibly a configuration mistake.
-		args = []
-		args = args ++ case u.locked do
-			nil   -> []
-			true  -> ["--lock"]
-			false -> ["--unlock"]
-		end
-		args = args ++ case u.comment do
-			nil   -> []
-			s     -> ["--comment", s]
-		end
-		args = args ++ ["--shell", u.shell]
-		args = args ++ ["--home",  u.home]
+		args = {[], &Kernel.++/2}
+			|> oper_if(u.locked  == true,  ["--lock"])
+			|> oper_if(u.locked  == false, ["--unlock"])
+			|> oper_if(u.comment != nil,   ["--comment", s])
+			|> oper_if(true,               ["--shell", u.shell])
+			|> oper_if(true,               ["--home", u.home])
+			|> elem(0)
 		{0, ""} = System.cmd("usermod", args ++ ["--", u.name])
 	end
 
 	defp meet_add(u) do
-		args = []
-		args = args ++ case u.uid do
-			nil -> []
-			uid -> ["--uid", "#{uid}"]
-		end
-		args = args ++ case u.gid do
-			nil -> []
-			uid -> ["--gid", "#{gid}"]
-		end
-		args = args ++ case u.comment do
-			nil -> []
-			s   -> ["--comment", s]
-		end
-		args = args ++ ["--shell",    u.shell]
-		args = args ++ ["--home-dir", u.home]
-		args = args ++ ["--create-home"]
+		args = {[], &Kernel.++/2}
+			|> oper_if(u.uid,     ["--uid",      "#{u.uid}"])
+			|> oper_if(u.uid,     ["--gid",      "#{u.gid}"])
+			|> oper_if(u.comment, ["--comment",  u.comment])
+			|> oper_if(true,      ["--shell",    u.shell])
+			|> oper_if(true,      ["--home-dir", u.home])
+			|> oper_if(true,      ["--create-home"])
+			|> elem(0)
 		{0, ""} = System.cmd("useradd", args ++ ["--", u.name])
 	end
 
