@@ -19,3 +19,10 @@ defmodule Converge.UserUtilTest do
 		assert is_binary(root.crypted_password)
 	end
 end
+
+
+defmodule Converge.UserPresent do
+	# TODO: test that comment is unchanged if not given
+	# TODO: test that uid and gid is unchanged if not given
+	# TODO: test that uid and gid is unchanged if given (errors out)
+end
