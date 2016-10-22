@@ -91,7 +91,7 @@ defimpl Unit, for: Converge.UserPresent do
 	end
 
 	defp meet_modify(u) do
-		# Note: we refuse to change uid or gid, because it's just too dangerous
+		# Note: we refuse to change uid or gid, because it's dangerous
 		# and possibly a configuration mistake.
 		args = {[], &Kernel.++/2}
 			|> oper_if(u.locked  == true,  ["--lock"])
