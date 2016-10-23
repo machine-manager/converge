@@ -66,6 +66,7 @@ end
 
 defimpl Unit, for: Converge.UserPresent do
 	import Gears.LangUtil, only: [oper_if: 3]
+	import ExUnit.Assertions, only: [assert: 2]
 	alias Converge.UserUtil
 
 	@docp """
@@ -112,7 +113,14 @@ defimpl Unit, for: Converge.UserPresent do
 			|> oper_if(true,      ["--home-dir", u.home])
 			|> oper_if(true,      ["--create-home"])
 			|> elem(0)
-		{"", 0} = System.cmd("useradd", args ++ ["--", u.name])
+		{out, 0} = System.cmd("useradd", args ++ ["--", u.name], stderr_to_stdout: true)
+		assert \
+			out == "" or
+			out == \
+				"""
+				useradd: warning: the home directory already exists.
+				Not copying any file from skel directory into it.
+				""", "Unexpected output from useradd: #{inspect out}"
 	end
 
 	def meet(u, rep) do
