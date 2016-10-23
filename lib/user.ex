@@ -16,10 +16,18 @@ defmodule Converge.UserUtil do
 			|> Enum.into(%{})
 	end
 
+	def crypted_password_is_locked(crypted_password) do
+		crypted_password |> String.starts_with?("!")
+	end
+
 	defp shadow_line_to_tuple(line) do
 		[name, crypted_password, _] = String.split(line, ":", parts: 3)
-		locked = crypted_password |> String.starts_with?("!")
-		{name, %{crypted_password: crypted_password, locked: locked}}
+		{name,
+			%{
+				crypted_password: crypted_password,
+				locked: crypted_password_is_locked(crypted_password)
+			}
+		}
 	end
 
 	defp passwd_line_to_tuple(line) do
@@ -56,12 +64,14 @@ defmodule Converge.UserPresent do
 
 	`uid`, `gid`, `comment`, and `locked` are optional, and if not specified,
 	will be automatically assigned for new users, or left unchanged for existing
-	users.
+	users.  New users will be locked by default (`crypted_password == "!"`).
 
 	New users will be a non-system user with a home directory, created as needed.
 	"""
 	@enforce_keys [:name, :home, :shell]
-	defstruct name: nil, uid: nil, gid: nil, comment: nil, home: nil, shell: nil, locked: nil
+	defstruct \
+		name: nil, uid: nil, gid: nil, comment: nil, home: nil, shell: nil,
+		locked: nil, crypted_password: nil
 end
 
 defimpl Unit, for: Converge.UserPresent do
@@ -79,6 +89,7 @@ defimpl Unit, for: Converge.UserPresent do
 	end
 
 	def met?(u) do
+		ensure_password_and_locked_consistency(u)
 		user = UserUtil.get_users()[u.name]
 		case user do
 			nil -> false
@@ -91,27 +102,48 @@ defimpl Unit, for: Converge.UserPresent do
 		end
 	end
 
+	@docp """
+	Ensure consistency in `crypted_password` and `locked` early, before the
+	unit fails to converge for a reason that is hard to decipher.
+	"""
+	defp ensure_password_and_locked_consistency(u) do
+		if u.locked != nil and u.crypted_password != nil do
+			if not UserUtil.crypted_password_is_locked(u.crypted_password) == u.locked do
+				case u.locked do
+					true  -> raise UnitError,
+						message: ~s(Expected crypted_password to be locked, but it lacked a leading "!")
+					false -> raise UnitError,
+						message: ~s(Expected crypted_password to be unlocked, but it had a leading "!")
+				end
+			end
+		end
+	end
+
 	defp meet_modify(u) do
-		# Note: we refuse to change uid or gid, because it's dangerous
-		# and possibly a configuration mistake.
+		have_password = u.crypted_password != nil
 		args = {[], &Kernel.++/2}
 			|> oper_if(u.locked  == true,  ["--lock"])
 			|> oper_if(u.locked  == false, ["--unlock"])
 			|> oper_if(u.comment != nil,   ["--comment", u.comment])
+			|> oper_if(have_password,      ["--password", u.crypted_password])
 			|> oper_if(true,               ["--shell", u.shell])
 			|> oper_if(true,               ["--home", u.home])
 			|> elem(0)
+		# Note: we refuse to change uid or gid, because it's dangerous
+		# and possibly a configuration mistake.
 		{"", 0} = System.cmd("usermod", args ++ ["--", u.name])
 	end
 
 	defp meet_add(u) do
+		have_password = u.crypted_password != nil
 		args = {[], &Kernel.++/2}
-			|> oper_if(u.uid,     ["--uid",      "#{u.uid}"])
-			|> oper_if(u.gid,     ["--gid",      "#{u.gid}"])
-			|> oper_if(u.comment, ["--comment",  u.comment])
-			|> oper_if(true,      ["--shell",    u.shell])
-			|> oper_if(true,      ["--home-dir", u.home])
-			|> oper_if(true,      ["--create-home"])
+			|> oper_if(u.uid,         ["--uid",      "#{u.uid}"])
+			|> oper_if(u.gid,         ["--gid",      "#{u.gid}"])
+			|> oper_if(u.comment,     ["--comment",  u.comment])
+			|> oper_if(have_password, ["--password", u.crypted_password])
+			|> oper_if(true,          ["--shell",    u.shell])
+			|> oper_if(true,          ["--home-dir", u.home])
+			|> oper_if(true,          ["--create-home"])
 			|> elem(0)
 		{out, 0} = System.cmd("useradd", args ++ ["--", u.name], stderr_to_stdout: true)
 		assert \
@@ -124,6 +156,7 @@ defimpl Unit, for: Converge.UserPresent do
 	end
 
 	def meet(u, rep) do
+		ensure_password_and_locked_consistency(u)
 		exists = UserUtil.get_users() |> Map.has_key?(u.name)
 		case exists do
 			true   -> meet_modify(u)
