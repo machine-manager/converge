@@ -124,10 +124,10 @@ defimpl Unit, for: Converge.UserPresent do
 		args = {[], &Kernel.++/2}
 			|> oper_if(u.locked  == true,  ["--lock"])
 			|> oper_if(u.locked  == false, ["--unlock"])
-			|> oper_if(u.comment != nil,   ["--comment", u.comment])
+			|> oper_if(u.comment != nil,   ["--comment",  u.comment])
 			|> oper_if(have_password,      ["--password", u.crypted_password])
-			|> oper_if(true,               ["--shell", u.shell])
-			|> oper_if(true,               ["--home", u.home])
+			|> oper_if(true,               ["--shell",    u.shell])
+			|> oper_if(true,               ["--home",     u.home])
 			|> elem(0)
 		# Note: we refuse to change uid or gid, because it's dangerous
 		# and possibly a configuration mistake.
