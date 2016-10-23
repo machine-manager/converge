@@ -25,14 +25,51 @@ defmodule Converge.UserPresentTest do
 	use ExUnit.Case
 
 	test "can create a user that doesn't exist" do
-		Runner.converge(%Converge.UserDeleted{name: "converge-test-userpresent"}, SilentReporter)
+		Runner.converge(%Converge.UserMissing{name: "converge-test-userpresent"}, SilentReporter)
 		Runner.converge(%Converge.UserPresent{
-			name:  "converge-test-userpresent",
-			home:  "/home/converge-test-userpresent",
-			shell: "/bin/bash"
+			name:    "converge-test-userpresent",
+			home:    "/home/converge-test-userpresent",
+			shell:   "/bin/bash"
 		}, SilentReporter)
 	end
-	# TODO: test that comment is unchanged if not given
+
+	test "can create a user with a specific uid" do
+		Runner.converge(%Converge.UserMissing{name: "converge-test-userpresent"}, SilentReporter)
+		Runner.converge(%Converge.UserPresent{
+			name:    "converge-test-userpresent",
+			home:    "/home/converge-test-userpresent",
+			shell:   "/bin/bash",
+			uid:     2000
+		}, SilentReporter)
+	end
+
+	test "can change shell, home, and comment for a user that already exists" do
+		Runner.converge(%Converge.UserMissing{name: "converge-test-userpresent"}, SilentReporter)
+		Runner.converge(%Converge.UserPresent{
+			name:    "converge-test-userpresent",
+			home:    "/home/converge-test-userpresent",
+			shell:   "/bin/bash"
+		}, SilentReporter)
+		Runner.converge(%Converge.UserPresent{
+			name:    "converge-test-userpresent",
+			home:    "/home/converge-test-userpresent-new-home",
+			shell:   "/bin/zsh",
+			comment: "Delete me"
+		}, SilentReporter)
+
+		# Comment is unchanged when not given
+		Runner.converge(%Converge.UserPresent{
+			name:    "converge-test-userpresent",
+			home:    "/home/converge-test-userpresent-new-home",
+			shell:   "/bin/zsh"
+		}, SilentReporter)
+		assert UserUtil.get_users()["converge-test-userpresent"].comment == "Delete me"
+	end
+
+	test "can not change uid or gid" do
+
+	end
+
 	# TODO: test that uid and gid is unchanged if not given
 	# TODO: test that uid and gid is unchanged if given (errors out)
 end

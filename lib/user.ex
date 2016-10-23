@@ -107,7 +107,7 @@ defimpl Unit, for: Converge.UserPresent do
 	defp meet_add(u) do
 		args = {[], &Kernel.++/2}
 			|> oper_if(u.uid,     ["--uid",      "#{u.uid}"])
-			|> oper_if(u.uid,     ["--gid",      "#{u.gid}"])
+			|> oper_if(u.gid,     ["--gid",      "#{u.gid}"])
 			|> oper_if(u.comment, ["--comment",  u.comment])
 			|> oper_if(true,      ["--shell",    u.shell])
 			|> oper_if(true,      ["--home-dir", u.home])
@@ -164,9 +164,9 @@ defimpl Unit, for: Converge.UserDisabled do
 end
 
 
-defmodule Converge.UserDeleted do
+defmodule Converge.UserMissing do
 	@moduledoc """
-	A user is deleted.
+	A user is not present in the user database.
 
 	Because adduser and useradd recycle UIDs, you should almost never use this,
 	except for testing, or for deleting users that have no files remaining on
@@ -176,7 +176,7 @@ defmodule Converge.UserDeleted do
 	defstruct name: nil
 end
 
-defimpl Unit, for: Converge.UserDeleted do
+defimpl Unit, for: Converge.UserMissing do
 	alias Converge.UserUtil
 
 	def met?(u) do
