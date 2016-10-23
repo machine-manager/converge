@@ -131,7 +131,10 @@ defimpl Unit, for: Converge.UserPresent do
 			|> elem(0)
 		# Note: we refuse to change uid or gid, because it's dangerous
 		# and possibly a configuration mistake.
-		{"", 0} = System.cmd("usermod", args ++ ["--", u.name])
+		{out, 0} = System.cmd("usermod", args ++ ["--", u.name], stderr_to_stdout: true)
+		assert \
+			out == "" or out == "usermod: no changes\n",
+			"Unexpected output from useradd: #{inspect out}"
 	end
 
 	defp meet_add(u) do
@@ -152,7 +155,8 @@ defimpl Unit, for: Converge.UserPresent do
 				"""
 				useradd: warning: the home directory already exists.
 				Not copying any file from skel directory into it.
-				""", "Unexpected output from useradd: #{inspect out}"
+				""",
+			"Unexpected output from useradd: #{inspect out}"
 	end
 
 	def meet(u, rep) do

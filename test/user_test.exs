@@ -95,10 +95,16 @@ defmodule Converge.UserPresentTest do
 		assert user.crypted_password == "$1$PSLJ33JN$ZQ57z/KqQi.ttlw4fXlFD0"
 	end
 
-	test "can not change uid or gid" do
-
+	test "can not change uid" do
+		Runner.converge(%Converge.UserMissing{name: "converge-test-userpresent"}, SilentReporter)
+		u = %Converge.UserPresent{
+			name:             "converge-test-userpresent",
+			home:             "/home/converge-test-userpresent",
+			shell:            "/bin/bash",
+			uid:              2000
+		}
+		Runner.converge(u, SilentReporter)
+		assert_raise UnitError, ~r"^Failed to converge", \
+			fn -> Runner.converge(%Converge.UserPresent{u | uid: 2001}, SilentReporter) end
 	end
-
-	# TODO: test that uid and gid is unchanged if not given
-	# TODO: test that uid and gid is unchanged if given (errors out)
 end
