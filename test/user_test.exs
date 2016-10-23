@@ -1,4 +1,4 @@
-alias Converge.{UserUtil, Runner}
+alias Converge.{UserUtil, Runner, UnitError}
 alias Converge.TestHelpers.{SilentReporter}
 
 defmodule Converge.UserUtilTest do
@@ -29,41 +29,70 @@ defmodule Converge.UserPresentTest do
 		Runner.converge(%Converge.UserPresent{
 			name:    "converge-test-userpresent",
 			home:    "/home/converge-test-userpresent",
-			shell:   "/bin/bash"
-		}, SilentReporter)
-	end
-
-	test "can create a user with a specific uid" do
-		Runner.converge(%Converge.UserMissing{name: "converge-test-userpresent"}, SilentReporter)
-		Runner.converge(%Converge.UserPresent{
-			name:    "converge-test-userpresent",
-			home:    "/home/converge-test-userpresent",
 			shell:   "/bin/bash",
-			uid:     2000
 		}, SilentReporter)
 	end
 
-	test "can change shell, home, and comment for a user that already exists" do
+	test "can create a user with a specific uid, locked, crypted_password" do
 		Runner.converge(%Converge.UserMissing{name: "converge-test-userpresent"}, SilentReporter)
 		Runner.converge(%Converge.UserPresent{
-			name:    "converge-test-userpresent",
-			home:    "/home/converge-test-userpresent",
-			shell:   "/bin/bash"
+			name:             "converge-test-userpresent",
+			home:             "/home/converge-test-userpresent",
+			shell:            "/bin/bash",
+			uid:              2000,
+			locked:           false,
+			crypted_password: "$1$HK1.P14i$3uOXlDCZbK8TmSXWOO5cV/",
+		}, SilentReporter)
+	end
+
+	test "raises UnitError with helpful error when locked but crypted_password lacks !" do
+		u = %Converge.UserPresent{
+			name:             "converge-test-userpresent",
+			home:             "/home/converge-test-userpresent",
+			shell:            "/bin/bash",
+			locked:           true,
+			crypted_password: "$1$HK1.P14i$3uOXlDCZbK8TmSXWOO5cV/",
+		}
+		assert_raise UnitError, ~r"^Expected crypted_password to be locked",
+			fn -> Runner.converge(u, SilentReporter) end
+	end
+
+	test "raises UnitError with helpful error when not locked but crypted_password has !" do
+		u = %Converge.UserPresent{
+			name:             "converge-test-userpresent",
+			home:             "/home/converge-test-userpresent",
+			shell:            "/bin/bash",
+			locked:           false,
+			crypted_password: "!$1$HK1.P14i$3uOXlDCZbK8TmSXWOO5cV/",
+		}
+		assert_raise UnitError, ~r"^Expected crypted_password to be unlocked",
+			fn -> Runner.converge(u, SilentReporter) end
+	end
+
+	test "can change shell, home, comment, and crypted_password for a user that already exists" do
+		Runner.converge(%Converge.UserMissing{name: "converge-test-userpresent"}, SilentReporter)
+		Runner.converge(%Converge.UserPresent{
+			name:             "converge-test-userpresent",
+			home:             "/home/converge-test-userpresent",
+			shell:            "/bin/bash",
 		}, SilentReporter)
 		Runner.converge(%Converge.UserPresent{
-			name:    "converge-test-userpresent",
-			home:    "/home/converge-test-userpresent-new-home",
-			shell:   "/bin/zsh",
-			comment: "Delete me"
+			name:             "converge-test-userpresent",
+			home:             "/home/converge-test-userpresent-new-home",
+			shell:            "/bin/zsh",
+			comment:          "Delete me",
+			crypted_password: "$1$PSLJ33JN$ZQ57z/KqQi.ttlw4fXlFD0",
 		}, SilentReporter)
 
-		# Comment is unchanged when not given
+		# comment and crypted_password are unchanged when not given
 		Runner.converge(%Converge.UserPresent{
-			name:    "converge-test-userpresent",
-			home:    "/home/converge-test-userpresent-new-home",
-			shell:   "/bin/zsh"
+			name:             "converge-test-userpresent",
+			home:             "/home/converge-test-userpresent-new-home",
+			shell:            "/bin/zsh",
 		}, SilentReporter)
-		assert UserUtil.get_users()["converge-test-userpresent"].comment == "Delete me"
+		user = UserUtil.get_users()["converge-test-userpresent"]
+		assert user.comment          == "Delete me"
+		assert user.crypted_password == "$1$PSLJ33JN$ZQ57z/KqQi.ttlw4fXlFD0"
 	end
 
 	test "can not change uid or gid" do

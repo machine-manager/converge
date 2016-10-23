@@ -1,4 +1,4 @@
-alias Converge.Unit
+alias Converge.{Unit, UnitError}
 
 defmodule Converge.UserUtil do
 	def get_users() do
@@ -159,8 +159,8 @@ defimpl Unit, for: Converge.UserPresent do
 		ensure_password_and_locked_consistency(u)
 		exists = UserUtil.get_users() |> Map.has_key?(u.name)
 		case exists do
-			true   -> meet_modify(u)
-			false  -> meet_add(u)
+			true  -> meet_modify(u)
+			false -> meet_add(u)
 		end
 	end
 end
