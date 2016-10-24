@@ -167,7 +167,7 @@ defimpl Unit, for: Converge.FilePresent do
 			# TODO: guard against giant files
 			{:ok, file} -> case IO.binread(file, :all) do
 				{:error, _} -> false
-				existing -> p.content == existing
+				existing    -> p.content == existing
 			end
 			{:error, _} -> false
 		end
