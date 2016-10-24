@@ -4,7 +4,7 @@ alias Converge.TestHelpers.{SilentReporter}
 defmodule Converge.UserUtilTest do
 	use ExUnit.Case, async: true
 
-	test "UserUtil.get_users has root" do
+	test ~s(UserUtil.get_users includes "root") do
 		users = UserUtil.get_users()
 		assert users |> Map.has_key?("root")
 	end
