@@ -2,7 +2,7 @@ alias Converge.{UserUtil, Runner, UnitError}
 alias Converge.TestHelpers.{SilentReporter}
 
 defmodule Converge.UserUtilTest do
-	use ExUnit.Case
+	use ExUnit.Case, async: true
 
 	test "UserUtil.get_users has root" do
 		users = UserUtil.get_users()
@@ -22,7 +22,7 @@ end
 
 
 defmodule Converge.UserPresentTest do
-	use ExUnit.Case
+	use ExUnit.Case, async: true
 
 	test "can create a user that doesn't exist" do
 		Runner.converge(%Converge.UserMissing{name: "converge-test-userpresent"}, SilentReporter)
@@ -45,7 +45,7 @@ defmodule Converge.UserPresentTest do
 		}, SilentReporter)
 	end
 
-	test "raises UnitError with helpful error when locked but crypted_password lacks !" do
+	test "raises UnitError with helpful error when locked but crypted_password lacks '!'" do
 		u = %Converge.UserPresent{
 			name:             "converge-test-userpresent",
 			home:             "/home/converge-test-userpresent",
@@ -57,7 +57,7 @@ defmodule Converge.UserPresentTest do
 			fn -> Runner.converge(u, SilentReporter) end
 	end
 
-	test "raises UnitError with helpful error when not locked but crypted_password has !" do
+	test "raises UnitError with helpful error when not locked but crypted_password has '!'" do
 		u = %Converge.UserPresent{
 			name:             "converge-test-userpresent",
 			home:             "/home/converge-test-userpresent",
@@ -111,7 +111,7 @@ end
 
 
 defmodule Converge.UserDisabledTest do
-	use ExUnit.Case
+	use ExUnit.Case, async: true
 
 	test "raises UnitError if user doesn't exist" do
 		u = %Converge.UserDisabled{name: "converge-test-userdisabled-never-existed"}
@@ -127,5 +127,26 @@ defmodule Converge.UserDisabledTest do
 			shell:            "/bin/zsh",
 		}, SilentReporter)
 		Runner.converge(%Converge.UserDisabled{name: name}, SilentReporter)
+	end
+end
+
+
+defmodule Converge.UserMissingTest do
+	use ExUnit.Case, async: true
+
+	test "can converge when user does not exist" do
+		u = %Converge.UserMissing{name: "converge-test-userdeleted-never-existed"}
+		Runner.converge(u, SilentReporter)
+	end
+
+	test "can converge when user exists" do
+		name = "converge-test-userdeleted"
+		Runner.converge(%Converge.UserPresent{
+			name:    name,
+			home:    "/home/#{name}",
+			shell:   "/bin/bash",
+		}, SilentReporter)
+
+		Runner.converge(%Converge.UserMissing{name: name}, SilentReporter)
 	end
 end

@@ -2,7 +2,7 @@ alias Converge.{All, Unit, Runner}
 alias Converge.TestHelpers.{ConvergeableUnit, AlreadyConvergedUnit, SilentReporter}
 
 defmodule Converge.AllTest do
-	use ExUnit.Case
+	use ExUnit.Case, async: true
 
 	test "All.met? runs met? on child units until one returns false" do
 		u1  = ConvergeableUnit.new()

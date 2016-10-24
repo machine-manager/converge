@@ -3,7 +3,7 @@ alias Converge.TestHelpers.{SilentReporter}
 alias Gears.FileUtil
 
 defmodule Converge.DirectoryPresentTest do
-	use ExUnit.Case
+	use ExUnit.Case, async: true
 
 	@dir FileUtil.temp_dir("converge-test")
 	@deleteme Path.join(@dir, "deleteme")
@@ -48,7 +48,7 @@ defmodule Converge.DirectoryPresentTest do
 end
 
 defmodule Converge.FilePresentTest do
-	use ExUnit.Case
+	use ExUnit.Case, async: true
 
 	@dir FileUtil.temp_dir("converge-test")
 	@deleteme Path.join(@dir, "deleteme")
@@ -75,7 +75,7 @@ defmodule Converge.FilePresentTest do
 end
 
 defmodule Converge.SymlinkPresentTest do
-	use ExUnit.Case
+	use ExUnit.Case, async: true
 
 	@dir FileUtil.temp_dir("converge-test")
 	@deleteme Path.join(@dir, "deleteme")
@@ -97,7 +97,7 @@ defmodule Converge.SymlinkPresentTest do
 end
 
 defmodule Converge.FileMissingTest do
-	use ExUnit.Case
+	use ExUnit.Case, async: true
 
 	@dir FileUtil.temp_dir("converge-test")
 	@deleteme Path.join(@dir, "deleteme")
