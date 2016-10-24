@@ -38,6 +38,7 @@ defmodule Converge.UserUtil do
 	end
 end
 
+
 defmodule Converge.GroupUtil do
 	defp group_line_to_tuple(line) do
 		[name, "x", gid_s, members_s] = String.split(line, ":")
@@ -57,6 +58,7 @@ defmodule Converge.GroupUtil do
 			|> Enum.into(%{})
 	end
 end
+
 
 defmodule Converge.UserPresent do
 	@moduledoc """
