@@ -153,7 +153,7 @@ defimpl Unit, for: Converge.UserPresent do
 		{out, 0} = System.cmd("useradd", args ++ ["--", u.name], stderr_to_stdout: true)
 		assert \
 			out == "" or
-			out == \
+			out ==
 				"""
 				useradd: warning: the home directory already exists.
 				Not copying any file from skel directory into it.
