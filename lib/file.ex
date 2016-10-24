@@ -81,8 +81,8 @@ end
 
 defmodule Converge.DirectoryPresent do
 	@moduledoc """
-	A directory exists at `path` with a specific `mode`, `immutable` flag,
-	`user`, and `group`.
+	A directory exists at `path` with a specific `mode` and `immutable` flag,
+	owned by `user` and `group`.
 	"""
 	@enforce_keys [:path, :mode]
 	defstruct path: nil, mode: nil, immutable: false, user: "root", group: "root"
@@ -127,8 +127,8 @@ end
 
 defmodule Converge.FilePresent do
 	@moduledoc """
-	A file exists at `path` with content `content`, a specific `mode`, `immutable` flag,
-	`user`, and `group`.
+	A file exists at `path` with content `content`, a specific `mode` `immutable` flag,
+	owned by `user` and `group`.
 	"""
 	@enforce_keys [:path, :content, :mode]
 	defstruct path: nil, content: nil, mode: nil, immutable: false, user: "root", group: "root"
@@ -177,7 +177,7 @@ end
 
 defmodule Converge.SymlinkPresent do
 	@moduledoc """
-	A symlink exists at `path` pointing to `dest`.
+	A symlink exists at `path` pointing to `dest`, owned by `user` and `group`.
 	"""
 	@enforce_keys [:path, :dest]
 	defstruct path: nil, dest: nil, user: "root", group: "root"
