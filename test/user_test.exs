@@ -108,3 +108,24 @@ defmodule Converge.UserPresentTest do
 			fn -> Runner.converge(%Converge.UserPresent{u | uid: 2001}, SilentReporter) end
 	end
 end
+
+
+defmodule Converge.UserDisabledTest do
+	use ExUnit.Case
+
+	test "raises UnitError if user doesn't exist" do
+		u = %Converge.UserDisabled{name: "converge-test-userdisabled-never-existed"}
+		assert_raise UnitError, ~r"^User .* does not exist", \
+			fn -> Runner.converge(u, SilentReporter) end
+	end
+
+	test "can disable an existing user" do
+		name = "converge-test-userdisabled"
+		Runner.converge(%Converge.UserPresent{
+			name:             name,
+			home:             "/home/#{name}",
+			shell:            "/bin/zsh",
+		}, SilentReporter)
+		Runner.converge(%Converge.UserDisabled{name: name}, SilentReporter)
+	end
+end

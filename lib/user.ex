@@ -172,7 +172,7 @@ end
 
 defmodule Converge.UserDisabled do
 	@moduledoc """
-	A user is disabled.
+	A user is disabled.  Cannot converge if the user doesn't exist.
 
 	We disable, instead of delete, users that are no longer needed, because
 	adduser and useradd recycle UIDs, and with this recycling, new users gain
@@ -186,17 +186,24 @@ defimpl Unit, for: Converge.UserDisabled do
 	alias Converge.UserUtil
 
 	def met?(u) do
-		%{shell: shell, locked: locked} = UserUtil.get_users()[u.name]
-		locked and shell == "/bin/false"
+		case UserUtil.get_users()[u.name] do
+			nil                             -> false
+			%{shell: shell, locked: locked} -> locked and shell == "/bin/false"
+		end
 	end
 
 	def meet(u, rep) do
-		{"", 0} = System.cmd("usermod", [
+		{out, status} = System.cmd("usermod", [
 			"--lock",
 			"--shell",   "/bin/false",
 			"--comment", "Disabled but kept to prevent UID recycling",
 			u.name
-		])
+		], stderr_to_stdout: true)
+		no_such_user_error = ~s(usermod: user '#{u.name}' does not exist\n)
+		case {out, status} do
+			{"",                  0} -> nil
+			{^no_such_user_error, 6} -> raise UnitError, message: "User #{inspect u.name} does not exist"
+		end
 	end
 end
 
