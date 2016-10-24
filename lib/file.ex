@@ -80,6 +80,10 @@ end
 
 
 defmodule Converge.DirectoryPresent do
+	@moduledoc """
+	A directory exists at `path` with a specific `mode`, `immutable` flag,
+	`user`, and `group`.
+	"""
 	@enforce_keys [:path, :mode]
 	defstruct path: nil, mode: nil, immutable: false, user: "root", group: "root"
 end
@@ -94,7 +98,8 @@ defimpl Unit, for: Converge.DirectoryPresent do
 	def meet(p, _) do
 		# We want the directory to be created with the right mode at creation time.
 		# Use cmd("mkdir", ...) because File.mkdir* can't syscall mkdir with a mode.
-		{out, status} = System.cmd("mkdir", ["--mode=#{as_octal_string(p.mode)}", "--", p.path], stderr_to_stdout: true)
+		{out, status} = System.cmd(
+			"mkdir", ["--mode=#{as_octal_string(p.mode)}", "--", p.path], stderr_to_stdout: true)
 		case status do
 			0 ->
 				meet_user_group_owner(p)
@@ -121,6 +126,10 @@ end
 
 
 defmodule Converge.FilePresent do
+	@moduledoc """
+	A file exists at `path` with content `content`, a specific `mode`, `immutable` flag,
+	`user`, and `group`.
+	"""
 	@enforce_keys [:path, :content, :mode]
 	defstruct path: nil, content: nil, mode: nil, immutable: false, user: "root", group: "root"
 end
@@ -167,6 +176,9 @@ end
 
 
 defmodule Converge.SymlinkPresent do
+	@moduledoc """
+	A symlink exists at `path` pointing to `dest`.
+	"""
 	@enforce_keys [:path, :dest]
 	defstruct path: nil, dest: nil, user: "root", group: "root"
 end
@@ -185,7 +197,8 @@ defimpl Unit, for: Converge.SymlinkPresent do
 			:ok ->
 				meet_user_group_owner(p)
 			{:error, reason} ->
-				raise UnitError, message: "failed to create symlink: #{inspect p.path}; reason: #{reason}"
+				raise UnitError, message:
+					"failed to create symlink: #{inspect p.path}; reason: #{reason}"
 		end
 	end
 
@@ -213,6 +226,10 @@ end
 
 
 defmodule Converge.FileMissing do
+	@moduledoc """
+	A file at `path` does not exist.  Fails to converge if `path` points to
+	a directory.
+	"""
 	@enforce_keys [:path]
 	defstruct path: nil
 end

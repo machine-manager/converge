@@ -115,11 +115,12 @@ defmodule Converge.FileMissingTest do
 	end
 
 	test "does not remove symlink destination when pointing FileMissing at symlink" do
+		# setup
 		dest = Path.join(@dir, "dest")
 		File.touch!(dest)
-		# setup
 		p = %SymlinkPresent{path: @deleteme, dest: dest}
 		Runner.converge(p, SilentReporter)
+
 		# test
 		m = %FileMissing{path: @deleteme}
 		Runner.converge(m, SilentReporter)

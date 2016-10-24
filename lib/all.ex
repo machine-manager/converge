@@ -1,6 +1,9 @@
 alias Converge.Unit
 
 defmodule Converge.All do
+	@moduledoc """
+	All units in `units` are satisfied.
+	"""
 	@enforce_keys [:units]
 	defstruct units: []
 end
