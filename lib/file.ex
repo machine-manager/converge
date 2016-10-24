@@ -162,14 +162,14 @@ defimpl Unit, for: Converge.FilePresent do
 		end
 	end
 
+	# TODO: guard against giant files in binread
 	defp met_contents?(p) do
 		case File.open(p.path, [:read]) do
-			# TODO: guard against giant files
+			{:error, _} -> false
 			{:ok, file} -> case IO.binread(file, :all) do
 				{:error, _} -> false
 				existing    -> p.content == existing
 			end
-			{:error, _} -> false
 		end
 	end
 end
