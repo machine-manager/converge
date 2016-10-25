@@ -1,14 +1,16 @@
 #!/bin/bash
 
-set -eu -o pipefail
-
 # Runs the unit tests on another host.  Required because our tests need to
-# run as root, and you probably don't want to do that on your development
-# machine.
+# run as root and modify both package and user configuration, so you really
+# don't want them running on your development machine.
 #
 # To skip slow tests, run this with: --exclude slow:true
 
+set -eu -o pipefail
+
 remote=sandlin
+elixir=$HOME/opt/elixir
+converge=$HOME/code/erlang/converge
 
 # Compile on local machine, because we want to
 # 1) compile deps/ despite the --no-deps-check used on the test machine,
@@ -19,12 +21,12 @@ remote=sandlin
 MIX_ENV=test mix compile
 
 rsync -av --delete --delete-excluded --exclude=.git \
-	$HOME/opt/elixir \
-	$HOME/code/erlang/converge \
+	"$elixir" \
+	"$converge" \
 	root@"$remote":
 
 # Need to rm -rf _build/ or else `mix test` will use stale .beam files
 # when the remote's clock is in the future.
-ssh root"@$remote" "
+ssh root@"$remote" "
 cd converge &&
 PATH=/root/elixir/bin:\$PATH mix test --no-deps-check --trace --color $@"
