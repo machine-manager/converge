@@ -52,10 +52,10 @@ defmodule Converge.GroupUtil do
 
 	def get_groups() do
 		File.read!("/etc/group")
-			|> String.trim_trailing("\n")
-			|> String.split("\n")
-			|> Enum.map(&group_line_to_tuple/1)
-			|> Enum.into(%{})
+		|> String.trim_trailing("\n")
+		|> String.split("\n")
+		|> Enum.map(&group_line_to_tuple/1)
+		|> Enum.into(%{})
 	end
 end
 
@@ -86,8 +86,8 @@ defimpl Unit, for: Converge.UserPresent do
 	"""
 	defp without_nil_values(m) do
 		m
-			|> Enum.filter(fn {k, v} -> v != nil end)
-			|> Enum.into(%{})
+		|> Enum.filter(fn {k, v} -> v != nil end)
+		|> Enum.into(%{})
 	end
 
 	def met?(u) do
@@ -227,8 +227,8 @@ defimpl Unit, for: Converge.UserMissing do
 
 	def met?(u) do
 		UserUtil.get_users()
-			|> Map.has_key?(u.name)
-			|> Kernel.not
+		|> Map.has_key?(u.name)
+		|> Kernel.not
 	end
 
 	def meet(u, rep) do
