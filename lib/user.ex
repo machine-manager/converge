@@ -89,7 +89,7 @@ defimpl Unit, for: Converge.UserPresent do
 	"""
 	defp without_nil_values(m) do
 		m
-		|> Enum.filter(fn {k, v} -> v != nil end)
+		|> Enum.filter(fn {_, v} -> v != nil end)
 		|> Enum.into(%{})
 	end
 
@@ -164,7 +164,7 @@ defimpl Unit, for: Converge.UserPresent do
 			"Unexpected output from useradd: #{inspect out}"
 	end
 
-	def meet(u, rep) do
+	def meet(u, _) do
 		ensure_password_and_locked_consistency(u)
 		exists = UserUtil.get_users() |> Map.has_key?(u.name)
 		case exists do
@@ -197,7 +197,7 @@ defimpl Unit, for: Converge.UserDisabled do
 		end
 	end
 
-	def meet(u, rep) do
+	def meet(u, _) do
 		{out, status} = System.cmd("usermod", [
 			"--lock",
 			"--shell",   "/bin/false",
@@ -234,7 +234,7 @@ defimpl Unit, for: Converge.UserMissing do
 		|> Kernel.not
 	end
 
-	def meet(u, rep) do
+	def meet(u, _) do
 		{"", 0} = System.cmd("userdel", ["--", u.name])
 	end
 end
@@ -255,7 +255,7 @@ defimpl Unit, for: Converge.NonSystemUsers do
 
 	end
 
-	def meet(u, rep) do
+	def meet(u, _) do
 
 	end
 end
