@@ -69,6 +69,9 @@ defmodule Converge.UserPresent do
 	users.  New users will be locked by default (`crypted_password == "!"`).
 
 	New users will be a non-system user with a home directory, created as needed.
+
+	Use `NonSystemUsers` instead of `UserPresent` directly, to avoid leaving
+	behind unwanted users after removing a `UserPresent` unit in a configuration.
 	"""
 	@enforce_keys [:name, :home, :shell]
 	defstruct \
@@ -233,5 +236,26 @@ defimpl Unit, for: Converge.UserMissing do
 
 	def meet(u, rep) do
 		{"", 0} = System.cmd("userdel", ["--", u.name])
+	end
+end
+
+
+defmodule Converge.NonSystemUsers do
+	@moduledoc """
+	A set of non-system users exist in the user database.
+
+	Use this instead of `UserPresent`, `UserDisabled`, or `UserMissing`,
+	because it will automatically disable users that are no longer defined here.
+	"""
+
+end
+
+defimpl Unit, for: Converge.NonSystemUsers do
+	def met?(u) do
+
+	end
+
+	def meet(u, rep) do
+
 	end
 end
