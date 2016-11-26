@@ -10,13 +10,17 @@ defmodule Converge.ThingPresent do
 	@moduledoc false
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 
+	def try_make_mutable(p) do
+		System.cmd("chattr", ["-i", "--", p.path], stderr_to_stdout: true)
+	end
+
 	def make_mutable(p) do
-		{_, 0} = System.cmd("chattr", ["-i", "--", p.path])
+		{"", 0} = try_make_mutable(p)
 	end
 
 	def meet_mutability(p) do
 		if p.immutable do
-			{_, 0} = System.cmd("chattr", ["+i", "--", p.path])
+			{"", 0} = System.cmd("chattr", ["+i", "--", p.path])
 		end
 	end
 
@@ -148,6 +152,7 @@ defimpl Unit, for: Converge.FilePresent do
 		#
 		# Removing the file first also avoids the problem of very briefly granting
 		# access to a new user/group that should not be able to see the old file contents.
+		try_make_mutable(p)
 		FileUtil.rm_f!(p.path)
 
 		f = File.open!(p.path, [:write])
@@ -235,6 +240,8 @@ defmodule Converge.FileMissing do
 end
 
 defimpl Unit, for: Converge.FileMissing do
+	import Converge.ThingPresent
+
 	def met?(p) do
 		not File.exists?(p.path)
 	end
@@ -242,7 +249,7 @@ defimpl Unit, for: Converge.FileMissing do
 	def meet(p, _) do
 		# Ignore output and exit code, because we may be removing a symlink
 		# on which you can't chattr -i or +i
-		System.cmd("chattr", ["-i", "--", p.path], stderr_to_stdout: true)
+		try_make_mutable(p)
 		FileUtil.rm_f!(p.path)
 	end
 end

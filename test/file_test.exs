@@ -72,6 +72,19 @@ defmodule Converge.FilePresentTest do
 		p = %FilePresent{path: @deleteme, content: "multiple\nlines", mode: 0o666, user: "nobody", group: "daemon"}
 		Runner.converge(p, SilentReporter)
 	end
+
+	test "file can be changed even if immutable" do
+		# setup
+		p = %FilePresent{path: @deleteme, content: "content", mode: 0o600, immutable: true}
+		Runner.converge(p, SilentReporter)
+
+		# test
+		p = %FilePresent{path: @deleteme, content: "changed", mode: 0o600, immutable: true}
+		Runner.converge(p, SilentReporter)
+
+		p = %FilePresent{path: @deleteme, content: "changed and mutable", mode: 0o600}
+		Runner.converge(p, SilentReporter)
+	end
 end
 
 defmodule Converge.SymlinkPresentTest do
@@ -118,7 +131,7 @@ defmodule Converge.FileMissingTest do
 	test "works if file exists and is immutable" do
 		m = %FileMissing{path: @immutable}
 		File.touch!(@immutable)
-		{_, 0} = System.cmd("chattr", ["+i", "--", @immutable])
+		{"", 0} = System.cmd("chattr", ["+i", "--", @immutable])
 		Runner.converge(m, SilentReporter)
 	end
 
