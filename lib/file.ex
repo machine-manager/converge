@@ -63,7 +63,7 @@ defmodule Converge.ThingPresent do
 		users     = UserUtil.get_users()
 		user_info = users[user]
 		if ! user_info do
-			raise UnitError, message: "OS lacks user #{inspect user}"
+			raise UnitError, message: "User database is missing user #{inspect user}"
 		end
 		user_info
 	end
@@ -72,7 +72,7 @@ defmodule Converge.ThingPresent do
 		groups     = GroupUtil.get_groups()
 		group_info = groups[group]
 		if ! group_info do
-			raise UnitError, message: "OS lacks group #{inspect group}"
+			raise UnitError, message: "Group database is missing group #{inspect group}"
 		end
 		group_info
 	end
