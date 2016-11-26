@@ -100,7 +100,8 @@ defmodule Converge.FileMissingTest do
 	use ExUnit.Case, async: true
 
 	@dir FileUtil.temp_dir("converge-test")
-	@deleteme Path.join(@dir, "deleteme")
+	@deleteme  Path.join(@dir, "deleteme")
+	@immutable Path.join(@dir, "immutable")
 
 	test "works if file doesn't exist" do
 		FileUtil.rm_f!(@deleteme)
@@ -111,6 +112,13 @@ defmodule Converge.FileMissingTest do
 	test "works if file exists" do
 		m = %FileMissing{path: @deleteme}
 		File.touch!(@deleteme)
+		Runner.converge(m, SilentReporter)
+	end
+
+	test "works if file exists and is immutable" do
+		m = %FileMissing{path: @immutable}
+		File.touch!(@immutable)
+		{_, 0} = System.cmd("chattr", ["+i", "--", @immutable])
 		Runner.converge(m, SilentReporter)
 	end
 

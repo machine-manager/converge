@@ -240,6 +240,9 @@ defimpl Unit, for: Converge.FileMissing do
 	end
 
 	def meet(p, _) do
+		# Ignore output and exit code, because we may be removing a symlink
+		# on which you can't chattr -i or +i
+		System.cmd("chattr", ["-i", "--", p.path], stderr_to_stdout: true)
 		FileUtil.rm_f!(p.path)
 	end
 end
