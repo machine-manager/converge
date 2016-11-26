@@ -18,6 +18,14 @@ defmodule Converge.ThingPresent do
 		{"", 0} = try_make_mutable(p)
 	end
 
+	@doc "Remove an existing dentry, even if it is immutable."
+	def remove_existing(p) do
+		# Ignore output and exit code, because we may be removing a symlink
+		# on which you can't chattr -i or +i
+		try_make_mutable(p)
+		FileUtil.rm_f!(p.path)
+	end
+
 	def meet_mutability(p) do
 		if p.immutable do
 			{"", 0} = System.cmd("chattr", ["+i", "--", p.path])
@@ -152,8 +160,7 @@ defimpl Unit, for: Converge.FilePresent do
 		#
 		# Removing the file first also avoids the problem of very briefly granting
 		# access to a new user/group that should not be able to see the old file contents.
-		try_make_mutable(p)
-		FileUtil.rm_f!(p.path)
+		remove_existing(p)
 
 		f = File.open!(p.path, [:write])
 		try do
@@ -197,7 +204,7 @@ defimpl Unit, for: Converge.SymlinkPresent do
 	end
 
 	def meet(p, _) do
-		FileUtil.rm_f!(p.path)
+		remove_existing(p)
 		case File.ln_s(p.dest, p.path) do
 			:ok ->
 				meet_user_group_owner(p)
@@ -247,9 +254,6 @@ defimpl Unit, for: Converge.FileMissing do
 	end
 
 	def meet(p, _) do
-		# Ignore output and exit code, because we may be removing a symlink
-		# on which you can't chattr -i or +i
-		try_make_mutable(p)
-		FileUtil.rm_f!(p.path)
+		remove_existing(p)
 	end
 end

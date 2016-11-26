@@ -91,7 +91,8 @@ defmodule Converge.SymlinkPresentTest do
 	use ExUnit.Case, async: true
 
 	@dir FileUtil.temp_dir("converge-test")
-	@deleteme Path.join(@dir, "deleteme")
+	@deleteme  Path.join(@dir, "deleteme")
+	@immutable Path.join(@dir, "immutable")
 
 	test "symlink" do
 		p = %SymlinkPresent{path: @deleteme, dest: "/root/some-dest"}
@@ -105,6 +106,16 @@ defmodule Converge.SymlinkPresentTest do
 
 	test "symlink with user nobody and group daemon" do
 		p = %SymlinkPresent{path: @deleteme, dest: "/root/some-dest", user: "nobody", group: "daemon"}
+		Runner.converge(p, SilentReporter)
+	end
+
+	test "symlink that replaces an immutable file" do
+		# setup
+		p = %FilePresent{path: @immutable, content: "content", mode: 0o600, immutable: true}
+		Runner.converge(p, SilentReporter)
+
+		# test
+		p = %SymlinkPresent{path: @immutable, dest: "/root/some-dest"}
 		Runner.converge(p, SilentReporter)
 	end
 end
