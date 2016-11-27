@@ -36,6 +36,30 @@ defmodule Converge.UserUtil do
 		{gid, ""} = Integer.parse(gid_s)
 		{name, %{uid: uid, gid: gid, comment: comment, home: home, shell: shell}}
 	end
+
+	defp get_login_defs_number(regexp) do
+		File.read!("/etc/login.defs")
+		|> String.split("\n")
+		|> Enum.filter(&Regex.match?(regexp, &1))
+		|> List.first
+		|> String.split(~r"\s")
+		|> List.last
+		|> String.to_integer
+	end
+
+	@doc """
+	Get the minimum UID for non-system users.
+	"""
+	def get_uid_min() do
+		get_login_defs_number(~r/^UID_MIN\s/)
+	end
+
+	@doc """
+	Get the maximum UID for non-system users.
+	"""
+	def get_uid_max() do
+		get_login_defs_number(~r/^UID_MAX\s/)
+	end
 end
 
 
@@ -57,6 +81,19 @@ defmodule Converge.GroupUtil do
 		|> Enum.map(&group_line_to_tuple/1)
 		|> Enum.into(%{})
 	end
+end
+
+
+defmodule Converge.User do
+	@moduledoc """
+	See the documentation for `Converge.UserPresent`.
+
+	`User` is used only by `NonSystemUsersPresent`, so it does not implement `Unit`.
+	"""
+	@enforce_keys [:name, :home, :shell]
+	defstruct \
+		name: nil, uid: nil, gid: nil, comment: nil, home: nil, shell: nil,
+		locked: nil, crypted_password: nil
 end
 
 
@@ -240,22 +277,33 @@ defimpl Unit, for: Converge.UserMissing do
 end
 
 
-defmodule Converge.NonSystemUsers do
+defmodule Converge.NonSystemUsersPresent do
 	@moduledoc """
 	A set of non-system users exist in the user database.
 
 	Use this instead of `UserPresent`, `UserDisabled`, or `UserMissing`,
 	because it will automatically disable users that are no longer defined here.
-	"""
 
+	Non-system users that currently exist, but should not, will be disabled.
+
+	`users` should be a list of `Converge.User` structs.
+	"""
+	@enforce_keys [:users]
+	defstruct users: nil
 end
 
-defimpl Unit, for: Converge.NonSystemUsers do
+defimpl Unit, for: Converge.NonSystemUsersPresent do
 	def met?(u) do
+		# TODO: need to determine if user is a system user
 
+		# name, uid, gid, comment, home, shell, locked, crypted_password
+
+		# make a Converge.All with UserPresent/UserDisabled units
+		# run met? on it
 	end
 
 	def meet(u, _) do
-
+		# make a Converge.All with UserPresent/UserDisabled units
+		# run meet on it
 	end
 end

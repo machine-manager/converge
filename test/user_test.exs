@@ -18,6 +18,18 @@ defmodule Converge.UserUtilTest do
 		assert is_binary(root.shell)
 		assert is_binary(root.crypted_password)
 	end
+
+	test "UserUtil.get_uid_min returns an integer" do
+		uid_min = UserUtil.get_uid_min()
+		assert is_integer(uid_min)
+	end
+
+	test "UserUtil.get_uid_max returns an integer greater than get_uid_min" do
+		uid_min = UserUtil.get_uid_min()
+		uid_max = UserUtil.get_uid_max()
+		assert is_integer(uid_max)
+		assert uid_max > uid_min
+	end
 end
 
 
