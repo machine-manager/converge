@@ -122,8 +122,8 @@ end
 defimpl Unit, for: Converge.MetaPackageInstalled do
 	def met?(u) do
 		met_identical_package_installed?(u) and
-		met_marked_as_manual?(u) and
-		met_nothing_to_fix?()
+		met_nothing_to_fix?() and
+		Unit.met?(%Converge.PackagesMarkedManualInstalled{names: [u.name]})
 	end
 
 	def meet(u, _) do
@@ -179,12 +179,6 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 				installed and same_depends
 			_ -> false
 		end
-	end
-
-	defp met_marked_as_manual?(u) do
-		{out, 0} = System.cmd("apt-mark", ["showmanual"])
-		installed_manual = out |> String.split("\n") |> MapSet.new
-		installed_manual |> MapSet.member?(u.name)
 	end
 
 	@docp """
