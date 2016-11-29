@@ -1,19 +1,19 @@
 alias Gears.StringUtil
 alias Converge.{
 	PackageIndexUpdated, PackageCacheEmptied, PackagesMarkedAutoInstalled,
-	PackagesMarkedManualInstalled, DanglingPackagesPurged, MetaPackageInstalled,
-	Runner}
+	PackagesMarkedManualInstalled, DanglingPackagesPurged, PackagePurged,
+	MetaPackageInstalled, Runner}
 alias Converge.TestHelpers.TestingContext
 
 defmodule Converge.PackageIndexUpdatedTest do
 	use ExUnit.Case
 
-	test "PackageIndexUpdated" do
+	test "package index is updated" do
 		p = %PackageIndexUpdated{}
 		Runner.converge(p, TestingContext.get_context())
 	end
 
-	test "PackageIndexUpdated with max_age" do
+	test "package index is updated when using a max_age" do
 		p = %PackageIndexUpdated{max_age: 1800}
 		Runner.converge(p, TestingContext.get_context())
 	end
@@ -23,7 +23,7 @@ end
 defmodule Converge.PackageCacheEmptiedTest do
 	use ExUnit.Case
 
-	test "PackageCacheEmptied" do
+	test "package cache is emptied" do
 		p = %PackageCacheEmptied{}
 		Runner.converge(p, TestingContext.get_context())
 	end
@@ -34,7 +34,7 @@ defmodule Converge.PackagesMarkedAutoInstalledTest do
 	use ExUnit.Case
 
 	@tag :slow
-	test "PackagesMarkedAutoInstalled" do
+	test "packages are marked auto" do
 		# setup
 		p = %MetaPackageInstalled{name: "converge-pmai-test-1", depends: []}
 		Runner.converge(p, TestingContext.get_context())
@@ -52,7 +52,7 @@ defmodule Converge.PackagesMarkedManualInstalledTest do
 	use ExUnit.Case
 
 	@tag :slow
-	test "PackagesMarkedManualInstalled" do
+	test "packages are marked manual" do
 		# setup
 		p = %MetaPackageInstalled{name: "converge-pmmi-test", depends: ["fortunes-mario", "fortunes-br"]}
 		Runner.converge(p, TestingContext.get_context())
@@ -67,6 +67,22 @@ defmodule Converge.PackagesMarkedManualInstalledTest do
 		p = %PackagesMarkedAutoInstalled{names: ["converge-pmmi-test", "fortunes-mario", "fortunes-br"]}
 		Runner.converge(p, TestingContext.get_context())
 		p = %DanglingPackagesPurged{}
+		Runner.converge(p, TestingContext.get_context())
+	end
+end
+
+
+defmodule Converge.PackagePurgedTest do
+	use ExUnit.Case
+
+	@tag :slow
+	test "package is purged" do
+		# setup
+		p = %MetaPackageInstalled{name: "converge-package-purged-test", depends: []}
+		Runner.converge(p, TestingContext.get_context())
+
+		# test
+		p = %PackagePurged{name: "converge-package-purged-test"}
 		Runner.converge(p, TestingContext.get_context())
 	end
 end

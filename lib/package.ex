@@ -70,6 +70,10 @@ end
 
 
 defmodule Converge.PackagesMarkedAutoInstalled do
+	@moduledoc """
+	Packages `names` are marked auto-installed (if nothing depends on them,
+	they will be automatically removed by `apt-get autoremove`).
+	"""
 	@enforce_keys [:names]
 	defstruct names: []
 end
@@ -89,6 +93,10 @@ end
 
 
 defmodule Converge.PackagesMarkedManualInstalled do
+	@moduledoc """
+	Packages `names` are marked manual-installed (they will not be automatically
+	removed by `apt-get autoremove`).
+	"""
 	@enforce_keys [:names]
 	defstruct names: []
 end
@@ -103,6 +111,36 @@ defimpl Unit, for: Converge.PackagesMarkedManualInstalled do
 
 	def meet(u, ctx) do
 		{_, 0} = System.cmd("apt-mark", ["manual", "--"] ++ u.names)
+	end
+end
+
+
+defmodule Converge.PackagePurged do
+	@moduledoc """
+	Package `name` is removed and purged (no configuration files left behind).
+	"""
+	@enforce_keys [:name]
+	defstruct name: nil
+end
+
+defimpl Unit, for: Converge.PackagePurged do
+	def met?(u) do
+		{out, status} = System.cmd("dpkg-query", ["--status", "--", u.name], stderr_to_stdout: true)
+		case status do
+			1 ->
+				String.match?(out, ~r"""
+					^dpkg-query: package '#{u.name}' is not installed \
+					and no information is available\
+					""")
+			_ -> false
+		end
+	end
+
+	def meet(u, _) do
+		env = [
+			{"DEBIAN_FRONTEND", "noninteractive"}
+		]
+		{_, 0} = System.cmd("apt-get", ["remove", "--purge", "-y", "--", u.name], env: env)
 	end
 end
 
@@ -167,7 +205,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 	end
 
 	defp met_identical_package_installed?(u) do
-		{out, status} = System.cmd("dpkg-query", ["--status", u.name], stderr_to_stdout: true)
+		{out, status} = System.cmd("dpkg-query", ["--status", "--", u.name], stderr_to_stdout: true)
 		case status do
 			0 ->
 				control = out |> String.split("\n")
