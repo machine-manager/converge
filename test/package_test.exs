@@ -53,7 +53,7 @@ defmodule Converge.MetaPackageInstalledTest do
 	end
 
 	defp package_installed(name) do
-		{out, code} = System.cmd("dpkg", ["-l"])
+		{out, 0} = System.cmd("dpkg", ["-l"])
 		lines = StringUtil.grep(out, ~r"^ii\s+#{name}\s+")
 		case lines do
 			[] -> false
