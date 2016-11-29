@@ -46,6 +46,31 @@ defimpl Unit, for: Converge.PackageCacheEmptied do
 end
 
 
+defmodule Converge.DanglingPackagesPurged do
+	@moduledoc """
+	All auto-installed packages that are no longer depended-on are purged.
+	"""
+	defstruct []
+end
+
+defimpl Unit, for: Converge.DanglingPackagesPurged do
+	def met?(_) do
+		{out, 0} = System.cmd("apt-get", ["autoremove", "--purge", "--simulate"])
+		actions = out
+			|> String.split("\n")
+			|> Enum.filter(&(String.match?(&1, ~r"^Purg ")))
+		case actions do
+			[] -> true
+			_  -> false
+		end
+	end
+
+	def meet(_, _) do
+		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y"])
+	end
+end
+
+
 defmodule Converge.MetaPackageInstalled do
 	@moduledoc """
 	A metapackage (one that just depends on other packages) is installed.
@@ -74,7 +99,6 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		]
 		dpkg_opts = ["-o", "Dpkg::Options::=--force-confdef", "-o", "Dpkg::Options::=--force-confold"]
 		{_, 0} = System.cmd("apt-get", ["install", "-y"] ++ dpkg_opts ++ [deb], env: env)
-		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y"], env: env)
 	end
 
 	@spec make_control(%Converge.MetaPackageInstalled{}) :: %Debpress.Control{}
@@ -128,20 +152,17 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 	end
 
 	@docp """
-	`true` if `apt-get -f install` doesn't need to do anything and there are no
-	packages that can be autoremoved.
+	`true` if `apt-get -f install` doesn't need to do anything.
 	"""
 	defp met_nothing_to_fix?() do
 		{out, 0} = System.cmd("apt-get", ["--simulate", "--fix-broken", "install"])
-		need_autoremove = String.match?(out, ~r"The following packages were automatically installed and are no longer required:")
 		actions = out
 			|> String.split("\n")
 			|> Enum.filter(&(String.match?(&1, ~r"^(Inst|Conf|Remv) ")))
-		met = case actions do
+		case actions do
 			[] -> true
 			_  -> false
 		end
-		met and not need_autoremove
 	end
 
 	defp get_control_line(lines, name) do

@@ -1,4 +1,4 @@
-alias Converge.{PackageIndexUpdated, PackageCacheEmptied, MetaPackageInstalled, Runner}
+alias Converge.{PackageIndexUpdated, PackageCacheEmptied, MetaPackageInstalled, DanglingPackagesPurged, Runner}
 alias Converge.TestHelpers.TestingContext
 
 defmodule Converge.PackageIndexUpdatedTest do
@@ -33,13 +33,30 @@ defmodule Converge.MetaPackageInstalledTest do
 	test "packages are installed and removed as needed" do
 		name = "converge-meta-package-installed-test"
 
-		p = %MetaPackageInstalled{name: name, depends: ["fortune", "fortunes-eo"]}
+		p = %MetaPackageInstalled{name: name, depends: ["fortune-mod", "fortunes-eo"]}
 		Runner.converge(p, TestingContext.get_context())
+		assert package_installed("fortune-mod")
+		assert package_installed("fortunes-eo")
 
 		p = %MetaPackageInstalled{name: name, depends: []}
 		Runner.converge(p, TestingContext.get_context())
 
+		# Make sure those `depends:` were actually removed
+		p = %DanglingPackagesPurged{}
+		Runner.converge(p, TestingContext.get_context())
+		assert not package_installed("fortune-mod")
+		assert not package_installed("fortunes-eo")
+
 		p = %MetaPackageInstalled{name: name, depends: []}
 		Runner.converge(p, TestingContext.get_context())
+	end
+
+	# Unsafe function only for use by these tests
+	defp package_installed(name) do
+		{_, code} = System.cmd("sh", ["-c", "dpkg -l | grep -P 'ii\s+#{name}\s+'"])
+		case code do
+			0 -> true
+			1 -> false
+		end
 	end
 end
