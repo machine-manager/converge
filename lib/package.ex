@@ -88,6 +88,25 @@ defimpl Unit, for: Converge.PackagesMarkedAutoInstalled do
 end
 
 
+defmodule Converge.PackagesMarkedManualInstalled do
+	@enforce_keys [:names]
+	defstruct names: []
+end
+
+defimpl Unit, for: Converge.PackagesMarkedManualInstalled do
+	def met?(u) do
+		{out, 0} = System.cmd("apt-mark", ["showmanual"])
+		installed_manual = out |> String.split("\n") |> MapSet.new
+		diff = MapSet.difference(MapSet.new(u.names), installed_manual)
+		MapSet.size(diff) == 0
+	end
+
+	def meet(u, ctx) do
+		{_, 0} = System.cmd("apt-mark", ["manual", "--"] ++ u.names)
+	end
+end
+
+
 defmodule Converge.MetaPackageInstalled do
 	@moduledoc """
 	A metapackage (one that just depends on other packages) is installed.

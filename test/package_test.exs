@@ -1,7 +1,8 @@
 alias Gears.StringUtil
 alias Converge.{
 	PackageIndexUpdated, PackageCacheEmptied, PackagesMarkedAutoInstalled,
-	DanglingPackagesPurged, MetaPackageInstalled, Runner}
+	PackagesMarkedManualInstalled, DanglingPackagesPurged, MetaPackageInstalled,
+	Runner}
 alias Converge.TestHelpers.TestingContext
 
 defmodule Converge.PackageIndexUpdatedTest do
@@ -32,6 +33,7 @@ end
 defmodule Converge.PackagesMarkedAutoInstalledTest do
 	use ExUnit.Case
 
+	@tag :slow
 	test "PackagesMarkedAutoInstalled" do
 		# setup
 		p = %MetaPackageInstalled{name: "converge-pmai-test-1", depends: []}
@@ -41,6 +43,30 @@ defmodule Converge.PackagesMarkedAutoInstalledTest do
 
 		# test
 		p = %PackagesMarkedAutoInstalled{names: ["converge-pmai-test-1", "converge-pmai-test-2"]}
+		Runner.converge(p, TestingContext.get_context())
+	end
+end
+
+
+defmodule Converge.PackagesMarkedManualInstalledTest do
+	use ExUnit.Case
+
+	@tag :slow
+	test "PackagesMarkedManualInstalled" do
+		# setup
+		p = %MetaPackageInstalled{name: "converge-pmmi-test", depends: ["fortunes-mario", "fortunes-br"]}
+		Runner.converge(p, TestingContext.get_context())
+
+		# test
+		p = %PackagesMarkedManualInstalled{names: ["fortunes-mario", "fortunes-br"]}
+		Runner.converge(p, TestingContext.get_context())
+		p = %PackagesMarkedManualInstalled{names: ["fortunes-mario"]}
+		Runner.converge(p, TestingContext.get_context())
+
+		# "cleanup"
+		p = %PackagesMarkedAutoInstalled{names: ["converge-pmmi-test", "fortunes-mario", "fortunes-br"]}
+		Runner.converge(p, TestingContext.get_context())
+		p = %DanglingPackagesPurged{}
 		Runner.converge(p, TestingContext.get_context())
 	end
 end
@@ -61,7 +87,8 @@ defmodule Converge.MetaPackageInstalledTest do
 		p = %MetaPackageInstalled{name: name, depends: []}
 		Runner.converge(p, TestingContext.get_context())
 
-		# Make sure those `depends:` were actually removed
+		# Make sure the old `depends:` are no longer depended-on by removing
+		# autoinstalled packages.
 		p = %DanglingPackagesPurged{}
 		Runner.converge(p, TestingContext.get_context())
 		assert not package_installed("fortune-mod")
