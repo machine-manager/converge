@@ -64,6 +64,14 @@ end
 
 
 defmodule Converge.GroupUtil do
+	def get_groups() do
+		File.read!("/etc/group")
+		|> String.trim_trailing("\n")
+		|> String.split("\n")
+		|> Enum.map(&group_line_to_tuple/1)
+		|> Enum.into(%{})
+	end
+
 	defp group_line_to_tuple(line) do
 		[name, "x", gid_s, members_s] = String.split(line, ":")
 		{gid, ""} = Integer.parse(gid_s)
@@ -72,14 +80,6 @@ defmodule Converge.GroupUtil do
 			s  -> s |> String.split(",")
 		end
 		{name, %{gid: gid, members: members}}
-	end
-
-	def get_groups() do
-		File.read!("/etc/group")
-		|> String.trim_trailing("\n")
-		|> String.split("\n")
-		|> Enum.map(&group_line_to_tuple/1)
-		|> Enum.into(%{})
 	end
 end
 
