@@ -16,10 +16,6 @@ defmodule Converge.UserUtil do
 		|> Enum.into(%{})
 	end
 
-	def crypted_password_is_locked(crypted_password) do
-		crypted_password |> String.starts_with?("!")
-	end
-
 	defp shadow_line_to_tuple(line) do
 		[name, crypted_password, _] = String.split(line, ":", parts: 3)
 		{name,
@@ -30,21 +26,15 @@ defmodule Converge.UserUtil do
 		}
 	end
 
+	def crypted_password_is_locked(crypted_password) do
+		crypted_password |> String.starts_with?("!")
+	end
+
 	defp passwd_line_to_tuple(line) do
 		[name, "x", uid_s, gid_s, comment, home, shell] = String.split(line, ":")
 		{uid, ""} = Integer.parse(uid_s)
 		{gid, ""} = Integer.parse(gid_s)
 		{name, %{uid: uid, gid: gid, comment: comment, home: home, shell: shell}}
-	end
-
-	defp get_login_defs_integer(regexp) do
-		File.read!("/etc/login.defs")
-		|> String.split("\n")
-		|> Enum.filter(&Regex.match?(regexp, &1))
-		|> List.first
-		|> String.split(~r"\s")
-		|> List.last
-		|> String.to_integer
 	end
 
 	@doc """
@@ -59,6 +49,16 @@ defmodule Converge.UserUtil do
 	"""
 	def get_uid_max() do
 		get_login_defs_integer(~r/^UID_MAX\s/)
+	end
+
+	defp get_login_defs_integer(regexp) do
+		File.read!("/etc/login.defs")
+		|> String.split("\n")
+		|> Enum.filter(&Regex.match?(regexp, &1))
+		|> List.first
+		|> String.split(~r"\s")
+		|> List.last
+		|> String.to_integer
 	end
 end
 
