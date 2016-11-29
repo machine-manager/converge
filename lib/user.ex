@@ -38,14 +38,14 @@ defmodule Converge.UserUtil do
 	end
 
 	@doc """
-	Get the minimum UID for non-system users.
+	Get the minimum UID for regular users created by useradd.
 	"""
 	def get_uid_min() do
 		get_login_defs_integer(~r/^UID_MIN\s/)
 	end
 
 	@doc """
-	Get the maximum UID for non-system users.
+	Get the maximum UID for regular users created by useradd.
 	"""
 	def get_uid_max() do
 		get_login_defs_integer(~r/^UID_MAX\s/)
@@ -88,7 +88,7 @@ defmodule Converge.User do
 	@moduledoc """
 	See the documentation for `Converge.UserPresent`.
 
-	`User` is used only by `NonSystemUsersPresent`, so it does not implement `Unit`.
+	`User` is used only by `RegularUsersPresent`, so it does not implement `Unit`.
 	"""
 	@enforce_keys [:name, :home, :shell]
 	defstruct \
@@ -105,9 +105,10 @@ defmodule Converge.UserPresent do
 	will be automatically assigned for new users, or left unchanged for existing
 	users.  New users will be locked by default (`crypted_password == "!"`).
 
-	New users will be a non-system user with a home directory, created as needed.
+	New users will be a regular (i.e. non-system) user with a home directory,
+	created as needed.
 
-	Use `NonSystemUsers` instead of `UserPresent` directly, to avoid leaving
+	Use `RegularUsers` instead of `UserPresent` directly, to avoid leaving
 	behind unwanted users after removing a `UserPresent` unit in a configuration.
 	"""
 	@enforce_keys [:name, :home, :shell]
@@ -277,14 +278,14 @@ defimpl Unit, for: Converge.UserMissing do
 end
 
 
-defmodule Converge.NonSystemUsersPresent do
+defmodule Converge.RegularUsersPresent do
 	@moduledoc """
-	A set of non-system users exist in the user database.
+	A set of regular (i.e. non-system) users exist in the user database.
 
 	Use this instead of `UserPresent`, `UserDisabled`, or `UserMissing`,
 	because it will automatically disable users that are no longer defined here.
 
-	Non-system users that currently exist, but should not, will be disabled.
+	Regular users that currently exist, but should not, will be disabled.
 
 	`users` should be a list of `Converge.User` structs.
 	"""
@@ -292,7 +293,7 @@ defmodule Converge.NonSystemUsersPresent do
 	defstruct users: nil
 end
 
-defimpl Unit, for: Converge.NonSystemUsersPresent do
+defimpl Unit, for: Converge.RegularUsersPresent do
 	alias Converge.{UserUtil, UserPresent, UserDisabled}
 
 	def met?(u) do
@@ -311,15 +312,15 @@ defimpl Unit, for: Converge.NonSystemUsersPresent do
 			if user.uid != nil && not (user.uid >= uid_min && user.uid <= uid_max) do
 				raise UnitError, message:
 					"""
-					UID for non-system user #{inspect user.name} must be \
+					UID for regular user #{inspect user.name} must be \
 					>= #{uid_min} and <= #{uid_max}; was #{inspect user.uid}
 					"""
 			end
 			user_to_userpresent(user)
 		end
 
-		# Usernames of existing non-system users on the system
-		non_system_user_usernames =
+		# Usernames of existing regular users in the user database
+		regular_user_usernames =
 			UserUtil.get_users()
 			|> Enum.filter(fn {_, user} ->
 					user.uid >= uid_min &&
@@ -327,14 +328,14 @@ defimpl Unit, for: Converge.NonSystemUsersPresent do
 			|> Enum.map(fn {name, _} -> name end)
 			|> MapSet.new
 
-		# Usernames of non-system users we want to exist
+		# Usernames of regular users we want to exist
 		wanted_user_usernames =
 			u.users
 			|> Enum.map(fn user -> user.name end)
 			|> MapSet.new
 
 		userdisabled_units =
-			MapSet.difference(non_system_user_usernames, wanted_user_usernames)
+			MapSet.difference(regular_user_usernames, wanted_user_usernames)
 			|> Enum.map(fn name -> %UserDisabled{name: name} end)
 
 		%Converge.All{units: userpresent_units ++ userdisabled_units}
