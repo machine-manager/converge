@@ -313,6 +313,13 @@ defimpl Unit, for: Converge.NonSystemUsersPresent do
 					user.uid <= uid_max end)
 
 		users_present = for user <- u.users do
+			if user.uid != nil && not (user.uid >= uid_min && user.uid <= uid_max) do
+				raise UnitError, message:
+					"""
+					UID for non-system user #{inspect user.name} must be \
+					>= #{uid_min} and <= #{uid_max}; was #{inspect user.uid}
+					"""
+			end
 			# Convert a User into a UserPresent
 			%UserPresent{
 				name:             user.name,

@@ -176,4 +176,19 @@ defmodule Converge.NonSystemUsersPresentTest do
 		u = %Converge.NonSystemUsersPresent{users: users}
 		Runner.converge(u, SilentReporter)
 	end
+
+	test "raises UnitError if given a UID below the range of non-system users" do
+		user = %Converge.User{name: "converge-invalid", home: "/home/converge-invalid", shell: "/bin/zsh", uid: 0}
+		u = %Converge.NonSystemUsersPresent{users: [user]}
+		assert_raise UnitError, ~r"^UID for non-system user",
+			fn -> Runner.converge(u, SilentReporter) end
+	end
+
+	test "raises UnitError if given a UID above the range of non-system users" do
+		uid_max = UserUtil.get_uid_max()
+		user = %Converge.User{name: "converge-invalid", home: "/home/converge-invalid", shell: "/bin/zsh", uid: uid_max + 1}
+		u = %Converge.NonSystemUsersPresent{users: [user]}
+		assert_raise UnitError, ~r"^UID for non-system user",
+			fn -> Runner.converge(u, SilentReporter) end
+	end
 end
