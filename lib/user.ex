@@ -293,17 +293,42 @@ defmodule Converge.NonSystemUsersPresent do
 end
 
 defimpl Unit, for: Converge.NonSystemUsersPresent do
+	alias Converge.{UserUtil, UserPresent}
+
 	def met?(u) do
-		# TODO: need to determine if user is a system user
-
-		# name, uid, gid, comment, home, shell, locked, crypted_password
-
-		# make a Converge.All with UserPresent/UserDisabled units
-		# run met? on it
+		Unit.met?(make_unit(u))
 	end
 
-	def meet(u, _) do
-		# make a Converge.All with UserPresent/UserDisabled units
-		# run meet on it
+	def meet(u, rep) do
+		Converge.Runner.converge(make_unit(u), rep)
+	end
+
+	def make_unit(u) do
+		uid_min = UserUtil.get_uid_min()
+		uid_max = UserUtil.get_uid_max()
+		non_system_users =
+			UserUtil.get_users()
+			|> Enum.filter(fn {_, user} ->
+					user.uid >= uid_min &&
+					user.uid <= uid_max end)
+
+		users_present = for user <- u.users do
+			# Convert a User into a UserPresent
+			%UserPresent{
+				name:             user.name,
+				uid:              user.uid,
+				gid:              user.gid,
+				comment:          user.comment,
+				home:             user.home,
+				shell:            user.shell,
+				locked:           user.locked,
+				crypted_password: user.crypted_password
+			}
+		end
+
+		# TODO
+		users_missing = []
+
+		%Converge.All{units: users_present ++ users_missing}
 	end
 end

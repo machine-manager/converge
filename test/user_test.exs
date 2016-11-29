@@ -162,3 +162,18 @@ defmodule Converge.UserMissingTest do
 		Runner.converge(%Converge.UserMissing{name: name}, SilentReporter)
 	end
 end
+
+
+defmodule Converge.NonSystemUsersPresentTest do
+	use ExUnit.Case, async: true
+
+	test "creates multiple users as needed" do
+		users = [
+			%Converge.User{name: "converge-nsup-1", home: "/home/converge-nsup-1", shell: "/bin/zsh"},
+			%Converge.User{name: "converge-nsup-2", home: "/home/converge-nsup-2", shell: "/bin/zsh"},
+			%Converge.User{name: "converge-nsup-3", home: "/home/converge-nsup-3", shell: "/bin/zsh"},
+		]
+		u = %Converge.NonSystemUsersPresent{users: users}
+		Runner.converge(u, SilentReporter)
+	end
+end
