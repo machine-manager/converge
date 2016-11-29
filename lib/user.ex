@@ -37,7 +37,7 @@ defmodule Converge.UserUtil do
 		{name, %{uid: uid, gid: gid, comment: comment, home: home, shell: shell}}
 	end
 
-	defp get_login_defs_number(regexp) do
+	defp get_login_defs_integer(regexp) do
 		File.read!("/etc/login.defs")
 		|> String.split("\n")
 		|> Enum.filter(&Regex.match?(regexp, &1))
@@ -51,14 +51,14 @@ defmodule Converge.UserUtil do
 	Get the minimum UID for non-system users.
 	"""
 	def get_uid_min() do
-		get_login_defs_number(~r/^UID_MIN\s/)
+		get_login_defs_integer(~r/^UID_MIN\s/)
 	end
 
 	@doc """
 	Get the maximum UID for non-system users.
 	"""
 	def get_uid_max() do
-		get_login_defs_number(~r/^UID_MAX\s/)
+		get_login_defs_integer(~r/^UID_MAX\s/)
 	end
 end
 
