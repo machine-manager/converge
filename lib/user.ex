@@ -293,7 +293,7 @@ defmodule Converge.NonSystemUsersPresent do
 end
 
 defimpl Unit, for: Converge.NonSystemUsersPresent do
-	alias Converge.{UserUtil, UserPresent}
+	alias Converge.{UserUtil, UserPresent, UserDisabled}
 
 	def met?(u) do
 		Unit.met?(make_unit(u))
@@ -306,13 +306,8 @@ defimpl Unit, for: Converge.NonSystemUsersPresent do
 	def make_unit(u) do
 		uid_min = UserUtil.get_uid_min()
 		uid_max = UserUtil.get_uid_max()
-		non_system_users =
-			UserUtil.get_users()
-			|> Enum.filter(fn {_, user} ->
-					user.uid >= uid_min &&
-					user.uid <= uid_max end)
 
-		users_present = for user <- u.users do
+		userpresent_units = for user <- u.users do
 			if user.uid != nil && not (user.uid >= uid_min && user.uid <= uid_max) do
 				raise UnitError, message:
 					"""
@@ -320,22 +315,41 @@ defimpl Unit, for: Converge.NonSystemUsersPresent do
 					>= #{uid_min} and <= #{uid_max}; was #{inspect user.uid}
 					"""
 			end
-			# Convert a User into a UserPresent
-			%UserPresent{
-				name:             user.name,
-				uid:              user.uid,
-				gid:              user.gid,
-				comment:          user.comment,
-				home:             user.home,
-				shell:            user.shell,
-				locked:           user.locked,
-				crypted_password: user.crypted_password
-			}
+			user_to_userpresent(user)
 		end
 
-		# TODO
-		users_missing = []
+		# Usernames of existing non-system users on the system
+		non_system_user_usernames =
+			UserUtil.get_users()
+			|> Enum.filter(fn {_, user} ->
+					user.uid >= uid_min &&
+					user.uid <= uid_max end)
+			|> Enum.map(fn {name, _} -> name end)
+			|> MapSet.new
 
-		%Converge.All{units: users_present ++ users_missing}
+		# Usernames of non-system users we want to exist
+		wanted_user_usernames =
+			u.users
+			|> Enum.map(fn user -> user.name end)
+			|> MapSet.new
+
+		userdisabled_units =
+			MapSet.difference(non_system_user_usernames, wanted_user_usernames)
+			|> Enum.map(fn name -> %UserDisabled{name: name} end)
+
+		%Converge.All{units: userpresent_units ++ userdisabled_units}
+	end
+
+	defp user_to_userpresent(user) do
+		%UserPresent{
+			name:             user.name,
+			uid:              user.uid,
+			gid:              user.gid,
+			comment:          user.comment,
+			home:             user.home,
+			shell:            user.shell,
+			locked:           user.locked,
+			crypted_password: user.crypted_password
+		}
 	end
 end
