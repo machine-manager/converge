@@ -121,15 +121,6 @@ defimpl Unit, for: Converge.UserPresent do
 	import ExUnit.Assertions, only: [assert: 2]
 	alias Converge.UserUtil
 
-	@docp """
-	Take a map and return a new map without any k/v pairs that have a nil value
-	"""
-	defp without_nil_values(m) do
-		m
-		|> Enum.filter(fn {_, v} -> v != nil end)
-		|> Enum.into(%{})
-	end
-
 	def met?(u) do
 		ensure_password_and_locked_consistency(u)
 		user = UserUtil.get_users()[u.name]
@@ -142,6 +133,24 @@ defimpl Unit, for: Converge.UserPresent do
 				current = user |> Map.take(Map.keys(wanted))
 				current == wanted
 		end
+	end
+
+	def meet(u, _) do
+		ensure_password_and_locked_consistency(u)
+		exists = UserUtil.get_users() |> Map.has_key?(u.name)
+		case exists do
+			true  -> meet_modify(u)
+			false -> meet_add(u)
+		end
+	end
+
+	@docp """
+	Take a map and return a new map without any k/v pairs that have a nil value
+	"""
+	defp without_nil_values(m) do
+		m
+		|> Enum.filter(fn {_, v} -> v != nil end)
+		|> Enum.into(%{})
 	end
 
 	@docp """
@@ -199,15 +208,6 @@ defimpl Unit, for: Converge.UserPresent do
 				Not copying any file from skel directory into it.
 				""",
 			"Unexpected output from useradd: #{inspect out}"
-	end
-
-	def meet(u, _) do
-		ensure_password_and_locked_consistency(u)
-		exists = UserUtil.get_users() |> Map.has_key?(u.name)
-		case exists do
-			true  -> meet_modify(u)
-			false -> meet_add(u)
-		end
 	end
 end
 
