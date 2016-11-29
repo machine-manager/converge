@@ -167,14 +167,29 @@ end
 defmodule Converge.NonSystemUsersPresentTest do
 	use ExUnit.Case, async: true
 
-	test "creates multiple users as needed" do
-		users = [
+	test "creates multiple users as needed, and disables any users not given" do
+		# Include the non-converge-tests users on the system, so that this
+		# test doesn't disable them.
+		users = get_non_converge_non_system_users() ++ [
 			%Converge.User{name: "converge-nsup-1", home: "/home/converge-nsup-1", shell: "/bin/zsh"},
 			%Converge.User{name: "converge-nsup-2", home: "/home/converge-nsup-2", shell: "/bin/zsh"},
 			%Converge.User{name: "converge-nsup-3", home: "/home/converge-nsup-3", shell: "/bin/zsh"},
 		]
 		u = %Converge.NonSystemUsersPresent{users: users}
 		Runner.converge(u, SilentReporter)
+	end
+
+	defp get_non_converge_non_system_users() do
+		uid_min = UserUtil.get_uid_min()
+		uid_max = UserUtil.get_uid_max()
+		UserUtil.get_users()
+		|> Enum.filter(fn {_, user} ->
+				user.uid >= uid_min &&
+				user.uid <= uid_max end)
+		|> Enum.filter(fn {name, _} ->
+				name |> String.starts_with?("converge-") |> Kernel.not end)
+		|> Enum.map(fn {name, user} ->
+				%Converge.User{name: name, home: user.home, shell: user.shell} end)
 	end
 
 	test "raises UnitError if given a UID below the range of non-system users" do
