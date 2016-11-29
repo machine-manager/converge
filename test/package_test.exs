@@ -1,3 +1,4 @@
+alias Gears.StringUtil
 alias Converge.{PackageIndexUpdated, PackageCacheEmptied, MetaPackageInstalled, DanglingPackagesPurged, Runner}
 alias Converge.TestHelpers.TestingContext
 
@@ -51,12 +52,12 @@ defmodule Converge.MetaPackageInstalledTest do
 		Runner.converge(p, TestingContext.get_context())
 	end
 
-	# Unsafe function only for use by these tests
 	defp package_installed(name) do
-		{_, code} = System.cmd("sh", ["-c", "dpkg -l | grep -P 'ii\s+#{name}\s+'"])
-		case code do
-			0 -> true
-			1 -> false
+		{out, code} = System.cmd("dpkg", ["-l"])
+		lines = StringUtil.grep(out, ~r"^ii\s+#{name}\s+")
+		case lines do
+			[] -> false
+			_  -> true
 		end
 	end
 end

@@ -1,4 +1,4 @@
-alias Gears.FileUtil
+alias Gears.{FileUtil, StringUtil}
 alias Converge.Unit
 
 defmodule Converge.PackageIndexUpdated do
@@ -56,9 +56,7 @@ end
 defimpl Unit, for: Converge.DanglingPackagesPurged do
 	def met?(_) do
 		{out, 0} = System.cmd("apt-get", ["autoremove", "--purge", "--simulate"])
-		actions = out
-			|> String.split("\n")
-			|> Enum.filter(&(String.match?(&1, ~r"^Purg ")))
+		actions = StringUtil.grep(out, ~r"^Purg ")
 		case actions do
 			[] -> true
 			_  -> false
@@ -156,9 +154,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 	"""
 	defp met_nothing_to_fix?() do
 		{out, 0} = System.cmd("apt-get", ["--simulate", "--fix-broken", "install"])
-		actions = out
-			|> String.split("\n")
-			|> Enum.filter(&(String.match?(&1, ~r"^(Inst|Conf|Remv) ")))
+		actions = StringUtil.grep(out, ~r"^(Inst|Conf|Remv) ")
 		case actions do
 			[] -> true
 			_  -> false
