@@ -15,9 +15,9 @@ defimpl Unit, for: Converge.All do
 			|> Enum.all?
 	end
 
-	def meet(u, rep) do
+	def meet(u, ctx) do
 		for unit <- u.units do
-			Converge.Runner.converge(unit, rep)
+			Converge.Runner.converge(unit, ctx)
 		end
 	end
 end

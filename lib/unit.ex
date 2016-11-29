@@ -1,9 +1,9 @@
 defprotocol Converge.Unit do
-	@doc "Returns true if the current state is the desired state"
+	@doc "Returns `true` if the current state is the desired state"
 	def met?(p)
 
-	@doc "Changes some state in a way that would satisfy met?"
-	def meet(p, rep)
+	@doc "Changes some state in a way that would satisfy `met?`"
+	def meet(p, ctx)
 end
 
 defmodule Converge.UnitError do

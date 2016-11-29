@@ -3,16 +3,21 @@ defmodule Converge.Reporter do
 		IO.write("#{inspect u}... ")
 	end
 
+	def already_met(_) do
+		IO.write("already met")
+	end
+
+	# Used when ctx.run_meet == false
+	def not_met(_) do
+		IO.write("not met")
+	end
+
 	def meeting(_) do
 		IO.write("meet()... ")
 	end
 
-	def already_met(_) do
-		IO.write("OK-already-met")
-	end
-
 	def just_met(_) do
-		IO.write("OK-just-met")
+		IO.write("just met")
 	end
 
 	def failed(_) do
@@ -24,26 +29,35 @@ defmodule Converge.Reporter do
 	end
 end
 
+defmodule Converge.Context do
+	@enforce_keys [:reporter, :run_meet]
+	defstruct reporter: nil, run_meet: nil
+end
+
 defmodule Converge.Runner do
 	alias Converge.{Unit, UnitError}
 
-	def converge(u, rep) do
-		apply(rep, :running, [u])
+	def converge(u, ctx) do
+		apply(ctx.reporter, :running, [u])
 		try do
 			if Unit.met?(u) do
-				apply(rep, :already_met, [u])
+				apply(ctx.reporter, :already_met, [u])
 			else
-				apply(rep, :meeting, [u])
-				Unit.meet(u, rep)
-				if Unit.met?(u) do
-					apply(rep, :just_met, [u])
+				if not ctx.run_meet do
+					apply(ctx.reporter, :not_met, [u])
 				else
-					apply(rep, :failed, [u])
-					raise UnitError, message: "Failed to converge: #{inspect u}"
+					apply(ctx.reporter, :meeting, [u])
+					Unit.meet(u, ctx)
+					if Unit.met?(u) do
+						apply(ctx.reporter, :just_met, [u])
+					else
+						apply(ctx.reporter, :failed, [u])
+						raise UnitError, message: "Failed to converge: #{inspect u}"
+					end
 				end
 			end
 		after
-			apply(rep, :done, [u])
+			apply(ctx.reporter, :done, [u])
 		end
 	end
 end

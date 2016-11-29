@@ -1,5 +1,5 @@
 alias Converge.{All, Unit, Runner}
-alias Converge.TestHelpers.{ConvergeableUnit, AlreadyConvergedUnit, SilentReporter}
+alias Converge.TestHelpers.{ConvergeableUnit, AlreadyConvergedUnit, TestingContext}
 
 defmodule Converge.AllTest do
 	use ExUnit.Case, async: true
@@ -21,7 +21,7 @@ defmodule Converge.AllTest do
 		u2  = ConvergeableUnit.new()
 		u3  = ConvergeableUnit.new()
 		all = %All{units: [u1, u2, u3]}
-		Runner.converge(all, SilentReporter)
+		Runner.converge(all, TestingContext.get_context())
 
 		# met? is run 3-4 times on the child units:
 		# 1. by All.met? (Only on the first unit, which returns false,

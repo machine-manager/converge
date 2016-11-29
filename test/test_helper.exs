@@ -38,8 +38,8 @@ end
 
 defmodule Converge.TestHelpers.ConvergeableUnit do
 	@moduledoc """
-	A unit that returns met?() -> false until meet() is called.  Used
-	for testing that met?() is called a second time after meet().
+	A unit that returns `met?()` -> `false` until `meet()` is called.
+	Used for testing that `met?` is called a second time after `meet()`.
 	"""
 	defstruct pid: nil
 
@@ -70,11 +70,22 @@ end
 
 defmodule Converge.TestHelpers.SilentReporter do
 	def running(_) do end
-	def meeting(_) do end
 	def already_met(_) do end
+	def not_met(_) do end
+	def meeting(_) do end
 	def just_met(_) do end
 	def failed(_) do end
 	def done(_) do end
+end
+
+
+defmodule Converge.TestHelpers.TestingContext do
+	alias Converge.Context
+	alias Converge.TestHelpers.SilentReporter
+
+	def get_context() do
+		%Context{reporter: SilentReporter, run_meet: true}
+	end
 end
 
 ExUnit.start()

@@ -300,8 +300,8 @@ defimpl Unit, for: Converge.RegularUsersPresent do
 		Unit.met?(make_unit(u))
 	end
 
-	def meet(u, rep) do
-		Converge.Runner.converge(make_unit(u), rep)
+	def meet(u, ctx) do
+		Converge.Runner.converge(make_unit(u), ctx)
 	end
 
 	def make_unit(u) do
