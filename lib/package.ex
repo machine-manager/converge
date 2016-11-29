@@ -145,7 +145,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 
 	defp met_marked_as_manual?(u) do
 		{out, 0} = System.cmd("apt-mark", ["showmanual"])
-		installed_manual = out |> String.split("\n") |> Enum.into(MapSet.new())
+		installed_manual = out |> String.split("\n") |> MapSet.new
 		installed_manual |> MapSet.member?(u.name)
 	end
 
