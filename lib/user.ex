@@ -9,11 +9,11 @@ defmodule Converge.UserUtil do
 			|> Enum.into(%{})
 
 		File.read!("/etc/passwd")
-			|> String.trim_trailing("\n")
-			|> String.split("\n")
-			|> Enum.map(&passwd_line_to_tuple/1)
-			|> Enum.map(fn {name, details} -> {name, Map.merge(details, shadow[name])} end)
-			|> Enum.into(%{})
+		|> String.trim_trailing("\n")
+		|> String.split("\n")
+		|> Enum.map(&passwd_line_to_tuple/1)
+		|> Enum.map(fn {name, details} -> {name, Map.merge(details, shadow[name])} end)
+		|> Enum.into(%{})
 	end
 
 	def crypted_password_is_locked(crypted_password) do
