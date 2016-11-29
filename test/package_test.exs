@@ -1,5 +1,7 @@
 alias Gears.StringUtil
-alias Converge.{PackageIndexUpdated, PackageCacheEmptied, MetaPackageInstalled, DanglingPackagesPurged, Runner}
+alias Converge.{
+	PackageIndexUpdated, PackageCacheEmptied, PackagesMarkedAutoInstalled,
+	DanglingPackagesPurged, MetaPackageInstalled, Runner}
 alias Converge.TestHelpers.TestingContext
 
 defmodule Converge.PackageIndexUpdatedTest do
@@ -22,6 +24,23 @@ defmodule Converge.PackageCacheEmptiedTest do
 
 	test "PackageCacheEmptied" do
 		p = %PackageCacheEmptied{}
+		Runner.converge(p, TestingContext.get_context())
+	end
+end
+
+
+defmodule Converge.PackagesMarkedAutoInstalledTest do
+	use ExUnit.Case
+
+	test "PackagesMarkedAutoInstalled" do
+		# setup
+		p = %MetaPackageInstalled{name: "converge-pmai-test-1", depends: []}
+		Runner.converge(p, TestingContext.get_context())
+		p = %MetaPackageInstalled{name: "converge-pmai-test-2", depends: []}
+		Runner.converge(p, TestingContext.get_context())
+
+		# test
+		p = %PackagesMarkedAutoInstalled{names: ["converge-pmai-test-1", "converge-pmai-test-2"]}
 		Runner.converge(p, TestingContext.get_context())
 	end
 end
