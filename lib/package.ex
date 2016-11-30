@@ -137,10 +137,7 @@ defimpl Unit, for: Converge.PackagePurged do
 	end
 
 	def meet(u, _) do
-		env = [
-			{"DEBIAN_FRONTEND", "noninteractive"}
-		]
-		{_, 0} = System.cmd("apt-get", ["remove", "--purge", "-y", "--", u.name], env: env)
+		{_, 0} = System.cmd("apt-get", ["remove", "--purge", "-y", "--", u.name])
 	end
 end
 
