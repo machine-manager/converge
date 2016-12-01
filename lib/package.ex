@@ -21,7 +21,9 @@ defimpl Unit, for: Converge.PackageIndexUpdated do
 	end
 
 	def meet(_, _) do
-		{_, 0} = System.cmd("apt-get", ["update"])
+		# `stderr_to_stdout: true` so that this message is not shown:
+		# "AppStream cache update completed, but some metadata was ignored due to errors."
+		{_, 0} = System.cmd("apt-get", ["update"], stderr_to_stdout: true)
 	end
 end
 
