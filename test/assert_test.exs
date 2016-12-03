@@ -1,5 +1,5 @@
 alias Converge.{Assert, Unit, UnitError}
-alias Converge.TestHelpers.{ConvergeableUnit, TestingContext}
+alias Converge.TestHelpers.ConvergeableUnit
 
 defmodule Converge.AssertTest do
 	use ExUnit.Case, async: true
