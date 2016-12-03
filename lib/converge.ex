@@ -48,20 +48,23 @@ defmodule Converge.Runner do
 
 	Returns `true` if `meet` was run, otherwise `false`.
 	"""
-	@spec converge(Converge.Unit, Converge.Reporter) :: boolean
+	@spec converge(Converge.Unit, Converge.Context) :: boolean
 	def converge(u, ctx) do
 		apply(ctx.reporter, :running, [u])
 		try do
 			if Unit.met?(u) do
 				apply(ctx.reporter, :already_met, [u])
+				false
 			else
 				if not ctx.run_meet do
 					apply(ctx.reporter, :not_met, [u])
+					false
 				else
 					apply(ctx.reporter, :meeting, [u])
 					Unit.meet(u, ctx)
 					if Unit.met?(u) do
 						apply(ctx.reporter, :just_met, [u])
+						true
 					else
 						apply(ctx.reporter, :failed, [u])
 						raise UnitError, message: "Failed to converge: #{inspect u}"
