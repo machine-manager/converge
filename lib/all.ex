@@ -11,8 +11,8 @@ end
 defimpl Unit, for: Converge.All do
 	def met?(u) do
 		u.units
-			|> Stream.map(&Unit.met?/1)
-			|> Enum.all?
+		|> Stream.map(&Unit.met?/1)
+		|> Enum.all?
 	end
 
 	def meet(u, ctx) do
