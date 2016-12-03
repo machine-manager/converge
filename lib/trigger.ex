@@ -14,9 +14,8 @@ defimpl Unit, for: Converge.Trigger do
 	end
 
 	def meet(u, ctx) do
-		modified = Runner.converge(u.unit, ctx)
-		if modified do
-			u.trigger.()
-		end
+		Runner.converge(u.unit, ctx)
+		# Note how Trigger.meet will only be called if the wrapped unit was unmet
+		u.trigger.()
 	end
 end
