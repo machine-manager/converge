@@ -3,6 +3,9 @@ alias Converge.Unit
 defmodule Converge.All do
 	@moduledoc """
 	All units in `units` are satisfied.
+
+	If any units conflict with each other, `All.met?` will return `false` when
+	called a second time by `Runner.converge`.
 	"""
 	@enforce_keys [:units]
 	defstruct units: []
