@@ -37,6 +37,18 @@ end
 defmodule Converge.Runner do
 	alias Converge.{Unit, UnitError}
 
+	@doc """
+	Converge unit `u`: run `met?` to check if state needs to be modified, and
+	it it does, run `meet`, then `met?` again to ensure that `meet` worked
+	correctly.  If `met?` returns `false` the second time, raise `UnitError`.
+
+	If `ctx.run_meet == false`, never run `meet` on units.
+
+	Everything is logged to `ctx.reporter`.
+
+	Returns `true` if `meet` was run, otherwise `false`.
+	"""
+	@spec converge(Converge.Unit, Converge.Reporter) :: boolean
 	def converge(u, ctx) do
 		apply(ctx.reporter, :running, [u])
 		try do
