@@ -2,7 +2,7 @@ alias Converge.{Unit, Runner}
 
 defmodule Converge.Trigger do
 	@moduledoc """
-	If meet() was run on `unit`, call `trigger`.
+	Wraps a unit to call anonymous function `trigger` only after `meet`.
 	"""
 	@enforce_keys [:unit, :trigger]
 	defstruct unit: nil, trigger: nil
@@ -14,8 +14,10 @@ defimpl Unit, for: Converge.Trigger do
 	end
 
 	def meet(u, ctx) do
-		Runner.converge(u.unit, ctx)
-		# Note how Trigger.meet will only be called if the wrapped unit was unmet
+		# Use Unit.meet directly instead of Runner.converge to avoid two extra
+		# redundant calls to Unit.met?(u.unit).  Effectively, we augment the unit
+		# instead of converging a child unit.
+		Unit.meet(u.unit, ctx)
 		u.trigger.()
 	end
 end
