@@ -69,13 +69,13 @@ end
 
 
 defmodule Converge.TestHelpers.SilentReporter do
-	def running(_) do end
-	def already_met(_) do end
-	def not_met(_) do end
-	def meeting(_) do end
-	def just_met(_) do end
-	def failed(_) do end
-	def done(_) do end
+	def running(_, _) do end
+	def already_met(_, _) do end
+	def not_met(_, _) do end
+	def meeting(_, _) do end
+	def just_met(_, _) do end
+	def failed(_, _) do end
+	def done(_, _) do end
 end
 
 

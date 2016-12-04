@@ -33,4 +33,12 @@ defmodule Converge.AllTest do
 		assert ConvergeableUnit.get_met_count(u2) == 3
 		assert ConvergeableUnit.get_met_count(u3) == 3
 	end
+
+	test "inspect shows the number of units, not the units themselves" do
+		u1 = ConvergeableUnit.new()
+
+		assert inspect(%All{units: [      ]}) == "%Converge.All{0 units}"
+		assert inspect(%All{units: [u1    ]}) == "%Converge.All{1 unit}"
+		assert inspect(%All{units: [u1, u1]}) == "%Converge.All{2 units}"
+	end
 end

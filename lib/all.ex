@@ -24,3 +24,14 @@ defimpl Unit, for: Converge.All do
 		end
 	end
 end
+
+defimpl Inspect, for: Converge.All do
+	def inspect(u, opts) do
+		len  = length(u.units)
+		word = case len do
+			1 -> "unit"
+			_ -> "units"
+		end
+		Inspect.Algebra.concat ["%Converge.All{#{len} #{word}}"]
+	end
+end
