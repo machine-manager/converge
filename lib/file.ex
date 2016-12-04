@@ -186,6 +186,26 @@ defimpl Unit, for: Converge.FilePresent do
 	end
 end
 
+defimpl Inspect, for: Converge.FilePresent do
+	def inspect(p, _opts) do
+		len  = p.content |> byte_size
+		word = case len do
+			1 -> "byte"
+			_ -> "bytes"
+		end
+		"""
+		%Converge.FilePresent{\
+		path: #{Kernel.inspect p.path}, \
+		content: #{len} #{word}, \
+		mode: #{Kernel.inspect p.mode, base: :octal}, \
+		immutable: #{Kernel.inspect p.immutable}, \
+		user: #{Kernel.inspect p.user}, \
+		group: #{Kernel.inspect p.group}\
+		}\
+		"""
+	end
+end
+
 
 defmodule Converge.SymlinkPresent do
 	@moduledoc """

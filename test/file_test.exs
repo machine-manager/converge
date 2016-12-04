@@ -85,6 +85,11 @@ defmodule Converge.FilePresentTest do
 		p = %FilePresent{path: @deleteme, content: "changed and mutable", mode: 0o600}
 		Runner.converge(p, TestingContext.get_context())
 	end
+
+	test "inspect shows content length, not contents; mode in octal" do
+		p = %FilePresent{path: "/tmp/not-written", content: "changed", mode: 0o600, immutable: true}
+		assert inspect(p) == ~s(%Converge.FilePresent{path: "/tmp/not-written", content: 7 bytes, mode: 0o600, immutable: true, user: "root", group: "root"})
+	end
 end
 
 defmodule Converge.SymlinkPresentTest do
