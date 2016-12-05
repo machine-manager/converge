@@ -60,24 +60,30 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 	end
 
 	def already_met(r, u, _) do
-		had_children = Agent.get(r.pid, fn(state) -> state.parents |> MapSet.member?(u) end)
-		depth = Agent.get(r.pid, fn(state) -> length(state.stack) end)
+		{had_children, depth} = Agent.get(r.pid, fn(state) -> {
+			state.parents |> MapSet.member?(u),
+			length(state.stack)
+		} end)
 		case had_children do
-			false -> IO.write(colorize(r, [:green], " [met already]"))
-			true  -> IO.write(colorize(r, [:green], "\n#{indent(depth)}^ [met already]"))
+			true  -> IO.write("\n#{indent(depth)}^ ")
+			false -> IO.write(" ")
 		end
+		IO.write(colorize(r, [:green], "[met already]"))
 	end
 
 	def should_meet(r, _, _) do
 	end
 
 	def just_met(r, u, ctx) do
-		had_children = Agent.get(r.pid, fn(state) -> state.parents |> MapSet.member?(u) end)
-		depth = Agent.get(r.pid, fn(state) -> length(state.stack) end)
+		{had_children, depth} = Agent.get(r.pid, fn(state) -> {
+			state.parents |> MapSet.member?(u),
+			length(state.stack)
+		} end)
 		case had_children do
-			false -> IO.write(colorize(r, [:bright, :black], " [met now]"))
-			true  -> IO.write(colorize(r, [:bright, :black], "\n#{indent(depth)}^ [met now]"))
+			true  -> IO.write("\n#{indent(depth)}^ ")
+			false -> IO.write(" ")
 		end
+		IO.write(colorize(r, [:bright, :black], "[met now]"))
 	end
 
 	def failed(r, _, _) do
