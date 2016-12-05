@@ -46,7 +46,7 @@ defimpl Converge.Reporter, for: Converge.TerminalReporter do
 			"""
 			#{colorize(r, color, which |> Atom.to_string)} \
 			#{indent(depth)}\
-			#{inspect u, syntax_colors: syntax_colors()}\
+			#{inspect u, safe: false, syntax_colors: syntax_colors()}\
 			""")
 	end
 
