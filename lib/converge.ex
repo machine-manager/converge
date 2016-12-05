@@ -56,10 +56,9 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 			false -> IO.write(" ")
 		end
 		{message, color} = case result do
-			:met_already -> {"[met already]", :green}
-			:met_now     -> {"[met now]",     [:inverse, :magenta]}
-			:needs_meet  -> {"[needs meet]",  [:bright,  :red]}
-			:failed      -> {"[failed]",      [:inverse, :red]}
+			:needs_meet -> {"[needs meet]",  [:bright,  :red]}
+			:ran_meet   -> {"[ran meet]",    [:inverse, :magenta]}
+			:met        -> {"[met]",         :green}
 		end
 		IO.write(colorize(r, color, message))
 		IO.write("\n")
@@ -107,7 +106,7 @@ defmodule Converge.Runner do
 		ctx.reporter |> Reporter.open(u, :met?)
 		met = Unit.met?(u, ctx)
 		result = case met do
-			true  -> :met_already
+			true  -> :met
 			false -> :needs_meet
 		end
 		ctx.reporter |> Reporter.close(u, result)
@@ -128,12 +127,8 @@ defmodule Converge.Runner do
 		if not met?(u, ctx) and ctx.run_meet do
 			ctx.reporter |> Reporter.open(u, :meet)
 			Unit.meet(u, ctx)
-			# Call Unit.met? instead of Runner.met? to avoid calling
-			# Reporter.met? a second time
-			if Unit.met?(u, ctx) do
-				ctx.reporter |> Reporter.close(u, :met_now)
-			else
-				ctx.reporter |> Reporter.close(u, :failed)
+			ctx.reporter |> Reporter.close(u, :ran_meet)
+			if not met?(u, ctx) do
 				raise UnitError, message: "Failed to converge: #{inspect u}"
 			end
 		end
