@@ -26,9 +26,15 @@ defimpl Unit, for: Converge.All do
 end
 
 defimpl Inspect, for: Converge.All do
+	import Inspect.Algebra
 	import Gears.StringUtil, only: [counted_noun: 3]
 
-	def inspect(u, _opts) do
-		~s(%Converge.All{#{counted_noun(length(u.units), "unit", "units")}})
+	def inspect(u, opts) do
+		len = length(u.units)
+		concat([
+			color("%Converge.All{", :map, opts),
+			counted_noun(len, "unit", "units"),
+			color("}",              :map, opts)
+		])
 	end
 end

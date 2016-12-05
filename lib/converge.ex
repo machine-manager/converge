@@ -43,7 +43,12 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 			:met? -> :yellow
 			:meet -> [:yellow, :inverse]
 		end
-		IO.write("#{colorize(r, color, which |> Atom.to_string)} #{indent(depth)}#{inspect u}")
+		IO.write(
+			"""
+			#{colorize(r, color, which |> Atom.to_string)} \
+			#{indent(depth)}\
+			#{inspect u, syntax_colors: syntax_colors()}\
+			""")
 	end
 
 	def close(r, u, result) do
@@ -56,9 +61,9 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 			false -> IO.write(" ")
 		end
 		{message, color} = case result do
-			:needs_meet -> {"[needs meet]",  [:bright,  :red]}
-			:ran_meet   -> {"[ran meet]",    [:inverse, :magenta]}
-			:met        -> {"[met]",         :green}
+			:unmet    -> {"[unmet]",    [:inverse, :red]}
+			:ran_meet -> {"[ran meet]", [:inverse, :magenta]}
+			:met      -> {"[met]",      [:inverse, :green]}
 		end
 		IO.write(colorize(r, color, message))
 		IO.write("\n")
@@ -84,6 +89,20 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 			string
 		end
 	end
+
+	defp syntax_colors() do
+		[
+			map:     [:bright],
+			atom:    :yellow,
+			string:  :cyan,
+			number:  :red,
+			list:    :default_color,
+			boolean: :magenta,
+			nil:     :magenta,
+			tuple:   :default_color,
+			binary:  :default_color
+		]
+	end
 end
 
 defmodule Converge.Context do
@@ -107,7 +126,7 @@ defmodule Converge.Runner do
 		met = Unit.met?(u, ctx)
 		result = case met do
 			true  -> :met
-			false -> :needs_meet
+			false -> :unmet
 		end
 		ctx.reporter |> Reporter.close(u, result)
 		met

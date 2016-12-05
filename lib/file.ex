@@ -187,20 +187,32 @@ defimpl Unit, for: Converge.FilePresent do
 end
 
 defimpl Inspect, for: Converge.FilePresent do
+	import Inspect.Algebra
 	import Gears.StringUtil, only: [counted_noun: 3]
 
-	def inspect(p, _opts) do
-		len  = p.content |> byte_size
-		"""
-		%Converge.FilePresent{\
-		path: #{Kernel.inspect p.path}, \
-		content: #{counted_noun(len, "byte", "bytes")}, \
-		mode: #{Kernel.inspect p.mode, base: :octal}, \
-		immutable: #{Kernel.inspect p.immutable}, \
-		user: #{Kernel.inspect p.user}, \
-		group: #{Kernel.inspect p.group}\
-		}\
-		"""
+	def inspect(p, opts) do
+		len = p.content |> byte_size
+		concat([
+			color("%Converge.FilePresent{", :map, opts),
+			color("path: ",      :atom, opts),
+			to_doc(p.path,              opts),
+			color(", ",          :map,  opts),
+			color("content: ",   :atom, opts),
+			counted_noun(len, "byte", "bytes"),
+			color(", ",          :map,  opts),
+			color("mode: ",      :atom, opts),
+			to_doc(p.mode, %Inspect.Opts{opts | base: :octal}),
+			color(", ",          :map,  opts),
+			color("immutable: ", :atom, opts),
+			to_doc(p.immutable,         opts),
+			color(", ",          :map,  opts),
+			color("user: ",      :atom, opts),
+			to_doc(p.user,              opts),
+			color(", ",          :map,  opts),
+			color("group: ",     :atom, opts),
+			to_doc(p.group,             opts),
+			color("}",           :map,  opts)
+		])
 	end
 end
 
