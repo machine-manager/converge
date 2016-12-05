@@ -49,15 +49,23 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 		stack = Agent.get_and_update(r.pid, fn(state) ->
 			{state.stack, %{state | stack: [u | state.stack]}}
 		end)
-		#IO.puts("\nstack: #{inspect stack}\n")
 		depth = length(stack)
-		if depth != 0 do
-			Agent.update(r.pid, fn(state) ->
-				parent_unit = hd(stack)
-				%{state | parents: state.parents |> MapSet.put(parent_unit)}
-			end)
+		need_nl = case depth do
+			0 -> false
+			_ ->
+				Agent.get_and_update(r.pid, fn(state) ->
+					parent_unit  = hd(stack)
+					# If parent_unit isn't in state.parents yet, we are the first child
+					# of that parent and we'll need to print a newline.
+					first_child? = state.parents |> MapSet.member?(parent_unit) |> Kernel.not
+					new_state    = %{state | parents: state.parents |> MapSet.put(parent_unit)}
+					{first_child?, new_state}
+				end)
 		end
-		IO.write("\n#{indent(depth)}#{inspect u}")
+		if need_nl do
+			IO.write("\n")
+		end
+		IO.write("#{indent(depth)}#{inspect u}")
 	end
 
 	def already_met(r, u, _ctx) do
@@ -66,7 +74,7 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 			length(state.stack) - 1
 		} end)
 		case had_children do
-			true  -> IO.write("\n#{indent(depth)}^ ")
+			true  -> IO.write("#{indent(depth)}^ ")
 			false -> IO.write(" ")
 		end
 		IO.write(colorize(r, :green, "[met already]"))
@@ -81,7 +89,7 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 			length(state.stack) - 1
 		} end)
 		case had_children do
-			true  -> IO.write("\n#{indent(depth)}^ ")
+			true  -> IO.write("#{indent(depth)}^ ")
 			false -> IO.write(" ")
 		end
 		IO.write(colorize(r, [:bright, :black], "[met now]"))
@@ -91,6 +99,7 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 	end
 
 	def done(r, u, _ctx) do
+		IO.write("\n")
 		Agent.update(r.pid, fn(state) ->
 			%{state |
 				stack:   tl(state.stack),
