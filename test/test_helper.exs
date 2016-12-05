@@ -69,12 +69,19 @@ end
 
 
 defmodule Converge.TestHelpers.SilentReporter do
-	def met?(_, _) do end
-	def already_met(_, _) do end
-	def should_meet(_, _) do end
-	def just_met(_, _) do end
-	def failed(_, _) do end
-	def done(_, _) do end
+	defstruct []
+	def new() do
+		%Converge.TestHelpers.SilentReporter{}
+	end
+end
+
+defimpl Converge.Reporter, for: Converge.TestHelpers.SilentReporter do
+	def met?(_, _, _) do end
+	def already_met(_, _, _) do end
+	def should_meet(_, _, _) do end
+	def just_met(_, _, _) do end
+	def failed(_, _, _) do end
+	def done(_, _, _) do end
 end
 
 
@@ -83,7 +90,7 @@ defmodule Converge.TestHelpers.TestingContext do
 	alias Converge.TestHelpers.SilentReporter
 
 	def get_context() do
-		%Context{reporter: SilentReporter, run_meet: true}
+		%Context{reporter: SilentReporter.new(), run_meet: true}
 	end
 end
 
