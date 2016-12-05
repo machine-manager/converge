@@ -18,7 +18,7 @@ end
 defmodule Converge.StandardReporter do
 	defstruct pid: nil
 
-	def new(log_met? \\ true, color \\ IO.ANSI.enabled?()) do
+	def new(log_met? \\ true, color \\ true) do
 		{:ok, pid} = Agent.start_link(fn -> %{
 			stack:    [],
 			parents:  MapSet.new(),
@@ -49,6 +49,7 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 		stack = Agent.get_and_update(r.pid, fn(state) ->
 			{state.stack, %{state | stack: [u | state.stack]}}
 		end)
+		#IO.puts("\nstack: #{inspect stack}\n")
 		depth = length(stack)
 		if depth != 0 do
 			Agent.update(r.pid, fn(state) ->
@@ -56,28 +57,28 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 				%{state | parents: state.parents |> MapSet.put(parent_unit)}
 			end)
 		end
-		IO.write(colorize(r, :green, "\n#{indent(depth)}#{inspect u}\n"))
+		IO.write("\n#{indent(depth)}#{inspect u}")
 	end
 
-	def already_met(r, u, _) do
+	def already_met(r, u, _ctx) do
 		{had_children, depth} = Agent.get(r.pid, fn(state) -> {
 			state.parents |> MapSet.member?(u),
-			length(state.stack)
+			length(state.stack) - 1
 		} end)
 		case had_children do
 			true  -> IO.write("\n#{indent(depth)}^ ")
 			false -> IO.write(" ")
 		end
-		IO.write(colorize(r, [:green], "[met already]"))
+		IO.write(colorize(r, :green, "[met already]"))
 	end
 
-	def should_meet(r, _, _) do
+	def should_meet(r, _u, _ctx) do
 	end
 
 	def just_met(r, u, ctx) do
 		{had_children, depth} = Agent.get(r.pid, fn(state) -> {
 			state.parents |> MapSet.member?(u),
-			length(state.stack)
+			length(state.stack) - 1
 		} end)
 		case had_children do
 			true  -> IO.write("\n#{indent(depth)}^ ")
@@ -86,10 +87,10 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 		IO.write(colorize(r, [:bright, :black], "[met now]"))
 	end
 
-	def failed(r, _, _) do
+	def failed(r, _u, _ctx) do
 	end
 
-	def done(r, u, _) do
+	def done(r, u, _ctx) do
 		Agent.update(r.pid, fn(state) ->
 			%{state |
 				stack:   tl(state.stack),
@@ -117,7 +118,15 @@ defmodule Converge.Runner do
 	@spec met?(Converge.Unit, Converge.Context) :: boolean
 	def met?(u, ctx) do
 		ctx.reporter |> Reporter.met?(u, ctx)
-		Unit.met?(u, ctx)
+		met = Unit.met?(u, ctx)
+		case met do
+			true  -> ctx.reporter |> Reporter.already_met(u, ctx)
+			false -> ctx.reporter |> Reporter.should_meet(u, ctx)
+		end
+		if met or not ctx.run_meet do
+			ctx.reporter |> Reporter.done(u, ctx)
+		end
+		met
 	end
 
 	@doc """
@@ -131,22 +140,16 @@ defmodule Converge.Runner do
 	"""
 	@spec converge(Converge.Unit, Converge.Context) :: nil
 	def converge(u, ctx) do
-		try do
-			if met?(u, ctx) do
-				ctx.reporter |> Reporter.already_met(u, ctx)
+		if not met?(u, ctx) and ctx.run_meet do
+			Unit.meet(u, ctx)
+			# Call Unit.met? instead of Runner.met? to avoid calling
+			# Reporter.met? a second time
+			if Unit.met?(u, ctx) do
+				ctx.reporter |> Reporter.just_met(u, ctx)
 			else
-				ctx.reporter |> Reporter.should_meet(u, ctx)
-				if ctx.run_meet do
-					Unit.meet(u, ctx)
-					if met?(u, ctx) do
-						ctx.reporter |> Reporter.just_met(u, ctx)
-					else
-						ctx.reporter |> Reporter.failed(u, ctx)
-						raise UnitError, message: "Failed to converge: #{inspect u}"
-					end
-				end
+				ctx.reporter |> Reporter.failed(u, ctx)
+				raise UnitError, message: "Failed to converge: #{inspect u}"
 			end
-		after
 			ctx.reporter |> Reporter.done(u, ctx)
 		end
 		nil
