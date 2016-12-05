@@ -4,7 +4,7 @@ defprotocol Converge.Reporter do
 end
 
 # TODO: support log_met? == false
-defmodule Converge.StandardReporter do
+defmodule Converge.TerminalReporter do
 	@enforce_keys [:pid, :log_met?, :color, :unicode]
 	defstruct pid: nil, log_met?: nil, color: nil, unicode: nil
 
@@ -13,11 +13,11 @@ defmodule Converge.StandardReporter do
 			stack:    [],
 			parents:  MapSet.new()
 		} end)
-		%Converge.StandardReporter{pid: pid, log_met?: log_met?, color: color, unicode: unicode}
+		%Converge.TerminalReporter{pid: pid, log_met?: log_met?, color: color, unicode: unicode}
 	end
 end
 
-defimpl Converge.Reporter, for: Converge.StandardReporter do
+defimpl Converge.Reporter, for: Converge.TerminalReporter do
 	def open(r, u, which) do
 		stack = Agent.get_and_update(r.pid, fn(state) ->
 			{state.stack, %{state | stack: [u | state.stack]}}
