@@ -1,5 +1,5 @@
 alias Gears.{FileUtil, StringUtil}
-alias Converge.Unit
+alias Converge.{Unit, Runner}
 
 defmodule Converge.PackageIndexUpdated do
 	@moduledoc """
@@ -10,7 +10,7 @@ defmodule Converge.PackageIndexUpdated do
 end
 
 defimpl Unit, for: Converge.PackageIndexUpdated do
-	def met?(u) do
+	def met?(u, _ctx) do
 		stat = File.stat("/var/cache/apt/pkgcache.bin", time: :posix)
 		updated = case stat do
 			{:ok, info} -> info.mtime
@@ -36,7 +36,7 @@ defmodule Converge.PackageCacheEmptied do
 end
 
 defimpl Unit, for: Converge.PackageCacheEmptied do
-	def met?(_) do
+	def met?(_, _ctx) do
 		empty_archives = Path.wildcard("/var/cache/apt/archives/*.*") == []
 		empty_partial  = Path.wildcard("/var/cache/apt/archives/partial/*.*") == []
 		empty_archives and empty_partial
@@ -56,7 +56,7 @@ defmodule Converge.DanglingPackagesPurged do
 end
 
 defimpl Unit, for: Converge.DanglingPackagesPurged do
-	def met?(_) do
+	def met?(_, _ctx) do
 		{out, 0} = System.cmd("apt-get", ["autoremove", "--purge", "--simulate"])
 		actions = StringUtil.grep(out, ~r"^Purg ")
 		case actions do
@@ -81,14 +81,14 @@ defmodule Converge.PackagesMarkedAutoInstalled do
 end
 
 defimpl Unit, for: Converge.PackagesMarkedAutoInstalled do
-	def met?(u) do
+	def met?(u, _ctx) do
 		{out, 0} = System.cmd("apt-mark", ["showauto"])
 		installed_auto = out |> String.split("\n") |> MapSet.new
 		diff = MapSet.difference(MapSet.new(u.names), installed_auto)
 		MapSet.size(diff) == 0
 	end
 
-	def meet(u, ctx) do
+	def meet(u, _ctx) do
 		{_, 0} = System.cmd("apt-mark", ["auto", "--"] ++ u.names)
 	end
 end
@@ -104,14 +104,14 @@ defmodule Converge.PackagesMarkedManualInstalled do
 end
 
 defimpl Unit, for: Converge.PackagesMarkedManualInstalled do
-	def met?(u) do
+	def met?(u, _ctx) do
 		{out, 0} = System.cmd("apt-mark", ["showmanual"])
 		installed_manual = out |> String.split("\n") |> MapSet.new
 		diff = MapSet.difference(MapSet.new(u.names), installed_manual)
 		MapSet.size(diff) == 0
 	end
 
-	def meet(u, ctx) do
+	def meet(u, _ctx) do
 		{_, 0} = System.cmd("apt-mark", ["manual", "--"] ++ u.names)
 	end
 end
@@ -126,7 +126,7 @@ defmodule Converge.PackagePurged do
 end
 
 defimpl Unit, for: Converge.PackagePurged do
-	def met?(u) do
+	def met?(u, _ctx) do
 		{out, status} = System.cmd("dpkg-query", ["--status", "--", u.name], stderr_to_stdout: true)
 		case status do
 			1 ->
@@ -157,10 +157,10 @@ defmodule Converge.MetaPackageInstalled do
 end
 
 defimpl Unit, for: Converge.MetaPackageInstalled do
-	def met?(u) do
+	def met?(u, ctx) do
 		met_identical_package_installed?(u) and
 		met_nothing_to_fix?() and
-		Unit.met?(%Converge.PackagesMarkedManualInstalled{names: [u.name]})
+		Runner.met?(%Converge.PackagesMarkedManualInstalled{names: [u.name]}, ctx)
 	end
 
 	def meet(u, _) do

@@ -103,7 +103,7 @@ end
 defimpl Unit, for: Converge.DirectoryPresent do
 	import Converge.ThingPresent
 
-	def met?(p) do
+	def met?(p, _ctx) do
 		File.dir?(p.path) and met_user_group_mode?(p) and met_mutability?(p)
 	end
 
@@ -149,7 +149,7 @@ end
 defimpl Unit, for: Converge.FilePresent do
 	import Converge.ThingPresent
 
-	def met?(p) do
+	def met?(p, _ctx) do
 		met_user_group_mode?(p) and met_mutability?(p) and met_contents?(p)
 	end
 
@@ -219,7 +219,7 @@ defimpl Unit, for: Converge.SymlinkPresent do
 	import Converge.ThingPresent
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 
-	def met?(p) do
+	def met?(p, _ctx) do
 		met_symlink_to_dest?(p) and met_user_group?(p)
 	end
 
@@ -269,7 +269,7 @@ end
 defimpl Unit, for: Converge.FileMissing do
 	import Converge.ThingPresent
 
-	def met?(p) do
+	def met?(p, _ctx) do
 		not File.exists?(p.path)
 	end
 

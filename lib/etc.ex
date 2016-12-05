@@ -8,12 +8,12 @@ defmodule Converge.EtcCommitted do
 end
 
 defimpl Unit, for: Converge.EtcCommitted do
-	def met?(u) do
+	def met?(_u, _ctx) do
 		{out, 0} = System.cmd("git", ["--work-tree=/etc", "--git-dir=/etc/.git", "status", "--short"])
 		String.trim_trailing(out) == ""
 	end
 
-	def meet(u, _) do
+	def meet(u, _ctx) do
 		message = case u.message do
 			nil -> "converge"
 			s   -> s

@@ -1,42 +1,68 @@
-defmodule Converge.Reporter do
-	def running(u, ctx) do
+defmodule Converge.ReporterOptions do
+	defstruct log_met?: true, color: true
+end
+
+# TODO: support log_met?: false
+# TODO: support color: false
+# TODO: print \n[^ met now] / \n[^ met already] when `depth` is unit is less than last unit
+defmodule Converge.StandardReporter do
+	defp colorize(escape, string, %{color: color}) do
+		if color do
+			[escape, string, :reset]
+			|> IO.ANSI.format_fragment(true)
+			|> IO.iodata_to_binary
+		else
+			string
+		end
+	end
+
+	def met?(u, ctx) do
 		indent = "   " |> String.duplicate(ctx.depth)
-		IO.write("#{indent}#{inspect u}\n")
+		IO.write(colorize(:green, "#{indent}#{inspect u}\n", ctx.reporter_options))
 	end
 
 	def already_met(_, _) do
-		#IO.write("already met")
+		IO.write("[met already]")
 	end
 
-	# Used when ctx.run_meet == false
-	def not_met(_, _) do
-		#IO.write("not met")
+	def should_meet(_, _) do
+
 	end
 
-	def meeting(_, _) do
-		#IO.write("meet()... ")
-	end
-
-	def just_met(_, _) do
-		#IO.write("just met")
+	def just_met(_, ctx) do
+		IO.write(colorize([:bright, :black], "[met now]", ctx.reporter_options))
 	end
 
 	def failed(_, _) do
-		#IO.write("FAILED")
+
 	end
 
 	def done(_, _) do
-		#IO.write("\n")
+
 	end
 end
 
 defmodule Converge.Context do
 	@enforce_keys [:reporter, :run_meet]
-	defstruct reporter: nil, run_meet: nil, depth: -1
+	defstruct reporter: nil, reporter_options: %Converge.ReporterOptions{}, run_meet: nil, depth: -1
 end
 
 defmodule Converge.Runner do
 	alias Converge.{Unit, UnitError, Context}
+
+	@doc """
+	Return `true` if unit `u` is met, otherwise `false`.
+
+	If a unit needs to check if another unit is met, it should call
+	`Runner.met?` instead of `Unit.met?`, because `Runner.met?` does the output
+	logging that the user expects.
+	"""
+	@spec met?(Converge.Unit, Converge.Context) :: boolean
+	def met?(u, ctx) do
+		ctx = %Context{ctx | depth: ctx.depth + 1}
+		apply(ctx.reporter, :met?, [u, ctx])
+		Unit.met?(u, ctx)
+	end
 
 	@doc """
 	Converge unit `u`: run `met?` to check if state needs to be modified, and
@@ -49,18 +75,16 @@ defmodule Converge.Runner do
 	"""
 	@spec converge(Converge.Unit, Converge.Context) :: nil
 	def converge(u, ctx) do
-		ctx = %Context{ctx | depth: ctx.depth + 1}
-		apply(ctx.reporter, :running, [u, ctx])
+		ctx_orig = ctx
+		ctx      = %Context{ctx | depth: ctx.depth + 1}
 		try do
-			if Unit.met?(u) do
+			if met?(u, ctx_orig) do
 				apply(ctx.reporter, :already_met, [u, ctx])
 			else
-				if not ctx.run_meet do
-					apply(ctx.reporter, :not_met, [u, ctx])
-				else
-					apply(ctx.reporter, :meeting, [u, ctx])
+				apply(ctx.reporter, :should_meet, [u, ctx])
+				if ctx.run_meet do
 					Unit.meet(u, ctx)
-					if Unit.met?(u) do
+					if met?(u, ctx_orig) do
 						apply(ctx.reporter, :just_met, [u, ctx])
 					else
 						apply(ctx.reporter, :failed, [u, ctx])

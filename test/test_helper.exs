@@ -9,7 +9,7 @@ defmodule Converge.TestHelpers.FailsToConvergeUnit do
 end
 
 defimpl Unit, for: Converge.TestHelpers.FailsToConvergeUnit do
-	def met?(_) do
+	def met?(_, _) do
 		false
 	end
 
@@ -26,7 +26,7 @@ defmodule Converge.TestHelpers.AlreadyConvergedUnit do
 end
 
 defimpl Unit, for: Converge.TestHelpers.AlreadyConvergedUnit do
-	def met?(_) do
+	def met?(_, _) do
 		true
 	end
 
@@ -54,7 +54,7 @@ defmodule Converge.TestHelpers.ConvergeableUnit do
 end
 
 defimpl Unit, for: Converge.TestHelpers.ConvergeableUnit do
-	def met?(u) do
+	def met?(u, _) do
 		Agent.get_and_update(u.pid, fn({has_met, met_count}) ->
 			{has_met, {has_met, met_count + 1}}
 		end)
@@ -69,10 +69,9 @@ end
 
 
 defmodule Converge.TestHelpers.SilentReporter do
-	def running(_, _) do end
+	def met?(_, _) do end
 	def already_met(_, _) do end
-	def not_met(_, _) do end
-	def meeting(_, _) do end
+	def should_meet(_, _) do end
 	def just_met(_, _) do end
 	def failed(_, _) do end
 	def done(_, _) do end

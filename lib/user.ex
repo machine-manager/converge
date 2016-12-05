@@ -1,4 +1,4 @@
-alias Converge.{Unit, UnitError}
+alias Converge.{Unit, UnitError, Runner}
 
 defmodule Converge.UserUtil do
 	def get_users() do
@@ -122,7 +122,7 @@ defimpl Unit, for: Converge.UserPresent do
 	import ExUnit.Assertions, only: [assert: 2]
 	alias Converge.UserUtil
 
-	def met?(u) do
+	def met?(u, _ctx) do
 		ensure_password_and_locked_consistency(u)
 		user = UserUtil.get_users()[u.name]
 		case user do
@@ -228,7 +228,7 @@ end
 defimpl Unit, for: Converge.UserDisabled do
 	alias Converge.UserUtil
 
-	def met?(u) do
+	def met?(u, _ctx) do
 		case UserUtil.get_users()[u.name] do
 			nil                             -> false
 			%{shell: shell, locked: locked} -> locked and shell == "/bin/false"
@@ -266,7 +266,7 @@ end
 defimpl Unit, for: Converge.UserMissing do
 	alias Converge.UserUtil
 
-	def met?(u) do
+	def met?(u, _ctx) do
 		UserUtil.get_users()
 		|> Map.has_key?(u.name)
 		|> Kernel.not
@@ -296,12 +296,12 @@ end
 defimpl Unit, for: Converge.RegularUsersPresent do
 	alias Converge.{UserUtil, UserPresent, UserDisabled}
 
-	def met?(u) do
-		Unit.met?(make_unit(u))
+	def met?(u, ctx) do
+		Runner.met?(make_unit(u), ctx)
 	end
 
 	def meet(u, ctx) do
-		Converge.Runner.converge(make_unit(u), ctx)
+		Runner.converge(make_unit(u), ctx)
 	end
 
 	def make_unit(u) do

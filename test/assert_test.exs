@@ -1,5 +1,5 @@
-alias Converge.{Assert, Unit, UnitError}
-alias Converge.TestHelpers.ConvergeableUnit
+alias Converge.{Assert, Unit, UnitError, Runner}
+alias Converge.TestHelpers.{ConvergeableUnit, TestingContext}
 
 defmodule Converge.AssertTest do
 	use ExUnit.Case, async: true
@@ -7,15 +7,17 @@ defmodule Converge.AssertTest do
 	test "Assert.met? runs met? on child unit" do
 		u1  = ConvergeableUnit.new()
 		ass = %Assert{unit: u1}
-		Unit.met?(ass)
+		ctx = TestingContext.get_context()
+		Runner.met?(ass, ctx)
 		assert ConvergeableUnit.get_met_count(u1) == 1
-		Unit.met?(ass)
+		Runner.met?(ass, ctx)
 		assert ConvergeableUnit.get_met_count(u1) == 2
 	end
 
 	test "Assert.meet always raises UnitError" do
 		u1  = ConvergeableUnit.new()
 		ass = %Assert{unit: u1}
-		assert_raise(UnitError, fn -> Unit.meet(ass, nil) end)
+		ctx = TestingContext.get_context()
+		assert_raise(UnitError, fn -> Unit.meet(ass, ctx) end)
 	end
 end

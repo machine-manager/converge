@@ -1,4 +1,4 @@
-alias Converge.{Unit, UnitError}
+alias Converge.{Unit, UnitError, Runner}
 
 defmodule Converge.Assert do
 	@moduledoc """
@@ -12,8 +12,8 @@ defmodule Converge.Assert do
 end
 
 defimpl Unit, for: Converge.Assert do
-	def met?(u) do
-		Unit.met?(u.unit)
+	def met?(u, ctx) do
+		Runner.met?(u.unit, ctx)
 	end
 
 	def meet(u, _) do

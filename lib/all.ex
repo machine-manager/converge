@@ -1,4 +1,4 @@
-alias Converge.Unit
+alias Converge.{Unit, Runner}
 
 defmodule Converge.All do
 	@moduledoc """
@@ -12,15 +12,15 @@ defmodule Converge.All do
 end
 
 defimpl Unit, for: Converge.All do
-	def met?(u) do
+	def met?(u, ctx) do
 		u.units
-		|> Stream.map(&Unit.met?/1)
+		|> Stream.map(&(Runner.met?(&1, ctx)))
 		|> Enum.all?
 	end
 
 	def meet(u, ctx) do
 		for unit <- u.units do
-			Converge.Runner.converge(unit, ctx)
+			Runner.converge(unit, ctx)
 		end
 	end
 end

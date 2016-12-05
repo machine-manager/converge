@@ -1,4 +1,4 @@
-alias Converge.{All, Unit, Runner}
+alias Converge.{All, Runner}
 alias Converge.TestHelpers.{ConvergeableUnit, AlreadyConvergedUnit, TestingContext}
 
 defmodule Converge.AllTest do
@@ -9,7 +9,7 @@ defmodule Converge.AllTest do
 		u2  = ConvergeableUnit.new()
 		u3  = ConvergeableUnit.new()
 		all = %All{units: [%AlreadyConvergedUnit{}, u1, u2, u3]}
-		Unit.met?(all)
+		Runner.met?(all, TestingContext.get_context())
 
 		assert ConvergeableUnit.get_met_count(u1) == 1
 		assert ConvergeableUnit.get_met_count(u2) == 0

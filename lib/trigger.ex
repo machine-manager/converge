@@ -9,8 +9,8 @@ defmodule Converge.Trigger do
 end
 
 defimpl Unit, for: Converge.Trigger do
-	def met?(u) do
-		Unit.met?(u.unit)
+	def met?(u, ctx) do
+		Runner.met?(u.unit, ctx)
 	end
 
 	def meet(u, ctx) do
