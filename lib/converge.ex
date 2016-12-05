@@ -5,15 +5,15 @@ end
 
 # TODO: support log_met? == false
 defmodule Converge.TerminalReporter do
-	@enforce_keys [:pid, :log_met?, :color, :unicode]
-	defstruct pid: nil, log_met?: nil, color: nil, unicode: nil
+	@enforce_keys [:pid, :log_met?, :color]
+	defstruct pid: nil, log_met?: nil, color: nil
 
-	def new(log_met? \\ true, color \\ true, unicode \\ true) do
+	def new(log_met? \\ true, color \\ true) do
 		{:ok, pid} = Agent.start_link(fn -> %{
 			stack:    [],
 			parents:  MapSet.new()
 		} end)
-		%Converge.TerminalReporter{pid: pid, log_met?: log_met?, color: color, unicode: unicode}
+		%Converge.TerminalReporter{pid: pid, log_met?: log_met?, color: color}
 	end
 end
 
