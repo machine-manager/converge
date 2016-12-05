@@ -187,16 +187,14 @@ defimpl Unit, for: Converge.FilePresent do
 end
 
 defimpl Inspect, for: Converge.FilePresent do
+	import Gears.StringUtil, only: [counted_noun: 3]
+
 	def inspect(p, _opts) do
 		len  = p.content |> byte_size
-		word = case len do
-			1 -> "byte"
-			_ -> "bytes"
-		end
 		"""
 		%Converge.FilePresent{\
 		path: #{Kernel.inspect p.path}, \
-		content: #{len} #{word}, \
+		content: #{counted_noun(len, "byte", "bytes")}, \
 		mode: #{Kernel.inspect p.mode, base: :octal}, \
 		immutable: #{Kernel.inspect p.immutable}, \
 		user: #{Kernel.inspect p.user}, \

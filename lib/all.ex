@@ -26,12 +26,9 @@ defimpl Unit, for: Converge.All do
 end
 
 defimpl Inspect, for: Converge.All do
+	import Gears.StringUtil, only: [counted_noun: 3]
+
 	def inspect(u, _opts) do
-		len  = length(u.units)
-		word = case len do
-			1 -> "unit"
-			_ -> "units"
-		end
-		"%Converge.All{#{len} #{word}}"
+		~s(%Converge.All{#{counted_noun(length(u.units), "unit", "units")}})
 	end
 end
