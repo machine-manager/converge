@@ -7,14 +7,7 @@ defprotocol Converge.Reporter do
 	def done(reporter, unit, ctx)
 end
 
-# How does this work?
-# A met? -> push A on stack
-#   B met? -> push B on stack -> done -> pop B from stack
-#   C met? -> push C on stack -> done -> pop C from stack
-# done -> pop A from stack [^ met]
-
 # TODO: support log_met? == false
-# TODO: print \n[^ met now] / \n[^ met already] when `depth` is unit is less than last unit
 defmodule Converge.StandardReporter do
 	defstruct pid: nil
 
