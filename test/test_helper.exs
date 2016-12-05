@@ -76,12 +76,8 @@ defmodule Converge.TestHelpers.SilentReporter do
 end
 
 defimpl Converge.Reporter, for: Converge.TestHelpers.SilentReporter do
-	def met?(_, _, _) do end
-	def already_met(_, _, _) do end
-	def should_meet(_, _, _) do end
-	def just_met(_, _, _) do end
-	def failed(_, _, _) do end
-	def done(_, _, _) do end
+	def open(_, _, _) do end
+	def close(_, _, _) do end
 end
 
 
