@@ -5,16 +5,15 @@ end
 
 # TODO: support log_met? == false
 defmodule Converge.StandardReporter do
-	defstruct pid: nil
+	@enforce_keys [:pid, :log_met?, :color, :unicode]
+	defstruct pid: nil, log_met?: nil, color: nil, unicode: nil
 
-	def new(log_met? \\ true, color \\ true) do
+	def new(log_met? \\ true, color \\ true, unicode \\ true) do
 		{:ok, pid} = Agent.start_link(fn -> %{
 			stack:    [],
-			parents:  MapSet.new(),
-			log_met?: log_met?,
-			color:    color
+			parents:  MapSet.new()
 		} end)
-		%Converge.StandardReporter{pid: pid}
+		%Converge.StandardReporter{pid: pid, log_met?: log_met?, color: color, unicode: unicode}
 	end
 end
 
@@ -57,7 +56,7 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 			length(state.stack) - 1
 		} end)
 		case had_children do
-			true  -> IO.write("     #{indent(depth)}^ ")
+			true  -> IO.write("     #{indent(depth)}")
 			false -> IO.write(" ")
 		end
 		{message, color} = case result do
@@ -76,12 +75,11 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 	end
 
 	defp indent(depth) do
-		"   " |> String.duplicate(depth)
+		"|  " |> String.duplicate(depth)
 	end
 
 	defp colorize(r, escape, string) do
-		color = Agent.get(r.pid, fn(state) -> state.color end)
-		if color do
+		if r.color do
 			[escape, string, :reset]
 			|> IO.ANSI.format_fragment(true)
 			|> IO.iodata_to_binary
@@ -92,7 +90,7 @@ defimpl Converge.Reporter, for: Converge.StandardReporter do
 
 	defp syntax_colors() do
 		[
-			map:     [:bright],
+			map:     :bright,
 			atom:    :yellow,
 			string:  :cyan,
 			number:  :red,
