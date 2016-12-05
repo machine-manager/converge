@@ -20,10 +20,10 @@ defmodule Converge.StandardReporter do
 
 	def new(log_met? \\ true, color \\ IO.ANSI.enabled?()) do
 		{:ok, pid} = Agent.start_link(fn -> %{
-			stack:            [],
-			parents: MapSet.new(),
-			log_met?:         log_met?,
-			color:            color
+			stack:    [],
+			parents:  MapSet.new(),
+			log_met?: log_met?,
+			color:    color
 		} end)
 		%Converge.StandardReporter{pid: pid}
 	end
