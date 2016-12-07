@@ -136,6 +136,31 @@ defimpl Unit, for: Converge.DirectoryPresent do
 	end
 end
 
+defimpl Inspect, for: Converge.DirectoryPresent do
+	import Inspect.Algebra
+
+	def inspect(p, opts) do
+		concat([
+			color("%Converge.DirectoryPresent{", :map, opts),
+			color("path: ",      :atom, opts),
+			to_doc(p.path,              opts),
+			color(", ",          :map,  opts),
+			color("mode: ",      :atom, opts),
+			to_doc(p.mode, %Inspect.Opts{opts | base: :octal}),
+			color(", ",          :map,  opts),
+			color("immutable: ", :atom, opts),
+			to_doc(p.immutable,         opts),
+			color(", ",          :map,  opts),
+			color("user: ",      :atom, opts),
+			to_doc(p.user,              opts),
+			color(", ",          :map,  opts),
+			color("group: ",     :atom, opts),
+			to_doc(p.group,             opts),
+			color("}",           :map,  opts)
+		])
+	end
+end
+
 
 defmodule Converge.FilePresent do
 	@moduledoc """

@@ -76,8 +76,13 @@ defmodule Converge.TestHelpers.SilentReporter do
 end
 
 defimpl Converge.Reporter, for: Converge.TestHelpers.SilentReporter do
-	def open(_, _, _) do end
-	def close(_, _, _) do end
+	def open(reporter, unit, which) do
+		# Exercise inspect() but don't actually print
+		_ = inspect(unit)
+	end
+	def close(reporter, unit, result) do
+		_ = inspect(unit)
+	end
 end
 
 
