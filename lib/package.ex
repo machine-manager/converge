@@ -159,8 +159,7 @@ end
 defimpl Unit, for: Converge.MetaPackageInstalled do
 	def met?(u, ctx) do
 		met_identical_package_installed?(u) and
-		met_nothing_to_fix?() and
-		Runner.met?(%Converge.PackagesMarkedManualInstalled{names: [u.name]}, ctx)
+		met_nothing_to_fix?()
 	end
 
 	def meet(u, _) do
@@ -197,7 +196,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		data_tar_xz = Path.join(temp, "data.tar.xz")
 		{_, 0} = System.cmd("tar", ["-cJf", data_tar_xz, "--files-from=/dev/null"])
 
-		deb = Path.join(temp, "converge-packages-installed.deb")
+		deb = Path.join(temp, "metapackage.deb")
 		Debpress.write_control_tar_gz(control_tar_gz, Debpress.control_file(make_control(u)), %{})
 		Debpress.write_deb(deb, control_tar_gz, data_tar_xz)
 		deb
