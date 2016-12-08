@@ -1,3 +1,5 @@
+alias Converge.{Unit, FilePresent}
+
 defmodule Converge.Fstab do
 	@moduledoc """
 	Ensures that `/etc/fstab` contains the entries listed in `includes`.
@@ -10,8 +12,6 @@ defmodule Converge.Fstab do
 end
 
 defimpl Unit, for: Converge.Fstab do
-	alias Converge.FilePresent
-
 	def met?(u, ctx) do
 		Runner.met?(make_unit(u), ctx)
 	end
@@ -21,7 +21,7 @@ defimpl Unit, for: Converge.Fstab do
 	end
 
 	def make_unit(u) do
-		%FilePresent{path: "/etc/fstab", content: make_fstab(), mode: 0o644}
+		%FilePresent{path: "/etc/fstab", content: make_fstab(u), mode: 0o644}
 	end
 
 	def make_fstab(u) do
