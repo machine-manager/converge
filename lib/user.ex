@@ -145,19 +145,15 @@ defimpl Unit, for: Converge.UserPresent do
 		end
 	end
 
-	@docp """
-	Take a map and return a new map without any k/v pairs that have a nil value
-	"""
+	# Take a map and return a new map without any k/v pairs that have a nil value
 	defp without_nil_values(m) do
 		m
 		|> Enum.filter(fn {_, v} -> v != nil end)
 		|> Enum.into(%{})
 	end
 
-	@docp """
-	Ensure consistency in `crypted_password` and `locked` early, before the
-	unit fails to converge for a reason that is hard to decipher.
-	"""
+	# Ensure consistency in `crypted_password` and `locked` early, before the
+	# unit fails to converge for a reason that is hard to decipher.
 	defp ensure_password_and_locked_consistency(u) do
 		if u.locked != nil and u.crypted_password != nil do
 			if not UserUtil.crypted_password_is_locked(u.crypted_password) == u.locked do

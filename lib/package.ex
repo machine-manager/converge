@@ -1,5 +1,5 @@
 alias Gears.{FileUtil, StringUtil}
-alias Converge.{Unit, Runner}
+alias Converge.Unit
 
 defmodule Converge.PackageIndexUpdated do
 	@moduledoc """
@@ -157,7 +157,7 @@ defmodule Converge.MetaPackageInstalled do
 end
 
 defimpl Unit, for: Converge.MetaPackageInstalled do
-	def met?(u, ctx) do
+	def met?(u, _ctx) do
 		met_identical_package_installed?(u) and
 		met_nothing_to_fix?()
 	end

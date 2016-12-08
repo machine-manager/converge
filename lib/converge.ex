@@ -118,7 +118,7 @@ defmodule Converge.Runner do
 	`Runner.met?` instead of `Unit.met?`, because `Runner.met?` does the output
 	logging that the user expects.
 	"""
-	@spec met?(Converge.Unit, Converge.Context) :: boolean
+	@spec met?(Unit, Context) :: boolean
 	def met?(u, ctx) do
 		ctx.reporter |> Reporter.open(u, :met?)
 		met = Unit.met?(u, ctx)
@@ -139,7 +139,7 @@ defmodule Converge.Runner do
 
 	Everything is logged to `ctx.reporter`.
 	"""
-	@spec converge(Converge.Unit, Converge.Context) :: nil
+	@spec converge(Unit, Context) :: nil
 	def converge(u, ctx) do
 		if not met?(u, ctx) and ctx.run_meet do
 			ctx.reporter |> Reporter.open(u, :meet)

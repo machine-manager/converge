@@ -1,4 +1,4 @@
-alias Converge.{Unit, FilePresent}
+alias Converge.{Unit, Runner, FilePresent}
 
 defmodule Converge.Fstab do
 	@moduledoc """
