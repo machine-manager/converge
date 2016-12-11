@@ -100,17 +100,17 @@ defmodule Converge.SymlinkPresentTest do
 	@immutable Path.join(@dir, "immutable")
 
 	test "symlink" do
-		p = %SymlinkPresent{path: @deleteme, dest: "/root/some-dest"}
+		p = %SymlinkPresent{path: @deleteme, target: "/root/some-target"}
 		Runner.converge(p, TestingContext.get_context())
 	end
 
 	test "symlink with user nobody" do
-		p = %SymlinkPresent{path: @deleteme, dest: "/root/some-dest", user: "nobody"}
+		p = %SymlinkPresent{path: @deleteme, target: "/root/some-target", user: "nobody"}
 		Runner.converge(p, TestingContext.get_context())
 	end
 
 	test "symlink with user nobody and group daemon" do
-		p = %SymlinkPresent{path: @deleteme, dest: "/root/some-dest", user: "nobody", group: "daemon"}
+		p = %SymlinkPresent{path: @deleteme, target: "/root/some-target", user: "nobody", group: "daemon"}
 		Runner.converge(p, TestingContext.get_context())
 	end
 
@@ -120,7 +120,7 @@ defmodule Converge.SymlinkPresentTest do
 		Runner.converge(p, TestingContext.get_context())
 
 		# test
-		p = %SymlinkPresent{path: @immutable, dest: "/root/some-dest"}
+		p = %SymlinkPresent{path: @immutable, target: "/root/some-target"}
 		Runner.converge(p, TestingContext.get_context())
 	end
 end
@@ -151,16 +151,16 @@ defmodule Converge.FileMissingTest do
 		Runner.converge(m, TestingContext.get_context())
 	end
 
-	test "does not remove symlink destination when pointing FileMissing at symlink" do
+	test "does not remove symlink target when pointing FileMissing at symlink" do
 		# setup
-		dest = Path.join(@dir, "dest")
-		File.touch!(dest)
-		p = %SymlinkPresent{path: @deleteme, dest: dest}
+		target = Path.join(@dir, "target")
+		File.touch!(target)
+		p = %SymlinkPresent{path: @deleteme, target: target}
 		Runner.converge(p, TestingContext.get_context())
 
 		# test
 		m = %FileMissing{path: @deleteme}
 		Runner.converge(m, TestingContext.get_context())
-		assert File.exists?(dest)
+		assert File.exists?(target)
 	end
 end

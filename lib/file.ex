@@ -244,10 +244,11 @@ end
 
 defmodule Converge.SymlinkPresent do
 	@moduledoc """
-	A symlink exists at `path` pointing to `dest`, owned by `user` and `group`.
+	A symlink exists at `path` pointing to `target`.  The symlink is owned
+	by `user` and `group`.
 	"""
-	@enforce_keys [:path, :dest]
-	defstruct path: nil, dest: nil, user: "root", group: "root"
+	@enforce_keys [:path, :target]
+	defstruct path: nil, target: nil, user: "root", group: "root"
 end
 
 defimpl Unit, for: Converge.SymlinkPresent do
@@ -255,12 +256,12 @@ defimpl Unit, for: Converge.SymlinkPresent do
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 
 	def met?(p, _ctx) do
-		met_symlink_to_dest?(p) and met_user_group?(p)
+		met_symlink_to_target?(p) and met_user_group?(p)
 	end
 
 	def meet(p, _) do
 		remove_existing(p)
-		case File.ln_s(p.dest, p.path) do
+		case File.ln_s(p.target, p.path) do
 			:ok ->
 				meet_user_group_owner(p)
 			{:error, reason} ->
@@ -269,13 +270,13 @@ defimpl Unit, for: Converge.SymlinkPresent do
 		end
 	end
 
-	def met_symlink_to_dest?(p) do
+	def met_symlink_to_target?(p) do
 		# read_link_all gives us a list except in cases where the filename
 		# can only be represented as a binary.  If we get a list, convert
 		# it to a binary (Elixir string).
 		case :file.read_link_all(p.path) do
-			{:ok, dest_l} -> IO.chardata_to_string(dest_l) == p.dest
-			_             -> false
+			{:ok, target_l} -> IO.chardata_to_string(target_l) == p.target
+			_               -> false
 		end
 	end
 
