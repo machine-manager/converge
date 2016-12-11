@@ -16,43 +16,28 @@ defmodule Converge.FstabEntry do
 	defstruct spec: nil, mount_point: nil, type: nil, options: nil, dump_frequency: 0, fsck_pass_number: nil
 end
 
-defmodule Converge.FstabHasEntry do
+defmodule Converge.Fstab do
 	@moduledoc """
-	Ensures that `/etc/fstab` contains the entry `entry`.  If an existing entry
-	with the same `entry.mount_point` exists (note: not `entry.spec`), it will
-	be replaced.
+	Make sure `/etc/fstab` consists of just entries `entries`.
 
-	Note that this will also remove any comments from `/etc/fstab`.
+	If you want to keep some existing entries, use `Fstab.get_entries()` to
+	retrieve them.  You can then index them on `mount_point` with:
+
+	```
+	Fstab.get_entries()
+		|> Enum.map(fn entry -> {entry.mount_point, entry} end)
+		|> Enum.into(%{})
+	```
 	"""
 
-	@enforce_keys [:entry]
-	defstruct entry: []
-end
+	@enforce_keys [:entries]
+	defstruct entries: [], fstab_file: "/etc/fstab"
 
-defimpl Unit, for: Converge.FstabHasEntry do
-	def met?(u, ctx) do
-		Runner.met?(make_unit(u), ctx)
-	end
-
-	def meet(u, ctx) do
-		Runner.converge(make_unit(u), ctx)
-	end
-
-	defp make_unit(u) do
-		%FilePresent{path: "/etc/fstab", content: make_fstab(u), mode: 0o644}
-	end
-
-	# Returns a string containing a new fstab that includes the entry specified in the unit.
-	defp make_fstab(u) do
-		entries = get_fstab()
-			|> Enum.map(fn entry -> {entry.mount_point, entry} end)
-			|> Enum.into(%{})
-		entries = %{entries | u.entry.mount_entry => u.entry}
-		entries_to_fstab(entries)
-	end
-
-	defp get_fstab() do
-		File.read!("/etc/fstab")
+	@doc """
+	Returns a list of existing entries in `/etc/fstab` (or another `fstab_file`)
+	"""
+	def get_entries(fstab_file \\ "/etc/fstab") do
+		File.read!(fstab_file)
 		|> String.split("\n")
 		|> Enum.filter(&line_has_entry?/1)
 		|> Enum.map(&line_to_entry/1)
@@ -74,6 +59,20 @@ defimpl Unit, for: Converge.FstabHasEntry do
 			dump_frequency:   dump_frequency,
 			fsck_pass_number: fsck_pass_number
 		}
+	end
+end
+
+defimpl Unit, for: Converge.Fstab do
+	def met?(u, ctx) do
+		Runner.met?(make_unit(u), ctx)
+	end
+
+	def meet(u, ctx) do
+		Runner.converge(make_unit(u), ctx)
+	end
+
+	defp make_unit(u) do
+		%FilePresent{path: u.fstab_file, content: entries_to_fstab(u.entries), mode: 0o644}
 	end
 
 	defp entry_to_row(entry) do
