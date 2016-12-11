@@ -6,7 +6,7 @@ defmodule Converge.EtcCommittedTest do
 	@moduledoc """
 	These tests assume that you have etckeeper installed.
 	"""
-	use ExUnit.Case
+	use ExUnit.Case, async: true
 
 	test "/etc can be committed with the default message" do
 		File.touch!("/etc/converge-etc-test-1")

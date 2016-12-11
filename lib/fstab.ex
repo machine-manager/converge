@@ -36,7 +36,8 @@ defmodule Converge.Fstab do
 	@doc """
 	Returns a list of existing entries in `/etc/fstab` (or another `fstab_file`)
 	"""
-	def get_entries(fstab_file \\ "/etc/fstab") do
+	def get_entries(options \\ []) do
+		fstab_file = Keyword.get(options, :fstab_file, "/etc/fstab")
 		File.read!(fstab_file)
 		|> String.split("\n")
 		|> Enum.filter(&line_has_entry?/1)
@@ -48,7 +49,7 @@ defmodule Converge.Fstab do
 	end
 
 	defp line_to_entry(line) do
-		{spec, mount_point, type, options, dump_frequency, fsck_pass_number} = String.split(line, ~r/[ \t]+/)
+		[spec, mount_point, type, options, dump_frequency, fsck_pass_number] = String.split(line, ~r/[ \t]+/)
 		dump_frequency   = String.to_integer(dump_frequency)
 		fsck_pass_number = String.to_integer(fsck_pass_number)
 		%FstabEntry{
