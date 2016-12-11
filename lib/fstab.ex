@@ -77,10 +77,12 @@ defimpl Unit, for: Converge.Fstab do
 	end
 
 	defp entry_to_row(entry) do
+		# fstab calls these:
+		# fs_spec,   fs_file,           fs_vfstype, fs_mntops,     fs_freq,              fs_passno
 		[entry.spec, entry.mount_point, entry.type, entry.options, entry.dump_frequency, entry.fsck_pass_number]
 	end
 
-	# Returns a string containing an fstab with entries
+	# Returns a string containing an fstab with the entries given
 	defp entries_to_fstab(entries) do
 		table = entries |> Enum.map(&entry_to_row/1)
 		TableFormatter.format(table, padding: 2) |> IO.iodata_to_binary()
