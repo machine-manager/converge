@@ -1,7 +1,7 @@
 defmodule Converge.Runner.RunnerTest do
 	use ExUnit.Case, async: true
 
-	alias Converge.{Runner, Context, UnitError}
+	alias Converge.{Runner, UnitError}
 	alias Converge.TestHelpers.{FailsToConvergeUnit, AlreadyConvergedUnit, ConvergeableUnit, TestingContext}
 
 	test "Runner.converge raises UnitError if Unit fails to converge" do
