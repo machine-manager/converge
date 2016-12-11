@@ -21,7 +21,7 @@ converge=$HOME/code/erlang/converge
 #    its clock is in the future
 MIX_ENV=test mix compile
 
-rsync -av --delete --delete-excluded --exclude=.git \
+rsync -a --delete --delete-excluded --exclude=.git \
 	"$elixir" \
 	"$hex" \
 	"$converge" \
@@ -29,6 +29,6 @@ rsync -av --delete --delete-excluded --exclude=.git \
 
 ssh root@"$remote" "
 cd ~/hex &&
-PATH=/root/elixir/bin:\$PATH mix install &&
+PATH=/root/elixir/bin:\$PATH mix install > /dev/null &&
 cd ~/converge &&
 PATH=/root/elixir/bin:\$PATH mix test --no-elixir-version-check --no-deps-check --no-archives-check --trace --color $@"
