@@ -1,6 +1,21 @@
 alias Gears.TableFormatter
 alias Converge.{Unit, Runner, FilePresent, FstabEntry}
 
+defmodule Converge.FstabEntry do
+	@moduledoc """
+	spec             - the block special device or remote filesystem to be mounted.
+	mount_point      - the mount point for the filesystem.
+	type             - the type of filesystem.
+	options          - the mount options.
+	dump_frequency   - used by dump(8) to determine how frequently to dump the filesystem.
+	fsck_pass_number - used by fsck to determine the order in which filesystems are checked at boot time.
+	                   The root filesystem should use 1.  Other filesystems should use 2.
+	                   Filesystems that can't be fscked should use 0.
+	"""
+	@enforce_keys [:spec, :mount_point, :type, :options, :fsck_pass_number]
+	defstruct spec: nil, mount_point: nil, type: nil, options: nil, dump_frequency: 0, fsck_pass_number: nil
+end
+
 defmodule Converge.FstabHasEntry do
 	@moduledoc """
 	Ensures that `/etc/fstab` contains the entry `entry`.  If an existing entry
@@ -32,7 +47,7 @@ defimpl Unit, for: Converge.FstabHasEntry do
 		entries = get_fstab()
 			|> Enum.map(fn entry -> {entry.mount_point, entry} end)
 			|> Enum.into(%{})
-		entries[u.entry.mount_entry] = u.entry
+		entries = %{entries | u.entry.mount_entry => u.entry}
 		entries_to_fstab(entries)
 	end
 
@@ -70,19 +85,4 @@ defimpl Unit, for: Converge.FstabHasEntry do
 		table = entries |> Enum.map(&entry_to_row/1)
 		TableFormatter.format(table, padding: 2) |> IO.iodata_to_binary()
 	end
-end
-
-defmodule Converge.FstabEntry do
-	@moduledoc """
-	spec             - the block special device or remote filesystem to be mounted.
-	mount_point      - the mount point for the filesystem.
-	type             - the type of filesystem.
-	options          - the mount options.
-	dump_frequency   - used by dump(8) to determine how frequently to dump the filesystem.
-	fsck_pass_number - used by fsck to determine the order in which filesystems are checked at boot time.
-	                   The root filesystem should use 1.  Other filesystems should use 2.
-	                   Filesystems that can't be fscked should use 0.
-	"""
-	@enforce_keys [:spec, :mount_point, :type, :options, :fsck_pass_number]
-	defstruct spec: nil, mount_point: nil, type: nil, options: nil, dump_frequency: 0, fsck_pass_number: nil
 end
