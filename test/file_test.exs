@@ -5,7 +5,7 @@ alias Gears.FileUtil
 defmodule Converge.DirectoryPresentTest do
 	use ExUnit.Case, async: true
 
-	@dir FileUtil.temp_dir("converge-test")
+	@dir      FileUtil.temp_dir("converge-test")
 	@deleteme Path.join(@dir, "deleteme")
 
 	test "directory with mode 0600" do
@@ -50,7 +50,7 @@ end
 defmodule Converge.FilePresentTest do
 	use ExUnit.Case, async: true
 
-	@dir FileUtil.temp_dir("converge-test")
+	@dir      FileUtil.temp_dir("converge-test")
 	@deleteme Path.join(@dir, "deleteme")
 
 	test "file with mode 0600" do
@@ -95,7 +95,7 @@ end
 defmodule Converge.SymlinkPresentTest do
 	use ExUnit.Case, async: true
 
-	@dir FileUtil.temp_dir("converge-test")
+	@dir       FileUtil.temp_dir("converge-test")
 	@deleteme  Path.join(@dir, "deleteme")
 	@immutable Path.join(@dir, "immutable")
 
@@ -128,7 +128,7 @@ end
 defmodule Converge.FileMissingTest do
 	use ExUnit.Case, async: true
 
-	@dir FileUtil.temp_dir("converge-test")
+	@dir       FileUtil.temp_dir("converge-test")
 	@deleteme  Path.join(@dir, "deleteme")
 	@immutable Path.join(@dir, "immutable")
 
