@@ -217,9 +217,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		end
 	end
 
-	@docp """
-	`true` if `apt-get -f install` doesn't need to do anything.
-	"""
+	# Returns `true` if `apt-get -f install` doesn't need to do anything.
 	defp met_nothing_to_fix?() do
 		{out, 0} = System.cmd("apt-get", ["--simulate", "--fix-broken", "install"])
 		actions = StringUtil.grep(out, ~r"^(Inst|Conf|Remv) ")
