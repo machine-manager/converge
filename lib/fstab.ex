@@ -1,5 +1,5 @@
 alias Gears.TableFormatter
-alias Converge.{Unit, Runner, FilePresent, FstabEntry}
+alias Converge.{Unit, UnitError, Runner, FilePresent, FstabEntry}
 
 defmodule Converge.FstabEntry do
 	@moduledoc """
@@ -20,13 +20,46 @@ defmodule Converge.Fstab do
 	@moduledoc """
 	Make sure `/etc/fstab` consists of just entries `entries`.
 
-	If you want to keep some existing entries, use `Fstab.get_entries()` to
-	retrieve them.  You can then index them on `mount_point` with:
+	This module has a method `Fstab.get_entries()` to gather existing fstab
+	entries, because it is likely that you want to keep most of them as-is.
+
+	Here is a recipe to retrieve the entries and put them in a map:
 
 	```
 	Fstab.get_entries()
 		|> Enum.map(fn entry -> {entry.mount_point, entry} end)
 		|> Enum.into(%{})
+	```
+
+	and a complete example of an `Fstab` unit that adds/overwrites the `/proc`
+	entry in fstab:
+
+	```
+	defp fstab_unit() do
+		fstab_existing_entries = Fstab.get_entries()
+			|> Enum.map(fn entry -> {entry.mount_point, entry} end)
+			|> Enum.into(%{})
+		fstab_entries = [
+			fstab_existing_entries["/"],
+			fstab_existing_entries["/boot"],
+			fstab_existing_entries["/boot/efi"],
+			%FstabEntry{
+				spec:             "proc",
+				mount_point:      "/proc",
+				type:             "proc",
+				# hidepid=2 prevents users from seeing other users' processes
+				options:          "hidepid=2",
+				fsck_pass_number: 0
+			}
+		] |> Enum.filter(&(&1 != nil))
+		fstab_trigger = fn ->
+			{_, 0} = System.cmd("mount", ["-o", "remount", "/proc"])
+		end
+		%Trigger{
+			unit:    %Fstab{entries: fstab_entries},
+			trigger: fstab_trigger
+		}
+	end
 	```
 	"""
 
@@ -77,7 +110,7 @@ defimpl Unit, for: Converge.Fstab do
 	end
 
 	defp entry_to_row(entry) do
-		# fstab calls these:
+		# `man fstab` calls these:
 		# fs_spec,   fs_file,           fs_vfstype, fs_mntops,     fs_freq,              fs_passno
 		[entry.spec, entry.mount_point, entry.type, entry.options, entry.dump_frequency, entry.fsck_pass_number]
 	end
