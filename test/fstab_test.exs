@@ -1,5 +1,5 @@
 alias Gears.FileUtil
-alias Converge.{Fstab, FstabEntry, Runner}
+alias Converge.{UnitError, Fstab, FstabEntry, Runner}
 alias Converge.TestHelpers.TestingContext
 
 defmodule Converge.FstabTest do
@@ -45,5 +45,28 @@ defmodule Converge.FstabTest do
 		p = Path.join(@dir, "new-fstab")
 		u = %Fstab{entries: @entries, fstab_file: p}
 		Runner.converge(u, TestingContext.get_context())
+	end
+
+	defp do_test_bad_entries(bad_entries) do
+		p = Path.join(@dir, "bad-fstab")
+		u = %Fstab{entries: bad_entries, fstab_file: p}
+		assert_raise UnitError, ~r/^Cannot write an fstab file where any value is empty or consists only of whitespace/, fn ->
+			Runner.converge(u, TestingContext.get_context())
+		end
+	end
+
+	test "Fstab refuses to write an fstab file where any row has a empty value" do
+		bad_entries = [
+			%FstabEntry{spec: "/dev/mapper/rootdrive", mount_point: "/",     type: "xfs",  options: "defaults",  dump_frequency: 0, fsck_pass_number: 2},
+			%FstabEntry{spec: "proc",                  mount_point: "/proc", type: "proc", options: "",          dump_frequency: 0, fsck_pass_number: 0},
+		]
+		do_test_bad_entries(bad_entries)
+	end
+
+	test "Fstab refuses to write an fstab file where any row has a whitespace value" do
+		bad_entries = [
+			%FstabEntry{spec: "/dev/mapper/rootdrive", mount_point: "/",     type: "xfs",  options: "\t \t",     dump_frequency: 0, fsck_pass_number: 2},
+		]
+		do_test_bad_entries(bad_entries)
 	end
 end

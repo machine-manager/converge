@@ -113,6 +113,18 @@ defimpl Unit, for: Converge.Fstab do
 		# `man fstab` calls these:
 		# fs_spec,   fs_file,           fs_vfstype, fs_mntops,     fs_freq,              fs_passno
 		[entry.spec, entry.mount_point, entry.type, entry.options, entry.dump_frequency, entry.fsck_pass_number]
+		|> Enum.map(fn value ->
+			s = to_string(value)
+			if s =~ ~r/^([ \t]+)?$/ do
+				raise UnitError, message:
+					"""
+					Cannot write an fstab file where any value is empty or \
+					consists only of whitespace, because the file would not be \
+					parsed correctly by the system.\
+					"""
+			end
+			s
+		end)
 	end
 
 	# Returns a string containing an fstab with the entries given
