@@ -4,7 +4,7 @@ defmodule Converge.Util do
 	are given as bytes, not as kB.
 	"""
 	def get_meminfo() do
-		# Need cat because File.read! and :file.read_file will return "" because
+		# Need cat because File.read! and :file.read_file return "" because
 		# procfs says the file has a size of 0.
 		{out, 0} = System.cmd("cat", ["/proc/meminfo"])
 		out
