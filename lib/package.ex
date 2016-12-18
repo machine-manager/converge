@@ -1,5 +1,6 @@
 alias Gears.{FileUtil, StringUtil}
 alias Converge.Unit
+import Converge.Util, only: [get_control_line: 2]
 
 defmodule Converge.PackageIndexUpdated do
 	@moduledoc """
@@ -224,14 +225,6 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		case actions do
 			[] -> true
 			_  -> false
-		end
-	end
-
-	defp get_control_line(lines, name) do
-		match = lines |> Enum.filter(&(String.starts_with?(&1, "#{name}: "))) |> List.first
-		case match do
-			nil -> nil
-			_   -> match |> String.split(": ", parts: 2) |> List.last
 		end
 	end
 end

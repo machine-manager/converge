@@ -20,4 +20,56 @@ defmodule Converge.Util do
 		end)
 		|> Enum.into(%{})
 	end
+
+	@doc false
+	def get_control_line(lines, name) do
+		match = lines |> Enum.filter(&(String.starts_with?(&1, "#{name}: "))) |> List.first
+		case match do
+			nil -> nil
+			_   -> match |> String.split(": ", parts: 2) |> List.last
+		end
+	end
+
+	@doc """
+	Returns `true` if package `name` is installed, otherwise `false`.
+	"""
+	def installed?(name) do
+		{out, status} = System.cmd("dpkg-query", ["--status", "--", name], stderr_to_stdout: true)
+		case status do
+			0 ->
+				control = out |> String.split("\n")
+				# https://anonscm.debian.org/cgit/dpkg/dpkg.git/tree/lib/dpkg/pkg-namevalue.c#n52
+				# http://manpages.ubuntu.com/manpages/precise/man1/dpkg.1.html
+				get_control_line(control, "Status") == "install ok installed"
+			_ -> false
+		end
+	end
+
+	@country_file "/etc/country"
+
+	@doc """
+	Determines which country this server is located in, returning a lowercase
+	two-letter country code.
+
+	Writes the cached country to `/etc/country` so that we don't have to ask
+	the Internet again.
+	"""
+	def get_country() do
+		case File.read(@country_file) do
+			{:ok, content} -> content |> String.trim_trailing()
+			_              ->
+				{out, 0} = System.cmd("curl", ["-q", "--silent", "http://freegeoip.net/json/"])
+				country =
+					Regex.run(~r/"country_code": ?"(..)"/, out, capture: :all_but_first)
+					|> hd
+					|> String.downcase
+				File.write(@country_file, country)
+				File.chmod!(@country_file, 0o644)
+				country
+		end
+	end
+
+	def get_hostname() do
+		File.read!("/etc/hostname") |> String.trim_trailing()
+	end
 end
