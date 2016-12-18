@@ -72,4 +72,21 @@ defmodule Converge.Util do
 	def get_hostname() do
 		File.read!("/etc/hostname") |> String.trim_trailing()
 	end
+
+	@doc """
+	@external_resource is used to tell mix which resource files affect the build
+	output.  But typing them all out is annoying if you have many files.  This
+	macro will walk `path` and declare every file in it an external resource.
+	"""
+	defmacro declare_external_resources(path) do
+		quote do
+			{out, 0} = System.cmd("find", [unquote(path), "-type", "f", "-print0"])
+			files = out
+				|> String.trim_trailing("\0")
+				|> String.split("\0")
+			for f <- files do
+				@external_resource f
+			end
+		end
+	end
 end
