@@ -15,9 +15,9 @@ defmodule Converge.SysctlTest do
 
 	test "some integer and string parameters" do
 		u = %Sysctl{parameters: %{
-			"vm.dirty_background_ratio" => 6,
+			"vm.dirty_background_ratio" => :rand.uniform(6),
 			"vm.dirty_ratio" => "11",
-			"vm.vfs_cache_pressure" => 50,
+			"vm.vfs_cache_pressure" => 25 + :rand.uniform(50),
 			"net.core.default_qdisc" => "pfifo_fast",
 		}}
 		try do
