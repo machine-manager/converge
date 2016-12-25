@@ -38,18 +38,18 @@ defimpl Unit, for: Converge.Sysctl do
 
 	# Returns a map of all kernel parameters with their current values, as strings
 	defp sysctl_a() do
- 		{out, 0} = System.cmd("sysctl", ["-a"], stderr_to_stdout: true)
- 		out
- 		|> String.trim_trailing("\n")
- 		|> String.split("\n")
- 		# Skip over error lines like:
- 		# sysctl: reading key "net.ipv6.conf.enp0s3.stable_secret"
- 		|> Enum.filter(fn line -> line =~ " = " end)
- 		|> Enum.map(fn line ->
- 			[k, v] = String.split(line, " = ", parts: 2)
- 			{k, v}
- 		end)
- 		|> Enum.into(%{})
+		{out, 0} = System.cmd("sysctl", ["-a"], stderr_to_stdout: true)
+		out
+		|> String.trim_trailing("\n")
+		|> String.split("\n")
+		# Skip over error lines like:
+		# sysctl: reading key "net.ipv6.conf.enp0s3.stable_secret"
+		|> Enum.filter(fn line -> line =~ " = " end)
+		|> Enum.map(fn line ->
+			[k, v] = String.split(line, " = ", parts: 2)
+			{k, v}
+		end)
+		|> Enum.into(%{})
 	end
 
 	defp make_unit(u) do
