@@ -46,7 +46,7 @@ defimpl Unit, for: Converge.Sysfs do
 		get_bracketed_word(value)
 	end
 	defp sysfs_content_to_value(_key, value) do
-		value |> String.trim_trailing("\n")
+		value |> String.replace_suffix("\n", "")
 	end
 
 	defp get_bracketed_word(s) do

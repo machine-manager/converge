@@ -40,7 +40,7 @@ defimpl Unit, for: Converge.Sysctl do
 	defp sysctl_a() do
 		{out, 0} = System.cmd("sysctl", ["-a"], stderr_to_stdout: true)
 		out
-		|> String.trim_trailing("\n")
+		|> String.replace_suffix("\n", "")
 		|> String.split("\n")
 		# Skip over error lines like:
 		# sysctl: reading key "net.ipv6.conf.enp0s3.stable_secret"

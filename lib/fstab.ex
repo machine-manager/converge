@@ -82,7 +82,7 @@ defmodule Converge.Fstab do
 	end
 
 	defp line_to_entry(line) do
-		[spec, mount_point, type, options, dump_frequency, fsck_pass_number] = String.split(line, ~r/[ \t]+/)
+		[spec, mount_point, type, options, dump_frequency, fsck_pass_number] = String.split(line, [" ", "\t"], trim: true)
 		dump_frequency   = String.to_integer(dump_frequency)
 		fsck_pass_number = String.to_integer(fsck_pass_number)
 		%FstabEntry{

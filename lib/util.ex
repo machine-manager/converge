@@ -8,14 +8,14 @@ defmodule Converge.Util do
 		# procfs says the file has a size of 0.
 		{out, 0} = System.cmd("cat", ["/proc/meminfo"])
 		out
-		|> String.trim_trailing("\n")
+		|> String.replace_suffix("\n", "")
 		|> String.split("\n")
 		|> Enum.map(fn line ->
 			case line |> String.split(~r/\s+/) do
 				[label, number, "kB"] ->
-					{label |> String.trim_trailing(":"), (number |> String.to_integer) * 1024}
+					{label |> String.replace_suffix(":", ""), (number |> String.to_integer) * 1024}
 				[label, number] ->
-					{label |> String.trim_trailing(":"),  number |> String.to_integer}
+					{label |> String.replace_suffix(":", ""),  number |> String.to_integer}
 			end
 		end)
 		|> Enum.into(%{})
@@ -56,7 +56,7 @@ defmodule Converge.Util do
 	"""
 	def get_country() do
 		case File.read(@country_file) do
-			{:ok, content} -> content |> String.trim_trailing()
+			{:ok, content} -> content |> String.trim_trailing
 			_              ->
 				{out, 0} = System.cmd("curl", ["-q", "--silent", "http://freegeoip.net/json/"])
 				country =
@@ -70,7 +70,7 @@ defmodule Converge.Util do
 	end
 
 	def get_hostname() do
-		File.read!("/etc/hostname") |> String.trim_trailing()
+		File.read!("/etc/hostname") |> String.trim_trailing
 	end
 
 	@doc """
@@ -82,7 +82,7 @@ defmodule Converge.Util do
 		quote do
 			{out, 0} = System.cmd("find", [unquote(path), "-type", "f", "-print0"])
 			files = out
-				|> String.trim_trailing("\0")
+				|> String.replace_suffix("\0", "")
 				|> String.split("\0")
 			for f <- files do
 				@external_resource f

@@ -46,10 +46,12 @@ defmodule Converge.ThingPresent do
 
 	defp get_attrs(path) do
 		{out, 0} = System.cmd("lsattr", ["-d", "--", path])
-		lines = out |> String.trim_trailing("\n") |> String.split("\n")
+		lines = out
+			|> String.replace_suffix("\n", "")
+			|> String.split("\n")
 		case lines do
-			[line | _] -> line |> String.split(" ") |> hd
-			_          -> raise UnitError, message: "Expected 1 line from lsattr but got #{inspect lines}"
+			[line] -> line |> String.split(" ") |> hd
+			_      -> raise UnitError, message: "Expected 1 line from lsattr but got #{inspect lines}"
 		end
 	end
 
