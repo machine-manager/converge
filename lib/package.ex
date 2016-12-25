@@ -176,6 +176,9 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 			# not automatically install them.  If you want any of the recommended
 			# packages, list them in the `depends` for this unit.
 			"--no-install-recommends",
+			# --force-confold, when combined with --force-confdef, will overwrite
+			# a configuration file only if it has not been modified from the
+			# package default.
 			"-o", "Dpkg::Options::=--force-confdef",
 			"-o", "Dpkg::Options::=--force-confold",
 		]
