@@ -40,7 +40,7 @@ defimpl Unit, for: Converge.Grub do
 	defp make_unit(u) do
 		%Trigger{
 			unit:    %FilePresent{path: "/etc/default/grub", content: make_default_grub(u), mode: 0o644},
-			trigger: fn -> {_, 0} = System.cmd("update-grub", []) end
+			trigger: fn -> {_, 0} = System.cmd("update-grub", [], stderr_to_stdout: true) end
 		}
 	end
 

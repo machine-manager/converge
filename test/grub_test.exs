@@ -4,8 +4,18 @@ alias Converge.TestHelpers.TestingContext
 defmodule Converge.GrubTest do
 	use ExUnit.Case, async: true
 
-	test "default grub config" do
+	defp cleanup() do
 		u = %Grub{}
 		Runner.converge(u, TestingContext.get_context())
+	end
+
+	test "no options" do
+		cleanup()
+	end
+
+	test "some options" do
+		u = %Grub{timeout: 4, cmdline_normal_and_recovery: "quiet", gfxpayload: "640x480"}
+		Runner.converge(u, TestingContext.get_context())
+		cleanup()
 	end
 end
