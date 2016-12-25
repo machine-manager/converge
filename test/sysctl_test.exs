@@ -4,8 +4,26 @@ alias Converge.TestHelpers.TestingContext
 defmodule Converge.SysctlTest do
 	use ExUnit.Case, async: true
 
-	test "no parameters" do
+	defp cleanup() do
 		u = %Sysctl{parameters: %{}}
 		Runner.converge(u, TestingContext.get_context())
+	end
+
+	test "no parameters" do
+		cleanup()
+	end
+
+	test "some integer and string parameters" do
+		u = %Sysctl{parameters: %{
+			"vm.dirty_background_ratio" => 6,
+			"vm.dirty_ratio" => "11",
+			"vm.vfs_cache_pressure" => 50,
+			"net.core.default_qdisc" => "pfifo_fast",
+		}}
+		try do
+			Runner.converge(u, TestingContext.get_context())
+		after
+			cleanup()
+		end
 	end
 end
