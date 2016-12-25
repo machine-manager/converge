@@ -170,8 +170,16 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 			{"APT_LISTCHANGES_FRONTEND", "none"},
 			{"APT_LISTBUGS_FRONTEND",    "none"}
 		]
-		dpkg_opts = ["-o", "Dpkg::Options::=--force-confdef", "-o", "Dpkg::Options::=--force-confold"]
-		{_, 0} = System.cmd("apt-get", ["install", "-y"] ++ dpkg_opts ++ [deb], env: env)
+		args = [
+			# This is the only reasonable behavior, both to reduce our exposure to
+			# security bugs, and because when the recommends are missing, apt will
+			# not automatically install them.  If you want any of the recommended
+			# packages, list them in the `depends` for this unit.
+			"--no-install-recommends",
+			"-o", "Dpkg::Options::=--force-confdef",
+			"-o", "Dpkg::Options::=--force-confold",
+		]
+		{_, 0} = System.cmd("apt-get", ["install", "-y"] ++ args ++ ["--", deb], env: env)
 	end
 
 	@spec make_control(%Converge.MetaPackageInstalled{}) :: %Debpress.Control{}
