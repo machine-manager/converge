@@ -33,6 +33,12 @@ defimpl Unit, for: Converge.Sysfs do
 		current_variables_s == desired_variables_s
 	end
 
+	defp stringify_values(variables) do
+		variables
+		|> Enum.map(fn {k, v} -> {k, to_string(v)} end)
+		|> Enum.into(%{})
+	end
+
 	defp sysfs_content_to_value("kernel/mm/transparent_hugepage/enabled", value) do
 		get_bracketed_word(value)
 	end
@@ -45,12 +51,6 @@ defimpl Unit, for: Converge.Sysfs do
 
 	defp get_bracketed_word(s) do
 		Regex.run(~r/\[(\w+)\]/, s, capture: :all_but_first) |> hd
-	end
-
-	defp stringify_values(variables) do
-		variables
-		|> Enum.map(fn {k, v} -> {k, to_string(v)} end)
-		|> Enum.into(%{})
 	end
 
 	defp make_unit(u) do
