@@ -1,3 +1,4 @@
+alias Gears.StringUtil
 alias Converge.{Unit, Runner, Trigger, FilePresent}
 
 defmodule Converge.Grub do
@@ -46,6 +47,6 @@ defimpl Unit, for: Converge.Grub do
 
 	defp make_default_grub(u) do
 		EEx.eval_string(@template, [u: u])
-		|> String.replace(~r/\n+/, "\n")
+		|> StringUtil.remove_empty_lines
 	end
 end

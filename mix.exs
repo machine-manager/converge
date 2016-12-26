@@ -17,7 +17,7 @@ defmodule Converge.Mixfile do
 
 	defp deps do
 		[
-			{:gears, "0.3.0"},
+			{:gears, "0.7.0"},
 			{:debpress, "0.2.2"}
 		]
 	end
