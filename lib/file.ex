@@ -166,7 +166,7 @@ end
 
 defmodule Converge.FilePresent do
 	@moduledoc """
-	A file exists at `path` with content `content`, a specific `mode` `immutable` flag,
+	A file exists at `path` with content `content`, a specific `mode`, `immutable` flag,
 	owned by `user` and `group`.
 	"""
 	@enforce_keys [:path, :content, :mode]
