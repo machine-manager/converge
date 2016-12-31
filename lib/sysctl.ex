@@ -1,5 +1,5 @@
 alias Gears.TableFormatter
-alias Converge.{Unit, Runner, Trigger, FilePresent}
+alias Converge.{Unit, Runner, AfterMeet, FilePresent}
 
 defmodule Converge.Sysctl do
 	@moduledoc """
@@ -53,7 +53,7 @@ defimpl Unit, for: Converge.Sysctl do
 	end
 
 	defp make_unit(u) do
-		%Trigger{
+		%AfterMeet{
 			unit:    %FilePresent{path: "/etc/sysctl.conf", content: parameters_to_sysctl(u.parameters), mode: 0o644},
 			trigger: fn -> {_, 0} = System.cmd("service", ["procps", "restart"]) end
 		}

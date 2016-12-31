@@ -55,7 +55,7 @@ defmodule Converge.Fstab do
 		fstab_trigger = fn ->
 			{_, 0} = System.cmd("mount", ["-o", "remount", "/proc"])
 		end
-		%Trigger{
+		%AfterMeet{
 			unit:    %Fstab{entries: fstab_entries},
 			trigger: fstab_trigger
 		}

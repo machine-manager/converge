@@ -11,6 +11,14 @@ defmodule Converge.PackageIndexUpdated do
 end
 
 defimpl Unit, for: Converge.PackageIndexUpdated do
+	@moduledoc """
+	The system package manager's package index was updated within the last
+	`max_age` seconds.
+
+	If you need to clear the cached package index manually (e.g. inside an
+	`AfterMeet` after updating `/etc/apt/sources.list`, call
+	`Converge.Util.remove_cached_package_index()`.
+	"""
 	def met?(u, _ctx) do
 		stat = File.stat("/var/cache/apt/pkgcache.bin", time: :posix)
 		updated = case stat do

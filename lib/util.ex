@@ -1,3 +1,5 @@
+alias Gears.FileUtil
+
 defmodule Converge.Util do
 	@doc """
 	Returns a map with information from /proc/meminfo.  Note that any kB values
@@ -43,6 +45,10 @@ defmodule Converge.Util do
 				get_control_line(control, "Status") == "install ok installed"
 			_ -> false
 		end
+	end
+
+	def remove_cached_package_index() do
+		FileUtil.rm_f!("/var/cache/apt/pkgcache.bin")
 	end
 
 	@country_file "/etc/country"

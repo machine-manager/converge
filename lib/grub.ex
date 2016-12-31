@@ -1,5 +1,5 @@
 alias Gears.StringUtil
-alias Converge.{Unit, Runner, Trigger, FilePresent}
+alias Converge.{Unit, Runner, AfterMeet, FilePresent}
 
 defmodule Converge.Grub do
 	@moduledoc """
@@ -39,7 +39,7 @@ defimpl Unit, for: Converge.Grub do
 	end
 
 	defp make_unit(u) do
-		%Trigger{
+		%AfterMeet{
 			unit:    %FilePresent{path: "/etc/default/grub", content: make_default_grub(u), mode: 0o644},
 			trigger: fn -> {_, 0} = System.cmd("update-grub", [], stderr_to_stdout: true) end
 		}
