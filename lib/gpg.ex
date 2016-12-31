@@ -4,8 +4,12 @@ alias Converge.{Unit, Runner, FilePresent}
 defmodule Converge.GPGSimpleKeyring do
 	@moduledoc """
 	A GPG simple keyring (not GPG2 keybox) file exists at `path` and contains
-	just keys `keys` (a list of strings containing an armored key).  Passes
+	just keys `keys` (a list of strings, one armored key per string).  Passes
 	`mode`, `immutable`, `user`, and `group` through to `FilePresent`.
+
+	The simple keyring format is used to make the output usable with apt,
+	which does not support the GPG2 keybox format:
+	https://lists.debian.org/deity/2016/11/msg00073.html
 	"""
 	@enforce_keys [:path, :keys, :mode]
 	defstruct path: nil, keys: [], mode: nil, immutable: false, user: "root", group: "root"
