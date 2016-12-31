@@ -11,11 +11,6 @@ defmodule Converge.GPG2Keyring do
 	defstruct path: nil, keys: [], mode: nil, immutable: false, user: "root", group: "root"
 end
 
-# This is implemented in a roundabout way because gpg2 --import doesn't produce
-# identical keyrings, even when given a --faked-system-time.  Instead of creating
-# a new temporary keyring and checking if it's byte-identical to the existing
-# keyring, we use gpg2 --export --armor to compare the list of the keys in the
-# current and desired keyrings.
 defimpl Unit, for: Converge.GPG2Keyring do
 	def met?(u, ctx) do
 		current_armored_export = get_armored_export_or_nil(u.path)
