@@ -1,8 +1,8 @@
 alias Gears.FileUtil
-alias Converge.{GPG2Keyring, Runner}
+alias Converge.{GPGSimpleKeyring, Runner}
 alias Converge.TestHelpers.TestingContext
 
-defmodule Converge.GPG2KeyringTest do
+defmodule Converge.GPGSimpleKeyringTest do
 	use ExUnit.Case, async: true
 
 	@wine_ppa_key """
@@ -70,20 +70,20 @@ defmodule Converge.GPG2KeyringTest do
 	"""
 
 	test "empty keyring" do
-		p = FileUtil.temp_path("converge-gpg2-keyring-test")
-		u = %GPG2Keyring{path: p, keys: [], mode: 0o644}
+		p = FileUtil.temp_path("converge-gpg-test")
+		u = %GPGSimpleKeyring{path: p, keys: [], mode: 0o644}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "keyring with one key" do
-		p = FileUtil.temp_path("converge-gpg2-keyring-test")
-		u = %GPG2Keyring{path: p, keys: [@wine_ppa_key], mode: 0o644}
+		p = FileUtil.temp_path("converge-gpg-test")
+		u = %GPGSimpleKeyring{path: p, keys: [@wine_ppa_key], mode: 0o644}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "keyring with two keys" do
-		p = FileUtil.temp_path("converge-gpg2-keyring-test")
-		u = %GPG2Keyring{path: p, keys: [@wine_ppa_key, @graphics_drivers_ppa_key], mode: 0o644}
+		p = FileUtil.temp_path("converge-gpg-test")
+		u = %GPGSimpleKeyring{path: p, keys: [@wine_ppa_key, @graphics_drivers_ppa_key], mode: 0o644}
 		Runner.converge(u, TestingContext.get_context())
 	end
 end
