@@ -10,34 +10,34 @@ defmodule Converge.ThingPresent do
 	@moduledoc false
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 
-	def try_make_mutable(p) do
-		System.cmd("chattr", ["-i", "--", p.path], stderr_to_stdout: true)
+	def try_make_mutable(u) do
+		System.cmd("chattr", ["-i", "--", u.path], stderr_to_stdout: true)
 	end
 
-	def make_mutable(p) do
-		{"", 0} = try_make_mutable(p)
+	def make_mutable(u) do
+		{"", 0} = try_make_mutable(u)
 	end
 
 	@doc "Remove an existing dentry, even if it is immutable."
-	def remove_existing(p) do
+	def remove_existing(u) do
 		# Ignore output and exit code, because we may be removing a symlink
 		# on which you can't chattr -i or +i
-		try_make_mutable(p)
-		FileUtil.rm_f!(p.path)
+		try_make_mutable(u)
+		FileUtil.rm_f!(u.path)
 	end
 
-	def meet_mutability(p) do
-		if p.immutable do
-			{"", 0} = System.cmd("chattr", ["+i", "--", p.path])
+	def meet_mutability(u) do
+		if u.immutable do
+			{"", 0} = System.cmd("chattr", ["+i", "--", u.path])
 		end
 	end
 
-	def meet_user_group_owner(p) do
-		want_user  = get_user_info(p.user)
-		want_group = get_group_info(p.group)
+	def meet_user_group_owner(u) do
+		want_user  = get_user_info(u.user)
+		want_group = get_group_info(u.group)
 
 		{_, 0} = System.cmd("chown",
-			["--no-dereference", "#{want_user.uid}:#{want_group.gid}", "--", p.path])
+			["--no-dereference", "#{want_user.uid}:#{want_group.gid}", "--", u.path])
 	end
 
 	def mode_without_type(mode) do
@@ -55,18 +55,18 @@ defmodule Converge.ThingPresent do
 		end
 	end
 
-	def met_mutability?(p) do
-		attrs = get_attrs(p.path)
+	def met_mutability?(u) do
+		attrs = get_attrs(u.path)
 		has_i = String.match?(attrs, ~r"i")
-		has_i == p.immutable
+		has_i == u.immutable
 	end
 
-	def met_user_group_mode?(p) do
-		want_user  = get_user_info(p.user)
-		want_group = get_group_info(p.group)
-		case :file.read_link_info(p.path) do
+	def met_user_group_mode?(u) do
+		want_user  = get_user_info(u.user)
+		want_group = get_group_info(u.group)
+		case :file.read_link_info(u.path) do
 			{:ok, file_info(mode: mode, uid: uid, gid: gid)} ->
-				mode_without_type(mode) == p.mode and
+				mode_without_type(mode) == u.mode and
 				uid == want_user.uid and
 				gid == want_group.gid
 			_ -> false
@@ -105,28 +105,28 @@ end
 defimpl Unit, for: Converge.DirectoryPresent do
 	import Converge.ThingPresent
 
-	def met?(p, _ctx) do
-		File.dir?(p.path) and met_user_group_mode?(p) and met_mutability?(p)
+	def met?(u, _ctx) do
+		File.dir?(u.path) and met_user_group_mode?(u) and met_mutability?(u)
 	end
 
-	def meet(p, _) do
+	def meet(u, _) do
 		# We want the directory to be created with the right mode at creation time.
 		# Use cmd("mkdir", ...) because File.mkdir* can't syscall mkdir with a mode.
 		{out, status} = System.cmd(
-			"mkdir", ["--mode=#{as_octal_string(p.mode)}", "--", p.path], stderr_to_stdout: true)
+			"mkdir", ["--mode=#{as_octal_string(u.mode)}", "--", u.path], stderr_to_stdout: true)
 		case status do
 			0 ->
-				meet_user_group_owner(p)
-				meet_mutability(p)
+				meet_user_group_owner(u)
+				meet_mutability(u)
 			_ ->
 				# mkdir may have failed because the directory already existed, but
 				# we still need to fix the mode/user/group.
-				case File.dir?(p.path) do
+				case File.dir?(u.path) do
 					true  ->
-						make_mutable(p)
-						File.chmod!(p.path, p.mode)
-						meet_user_group_owner(p)
-						meet_mutability(p)
+						make_mutable(u)
+						File.chmod!(u.path, u.mode)
+						meet_user_group_owner(u)
+						meet_mutability(u)
 					false ->
 						raise UnitError, message: "mkdir failed to create a directory: #{out}"
 				end
@@ -141,23 +141,23 @@ end
 defimpl Inspect, for: Converge.DirectoryPresent do
 	import Inspect.Algebra
 
-	def inspect(p, opts) do
+	def inspect(u, opts) do
 		concat([
 			color("%Converge.DirectoryPresent{", :map, opts),
 			color("path: ",      :atom, opts),
-			to_doc(p.path,              opts),
+			to_doc(u.path,              opts),
 			color(", ",          :map,  opts),
 			color("mode: ",      :atom, opts),
-			to_doc(p.mode, %Inspect.Opts{opts | base: :octal}),
+			to_doc(u.mode, %Inspect.Opts{opts | base: :octal}),
 			color(", ",          :map,  opts),
 			color("immutable: ", :atom, opts),
-			to_doc(p.immutable,         opts),
+			to_doc(u.immutable,         opts),
 			color(", ",          :map,  opts),
 			color("user: ",      :atom, opts),
-			to_doc(p.user,              opts),
+			to_doc(u.user,              opts),
 			color(", ",          :map,  opts),
 			color("group: ",     :atom, opts),
-			to_doc(p.group,             opts),
+			to_doc(u.group,             opts),
 			color("}",           :map,  opts)
 		])
 	end
@@ -176,38 +176,38 @@ end
 defimpl Unit, for: Converge.FilePresent do
 	import Converge.ThingPresent
 
-	def met?(p, _ctx) do
-		met_user_group_mode?(p) and met_mutability?(p) and met_contents?(p)
+	def met?(u, _ctx) do
+		met_user_group_mode?(u) and met_mutability?(u) and met_contents?(u)
 	end
 
-	def meet(p, _) do
+	def meet(u, _) do
 		# It's safer to unlink the file first, because it may be a shell script, and
 		# shells handle modified scripts very poorly.  If unlinked first, the shell
 		# will continue running the old (unlinked) script instead of crashing.
 		#
 		# Removing the file first also avoids the problem of very briefly granting
 		# access to a new user/group that should not be able to see the old file contents.
-		remove_existing(p)
+		remove_existing(u)
 
-		f = File.open!(p.path, [:write])
+		f = File.open!(u.path, [:write])
 		try do
 			# After opening, chmod before writing possibly-secret content
-			File.chmod!(p.path, p.mode)
-			meet_user_group_owner(p)
-			IOUtil.binwrite!(f, p.content)
-			meet_mutability(p)
+			File.chmod!(u.path, u.mode)
+			meet_user_group_owner(u)
+			IOUtil.binwrite!(f, u.content)
+			meet_mutability(u)
 		after
 			File.close(f)
 		end
 	end
 
 	# TODO: guard against giant files in binread
-	defp met_contents?(p) do
-		case File.open(p.path, [:read]) do
+	defp met_contents?(u) do
+		case File.open(u.path, [:read]) do
 			{:error, _} -> false
 			{:ok, file} -> case IO.binread(file, :all) do
 				{:error, _} -> false
-				existing    -> p.content == existing
+				existing    -> u.content == existing
 			end
 		end
 	end
@@ -217,27 +217,27 @@ defimpl Inspect, for: Converge.FilePresent do
 	import Inspect.Algebra
 	import Gears.StringUtil, only: [counted_noun: 3]
 
-	def inspect(p, opts) do
-		len = p.content |> byte_size
+	def inspect(u, opts) do
+		len = u.content |> byte_size
 		concat([
 			color("%Converge.FilePresent{", :map, opts),
 			color("path: ",      :atom, opts),
-			to_doc(p.path,              opts),
+			to_doc(u.path,              opts),
 			color(", ",          :map,  opts),
 			color("content: ",   :atom, opts),
 			counted_noun(len, "byte", "bytes"),
 			color(", ",          :map,  opts),
 			color("mode: ",      :atom, opts),
-			to_doc(p.mode, %Inspect.Opts{opts | base: :octal}),
+			to_doc(u.mode, %Inspect.Opts{opts | base: :octal}),
 			color(", ",          :map,  opts),
 			color("immutable: ", :atom, opts),
-			to_doc(p.immutable,         opts),
+			to_doc(u.immutable,         opts),
 			color(", ",          :map,  opts),
 			color("user: ",      :atom, opts),
-			to_doc(p.user,              opts),
+			to_doc(u.user,              opts),
 			color(", ",          :map,  opts),
 			color("group: ",     :atom, opts),
-			to_doc(p.group,             opts),
+			to_doc(u.group,             opts),
 			color("}",           :map,  opts)
 		])
 	end
@@ -257,35 +257,35 @@ defimpl Unit, for: Converge.SymlinkPresent do
 	import Converge.ThingPresent
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 
-	def met?(p, _ctx) do
-		met_symlink_to_target?(p) and met_user_group?(p)
+	def met?(u, _ctx) do
+		met_symlink_to_target?(u) and met_user_group?(u)
 	end
 
-	def meet(p, _) do
-		remove_existing(p)
-		case File.ln_s(p.target, p.path) do
+	def meet(u, _) do
+		remove_existing(u)
+		case File.ln_s(u.target, u.path) do
 			:ok ->
-				meet_user_group_owner(p)
+				meet_user_group_owner(u)
 			{:error, reason} ->
 				raise UnitError, message:
-					"failed to create symlink: #{inspect p.path}; reason: #{reason}"
+					"failed to create symlink: #{inspect u.path}; reason: #{reason}"
 		end
 	end
 
-	def met_symlink_to_target?(p) do
+	def met_symlink_to_target?(u) do
 		# read_link_all gives us a list except in cases where the filename
 		# can only be represented as a binary.  If we get a list, convert
 		# it to a binary (Elixir string).
-		case :file.read_link_all(p.path) do
-			{:ok, target_l} -> IO.chardata_to_string(target_l) == p.target
+		case :file.read_link_all(u.path) do
+			{:ok, target_l} -> IO.chardata_to_string(target_l) == u.target
 			_               -> false
 		end
 	end
 
-	def met_user_group?(p) do
-		want_user  = get_user_info(p.user)
-		want_group = get_group_info(p.group)
-		case :file.read_link_info(p.path) do
+	def met_user_group?(u) do
+		want_user  = get_user_info(u.user)
+		want_group = get_group_info(u.group)
+		case :file.read_link_info(u.path) do
 			{:ok, file_info(type: :symlink, uid: uid, gid: gid)} ->
 				uid == want_user.uid and
 				gid == want_group.gid
@@ -307,12 +307,12 @@ end
 defimpl Unit, for: Converge.FileMissing do
 	import Converge.ThingPresent
 
-	def met?(p, _ctx) do
-		not File.exists?(p.path)
+	def met?(u, _ctx) do
+		not File.exists?(u.path)
 	end
 
-	def meet(p, _) do
-		remove_existing(p)
+	def meet(u, _) do
+		remove_existing(u)
 	end
 end
 
@@ -329,16 +329,16 @@ defmodule Converge.DirectoryEmpty do
 end
 
 defimpl Unit, for: Converge.DirectoryEmpty do
-	def met?(p, _ctx) do
-		case File.ls(p.path) do
+	def met?(u, _ctx) do
+		case File.ls(u.path) do
 			{:ok, children} -> children == []
 			{:error, _}     -> false
 		end
 	end
 
-	def meet(p, _) do
-		for child <- File.ls!(p.path) do
-			child_path = Path.join(p.path, child)
+	def meet(u, _) do
+		for child <- File.ls!(u.path) do
+			child_path = Path.join(u.path, child)
 			case File.dir?(child) do
 				true  -> File.rmdir!(child_path)
 				false -> File.rm!(child_path)
