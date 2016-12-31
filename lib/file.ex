@@ -315,3 +315,34 @@ defimpl Unit, for: Converge.FileMissing do
 		remove_existing(p)
 	end
 end
+
+
+defmodule Converge.DirectoryEmpty do
+	@moduledoc """
+	Directory at `path` is empty.  Directory must already exist.
+
+	Converging will remove files and empty directories in `path`, but not
+	recursively.
+	"""
+	@enforce_keys [:path]
+	defstruct path: nil
+end
+
+defimpl Unit, for: Converge.DirectoryEmpty do
+	def met?(p, _ctx) do
+		case File.ls(p.path) do
+			{:ok, children} -> children == []
+			{:error, _}     -> false
+		end
+	end
+
+	def meet(p, _) do
+		for child <- File.ls!(p.path) do
+			child_path = Path.join(p.path, child)
+			case File.dir?(child) do
+				true  -> File.rmdir!(child_path)
+				false -> File.rm!(child_path)
+			end
+		end
+	end
+end

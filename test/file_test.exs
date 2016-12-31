@@ -1,4 +1,4 @@
-alias Converge.{DirectoryPresent, FilePresent, SymlinkPresent, FileMissing, Runner}
+alias Converge.{DirectoryPresent, FilePresent, SymlinkPresent, FileMissing, DirectoryEmpty, Runner}
 alias Converge.TestHelpers.TestingContext
 alias Gears.FileUtil
 
@@ -161,6 +161,49 @@ defmodule Converge.FileMissingTest do
 		# test
 		m = %FileMissing{path: @deleteme}
 		Runner.converge(m, TestingContext.get_context())
+		assert File.exists?(target)
+	end
+end
+
+defmodule Converge.DirectoryEmptyTest do
+	use ExUnit.Case, async: true
+
+	test "raises error if path does not exist" do
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %DirectoryEmpty{path: p}
+		assert_raise(File.Error, fn -> Runner.converge(u, TestingContext.get_context()) end)
+	end
+
+	test "raises error if path is a file" do
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		File.touch!(p)
+		u = %DirectoryEmpty{path: p}
+		assert_raise(File.Error, fn -> Runner.converge(u, TestingContext.get_context()) end)
+	end
+
+	test "deletes regular files and dotfiles" do
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		File.mkdir!(p)
+		File.touch!(Path.join(p, "a-file"))
+		File.touch!(Path.join(p, ".a-dotfile"))
+		u = %DirectoryEmpty{path: p}
+		Runner.converge(u, TestingContext.get_context())
+	end
+
+	test "deletes symlink, not target" do
+		parent = FileUtil.temp_dir("converge-test")
+		p      = Path.join(parent, "deleteme")
+		File.mkdir!(p)
+
+		# setup
+		target = Path.join(parent, "target")
+		File.touch!(target)
+		u = %SymlinkPresent{path: Path.join(p, "symlink"), target: target}
+		Runner.converge(u, TestingContext.get_context())
+
+		# test
+		u = %DirectoryEmpty{path: p}
+		Runner.converge(u, TestingContext.get_context())
 		assert File.exists?(target)
 	end
 end
