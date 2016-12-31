@@ -4,8 +4,8 @@ alias Converge.{Unit, Runner, FilePresent}
 defmodule Converge.GPG2Keyring do
 	@moduledoc """
 	A GPG2 keyring file `path` exists and contains just keys `keys` (a list of
-	strings with armored keys).  Passes `mode`, `immutable`, `user`, and `group`
-	through to `FilePresent`.
+	strings containing an armored key).  Passes `mode`, `immutable`, `user`, and
+	`group` through to `FilePresent`.
 	"""
 	@enforce_keys [:path, :keys, :mode]
 	defstruct path: nil, keys: [], mode: nil, immutable: false, user: "root", group: "root"
@@ -94,7 +94,8 @@ defimpl Unit, for: Converge.GPG2Keyring do
 		[
 			"--quiet",
 			"--no-options",
-			# Avoid creating a ~/.gnupg/trustdb.gpg
+			"--ignore-time-conflict",
+			# This also avoids creating a ~/.gnupg/trustdb.gpg
 			"--trust-model", "direct",
 			"--no-auto-check-trustdb",
 			"--no-default-keyring",
