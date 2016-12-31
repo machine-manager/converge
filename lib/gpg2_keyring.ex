@@ -14,22 +14,23 @@ end
 # This is implemented in a roundabout way because gpg2 --import doesn't produce
 # identical keyrings, even when given a --faked-system-time.  Instead of creating
 # a new temporary keyring and checking if it's byte-identical to the existing
-# keyring, we use gpg2 --with-colons to compare the list of the keys in the current
-# and desired keyrings.
+# keyring, we use gpg2 --export --armor to compare the list of the keys in the
+# current and desired keyrings.
 defimpl Unit, for: Converge.GPG2Keyring do
 	def met?(u, ctx) do
-		current_key_listing = get_key_listing_or_nil(u.path)
-		case current_key_listing do
+		current_armored_export = get_armored_export_or_nil(u.path)
+		case current_armored_export do
 			nil -> false
 			_   ->
-				# Hopefully the file hasn't changed since the call to get_key_listing_or_nil
+				# Hopefully the file hasn't changed since the call to get_armored_export_or_nil
 				existing_content       = File.read!(u.path)
 				temporary_keyring_file = make_keyring_file(u.keys)
-				desired_key_listing    = get_key_listing_or_nil(temporary_keyring_file)
+				desired_armored_export = get_armored_export_or_nil(temporary_keyring_file)
 				FileUtil.rm_f!(temporary_keyring_file)
 				# This is kind of gross.  FilePresent needs a `content` string, so
-				# give it the existing content, but only if the key listings match.
-				current_key_listing == desired_key_listing and \
+				# just give it the existing content (we need FilePresent to make sure
+				# all the other file attributes are correct.)
+				current_armored_export == desired_armored_export and \
 					Runner.met?(make_unit(u, existing_content), ctx)
 		end
 	end
@@ -68,22 +69,24 @@ defimpl Unit, for: Converge.GPG2Keyring do
 		], stderr_to_stdout: true)
 	end
 
-	# Takes a path `keyring_file`, returns a string containing a machine-parseable
-	# key listing (gpg2's "--with-colons" format) of keys in that file, or `nil`
-	# if the file does not exist.
-	defp get_key_listing_or_nil(keyring_file) do
+	# Takes a path `keyring_file`, returns a string containing an armored export
+	# of the keyring, or `nil` if the file does not exist.  Note the output string
+	# will be "gpg: WARNING: nothing exported" for empty keyrings.
+	#
+	# We use an armored export instead of --list-keys because --list-keys insists
+	# on creating a ~/.gnupg/trustdb.gpg, even with --trust-model=direct.
+	defp get_armored_export_or_nil(keyring_file) do
 		case File.regular?(keyring_file) do
-			true  -> get_key_listing(keyring_file)
+			true  -> get_armored_export(keyring_file)
 			false -> nil
 		end
 	end
 
-	defp get_key_listing(keyring_file) do
+	defp get_armored_export(keyring_file) do
 		{out, 0} = System.cmd("gpg2", get_gpg_opts(keyring_file) ++ [
-			"--with-colons",
-			"--with-secret",
-			"--fingerprint",
-		])
+			"--export",
+			"--armor",
+		], stderr_to_stdout: true)
 		out
 	end
 
@@ -91,6 +94,9 @@ defimpl Unit, for: Converge.GPG2Keyring do
 		[
 			"--quiet",
 			"--no-options",
+			# Avoid creating a ~/.gnupg/trustdb.gpg
+			"--trust-model", "direct",
+			"--no-auto-check-trustdb",
 			"--no-default-keyring",
 			"--primary-keyring", keyring_file,
 		]
