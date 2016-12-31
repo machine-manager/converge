@@ -96,3 +96,33 @@ defimpl Unit, for: Converge.GPG2Keyring do
 		]
 	end
 end
+
+defimpl Inspect, for: Converge.GPG2Keyring do
+	import Inspect.Algebra
+	import Gears.StringUtil, only: [counted_noun: 3]
+
+	def inspect(u, opts) do
+		count = u.keys |> length
+		concat([
+			color("%Converge.GPG2Keyring{", :map, opts),
+			color("path: ",      :atom, opts),
+			to_doc(u.path,              opts),
+			color(", ",          :map,  opts),
+			color("keys: ",      :atom, opts),
+			counted_noun(count, "key", "keys"),
+			color(", ",          :map,  opts),
+			color("mode: ",      :atom, opts),
+			to_doc(u.mode, %Inspect.Opts{opts | base: :octal}),
+			color(", ",          :map,  opts),
+			color("immutable: ", :atom, opts),
+			to_doc(u.immutable,         opts),
+			color(", ",          :map,  opts),
+			color("user: ",      :atom, opts),
+			to_doc(u.user,              opts),
+			color(", ",          :map,  opts),
+			color("group: ",     :atom, opts),
+			to_doc(u.group,             opts),
+			color("}",           :map,  opts)
+		])
+	end
+end
