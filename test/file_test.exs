@@ -181,6 +181,16 @@ defmodule Converge.DirectoryEmptyTest do
 		assert_raise(File.Error, fn -> Runner.converge(u, TestingContext.get_context()) end)
 	end
 
+	test "raises error if child directory is not empty" do
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		File.mkdir!(p)
+		child = Path.join(p, "child")
+		File.mkdir!(child)
+		File.touch!(Path.join(child, "a-file"))
+		u = %DirectoryEmpty{path: p}
+		assert_raise(File.Error, fn -> Runner.converge(u, TestingContext.get_context()) end)
+	end
+
 	test "deletes regular files and dotfiles" do
 		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
 		File.mkdir!(p)
