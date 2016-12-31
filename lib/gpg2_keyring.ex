@@ -54,11 +54,8 @@ defimpl Unit, for: Converge.GPG2Keyring do
 		for key <- keys do
 			key_file = FileUtil.temp_path("converge-gpg2-key")
 			File.write!(key_file, key)
-			{"", 0} = System.cmd("gpg2", [
-				"--quiet",
-				"--no-default-keyring",
-				"--primary-keyring", keyring_file,
-				"--import", key_file
+			{"", 0} = System.cmd("gpg2", get_gpg_opts(keyring_file) ++ [
+				"--import", key_file,
 			])
 			FileUtil.rm_f!(key_file)
 		end
@@ -66,10 +63,7 @@ defimpl Unit, for: Converge.GPG2Keyring do
 	end
 
 	defp create_empty_keyring(keyring_file) do
-		{"gpg: no valid OpenPGP data found.\n", 2} = System.cmd("gpg2", [
-			"--quiet",
-			"--no-default-keyring",
-			"--primary-keyring", keyring_file,
+		{"gpg: no valid OpenPGP data found.\n", 2} = System.cmd("gpg2", get_gpg_opts(keyring_file) ++ [
 			"--import", "/dev/null"
 		], stderr_to_stdout: true)
 	end
@@ -85,14 +79,20 @@ defimpl Unit, for: Converge.GPG2Keyring do
 	end
 
 	defp get_key_listing(keyring_file) do
-		{out, 0} = System.cmd("gpg2", [
-			"--quiet",
-			"--no-default-keyring",
-			"--primary-keyring", keyring_file,
-			"--fingerprint",
+		{out, 0} = System.cmd("gpg2", get_gpg_opts(keyring_file) ++ [
 			"--with-colons",
-			"--with-secret"
+			"--with-secret",
+			"--fingerprint",
 		])
 		out
+	end
+
+	defp get_gpg_opts(keyring_file) do
+		[
+			"--quiet",
+			"--no-options",
+			"--no-default-keyring",
+			"--primary-keyring", keyring_file,
+		]
 	end
 end
