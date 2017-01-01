@@ -1,8 +1,6 @@
 alias Converge.{Unit, UnitError, UserUtil, GroupUtil}
 alias Gears.{FileUtil, IOUtil}
 
-use Bitwise
-
 import Record, only: [defrecordp: 2, extract: 2]
 
 # Functions shared by DirectoryPresent, FilePresent, SymlinkPresent, DirectoryEmpty
@@ -44,6 +42,8 @@ defmodule Converge.ThingPresent do
 	end
 
 	def mode_without_type(mode) do
+		use Bitwise
+
 		mode &&& 0o7777
 	end
 
