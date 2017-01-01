@@ -1,4 +1,4 @@
-alias Converge.{DirectoryPresent, FilePresent, SymlinkPresent, FileMissing, DirectoryEmpty, Runner}
+alias Converge.{ThingPresent, DirectoryPresent, FilePresent, SymlinkPresent, FileMissing, DirectoryEmpty, Runner}
 alias Converge.TestHelpers.TestingContext
 alias Gears.FileUtil
 
@@ -222,7 +222,7 @@ defmodule Converge.DirectoryEmptyTest do
 		assert_raise(File.Error, fn -> Runner.converge(u, TestingContext.get_context()) end)
 	end
 
-	test "deletes regular files and dotfiles and empty directories" do
+	test "deletes children: regular files and dotfiles and empty directories" do
 		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
 		File.mkdir!(p)
 		File.touch!(Path.join(p, "a-file"))
@@ -230,23 +230,31 @@ defmodule Converge.DirectoryEmptyTest do
 		File.mkdir!(Path.join(p, "empty-directory"))
 		u = %DirectoryEmpty{path: p}
 		Runner.converge(u, TestingContext.get_context())
+		assert not ThingPresent.immutable?(p)
 	end
 
-	test "deletes (immutable) regular files and dotfiles and empty directories" do
+	test "deletes immutable children: regular files and dotfiles and empty directories" do
 		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
 		File.mkdir!(p)
 		File.touch!(Path.join(p, "a-file"))
 		File.touch!(Path.join(p, ".a-dotfile"))
 		File.mkdir!(Path.join(p, "empty-directory"))
-		make_immutable(Path.join(p, "a-file"))
-		make_immutable(Path.join(p, ".a-dotfile"))
-		make_immutable(Path.join(p, "empty-directory"))
+		ThingPresent.make_immutable(Path.join(p, "a-file"))
+		ThingPresent.make_immutable(Path.join(p, ".a-dotfile"))
+		ThingPresent.make_immutable(Path.join(p, "empty-directory"))
 		u = %DirectoryEmpty{path: p}
 		Runner.converge(u, TestingContext.get_context())
+		assert not ThingPresent.immutable?(p)
 	end
 
-	defp make_immutable(p) do
-		{"", 0} = System.cmd("chattr", ["+i", "--", p], stderr_to_stdout: true)
+	test "deletes children: even when given directory is immutable" do
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		File.mkdir!(p)
+		File.touch!(Path.join(p, "a-file"))
+		ThingPresent.make_immutable(p)
+		u = %DirectoryEmpty{path: p}
+		Runner.converge(u, TestingContext.get_context())
+		assert ThingPresent.immutable?(p)
 	end
 
 	test "deletes symlink, not target" do

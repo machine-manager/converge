@@ -59,9 +59,12 @@ defmodule Converge.ThingPresent do
 	end
 
 	def met_mutability?(u) do
-		attrs = get_attrs(u.path)
-		has_i = String.match?(attrs, ~r"i")
-		has_i == u.immutable
+		immutable?(u.path) == u.immutable
+	end
+
+	def immutable?(path) do
+		attrs = get_attrs(path)
+		attrs =~ "i"
 	end
 
 	def met_user_group_mode?(u) do
@@ -349,9 +352,22 @@ defimpl Unit, for: Converge.DirectoryEmpty do
 	end
 
 	def meet(u, _) do
-		for child <- File.ls!(u.path) do
-			child_path = Path.join(u.path, child)
-			remove_existing(child_path)
+		children = File.ls!(u.path)
+		case children do
+			[]   -> nil
+			some ->
+				was_immutable = immutable?(u.path)
+				if was_immutable do
+					try_make_mutable(u.path)
+				end
+				for child <- some do
+					child_path = Path.join(u.path, child)
+					remove_existing(child_path)
+				end
+				# Restore original mutability state
+				if was_immutable do
+					make_immutable(u.path)
+				end
 		end
 	end
 end
