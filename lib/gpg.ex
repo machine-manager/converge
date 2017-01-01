@@ -1,4 +1,3 @@
-alias Gears.FileUtil
 alias Converge.{Unit, Runner, FilePresent}
 
 defmodule Converge.GPGSimpleKeyring do
@@ -25,61 +24,19 @@ defimpl Unit, for: Converge.GPGSimpleKeyring do
 	end
 
 	defp make_unit(u) do
-		temporary_keybox_file = make_keybox_file(u.keys)
-		content = try do
-			get_simple_keyring(temporary_keybox_file)
-		after
-			FileUtil.rm_f!(temporary_keybox_file)
-		end
+		content = u.keys
+			|> Enum.map(&decode_armored_key/1)
+			|> Enum.join
 		%FilePresent{path: u.path, content: content, mode: u.mode, immutable: u.immutable, user: u.user, group: u.group}
 	end
 
-	# Takes a list of keys, returns the path to a temporary file containing
-	# a GPG2 keybox with those keys.
-	defp make_keybox_file(keys) do
-		keybox_file = FileUtil.temp_path("converge-gpg2-keybox")
-		# Create an empty keybox, because `keys` may be empty
-		create_empty_keybox(keybox_file)
-		for key <- keys do
-			key_file = FileUtil.temp_path("converge-gpg2-key")
-			File.write!(key_file, key)
-			{"", 0} = System.cmd("gpg2", get_gpg_opts(keybox_file) ++ [
-				"--import", key_file,
-			])
-			FileUtil.rm_f!(key_file)
-		end
-		keybox_file
-	end
-
-	defp create_empty_keybox(keybox_file) do
-		{"gpg: no valid OpenPGP data found.\n", 2} = System.cmd("gpg2", get_gpg_opts(keybox_file) ++ [
-			"--import", "/dev/null"
-		], stderr_to_stdout: true)
-	end
-
-	# Takes a path `keybox_file` (keybox or simple keyring), returns a string
-	# containing a simple keyring export of the keyring.
-	defp get_simple_keyring(keybox_file) do
-		{out, 0} = System.cmd("gpg2", get_gpg_opts(keybox_file) ++ [
-			"--export",
-		], stderr_to_stdout: true)
-		case out do
-			"gpg: WARNING: nothing exported\n" -> ""
-			other                              -> other
-		end
-	end
-
-	defp get_gpg_opts(keybox_file) do
-		[
-			"--quiet",
-			"--no-options",
-			"--ignore-time-conflict",
-			# This also avoids creating a ~/.gnupg/trustdb.gpg
-			"--trust-model", "direct",
-			"--no-auto-check-trustdb",
-			"--no-default-keyring",
-			"--primary-keyring", keybox_file,
-		]
+	defp decode_armored_key(key) do
+		key
+		|> String.split("\n")
+		# Skip "-----{BEGIN,END} PGP PUBLIC KEY BLOCK-----", "Version: ", "=checksum"
+		|> Enum.filter(&(&1 =~ ~r/^[^ =]+$/))
+		|> Enum.join
+		|> Base.decode64!
 	end
 end
 
