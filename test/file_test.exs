@@ -110,6 +110,13 @@ defmodule Converge.FilePresentTest do
 		Runner.converge(u, TestingContext.get_context())
 	end
 
+	test "file can replace an empty directory" do
+		deleteme = FileUtil.temp_dir("converge-test")
+
+		u = %FilePresent{path: deleteme, content: "changed", mode: 0o600}
+		Runner.converge(u, TestingContext.get_context())
+	end
+
 	test "inspect shows content length, not contents; mode in octal" do
 		u = %FilePresent{path: "/tmp/not-written", content: "changed", mode: 0o600, immutable: true}
 		assert inspect(u) == ~s(%Converge.FilePresent{path: "/tmp/not-written", content: 7 bytes, mode: 0o600, immutable: true, user: "root", group: "root"})

@@ -5,30 +5,33 @@ use Bitwise
 
 import Record, only: [defrecordp: 2, extract: 2]
 
-# Functions shared by DirectoryPresent, FilePresent, SymlinkPresent
+# Functions shared by DirectoryPresent, FilePresent, SymlinkPresent, DirectoryEmpty
 defmodule Converge.ThingPresent do
 	@moduledoc false
 	defrecordp :file_info, extract(:file_info, from_lib: "kernel/include/file.hrl")
 
-	def try_make_mutable(u) do
-		System.cmd("chattr", ["-i", "--", u.path], stderr_to_stdout: true)
+	def try_make_mutable(path) do
+		System.cmd("chattr", ["-i", "--", path], stderr_to_stdout: true)
 	end
 
-	def make_mutable(u) do
-		{"", 0} = try_make_mutable(u)
+	def make_mutable(path) do
+		{"", 0} = try_make_mutable(path)
 	end
 
-	@doc "Remove an existing dentry, even if it is immutable."
-	def remove_existing(u) do
-		# Ignore output and exit code, because we may be removing a symlink
-		# on which you can't chattr -i or +i
-		try_make_mutable(u)
-		FileUtil.rm_f!(u.path)
+	def make_immutable(path) do
+		{"", 0} = System.cmd("chattr", ["+i", "--", path], stderr_to_stdout: true)
 	end
 
-	def meet_mutability(u) do
-		if u.immutable do
-			{"", 0} = System.cmd("chattr", ["+i", "--", u.path])
+	@doc """
+	Remove an existing file or symlink or empty directory, even if it is immutable.
+	"""
+	def remove_existing(path) do
+		# Ignore output and exit code, because 1) file may not exist 2) we may
+		# be removing a symlink, which you can't chattr -i or +i
+		try_make_mutable(path)
+		case File.dir?(path) do
+			true  -> File.rmdir!(path)
+			false -> FileUtil.rm_f!(path)
 		end
 	end
 
@@ -117,17 +120,21 @@ defimpl Unit, for: Converge.DirectoryPresent do
 		case status do
 			0 ->
 				meet_user_group_owner(u)
-				meet_mutability(u)
+				if u.immutable do
+					make_immutable(u.path)
+				end
 			_ ->
 				# mkdir may have failed because the directory already existed, but
 				# we still need to fix the mode/user/group.
 				case File.dir?(u.path) do
 					true  ->
 						# Must make mutable before we can chmod
-						make_mutable(u)
+						make_mutable(u.path)
 						File.chmod!(u.path, u.mode)
 						meet_user_group_owner(u)
-						meet_mutability(u)
+						if u.immutable do
+							make_immutable(u.path)
+						end
 					false ->
 						raise UnitError, message: "mkdir failed to create a directory: #{out}"
 				end
@@ -188,7 +195,7 @@ defimpl Unit, for: Converge.FilePresent do
 		#
 		# Removing the file first also avoids the problem of very briefly granting
 		# access to a new user/group that should not be able to see the old file contents.
-		remove_existing(u)
+		remove_existing(u.path)
 
 		f = File.open!(u.path, [:write])
 		try do
@@ -196,7 +203,9 @@ defimpl Unit, for: Converge.FilePresent do
 			File.chmod!(u.path, u.mode)
 			meet_user_group_owner(u)
 			IOUtil.binwrite!(f, u.content)
-			meet_mutability(u)
+			if u.immutable do
+				make_immutable(u.path)
+			end
 		after
 			File.close(f)
 		end
@@ -263,7 +272,7 @@ defimpl Unit, for: Converge.SymlinkPresent do
 	end
 
 	def meet(u, _) do
-		remove_existing(u)
+		remove_existing(u.path)
 		case File.ln_s(u.target, u.path) do
 			:ok ->
 				meet_user_group_owner(u)
@@ -313,7 +322,7 @@ defimpl Unit, for: Converge.FileMissing do
 	end
 
 	def meet(u, _) do
-		remove_existing(u)
+		remove_existing(u.path)
 	end
 end
 
@@ -330,6 +339,8 @@ defmodule Converge.DirectoryEmpty do
 end
 
 defimpl Unit, for: Converge.DirectoryEmpty do
+	import Converge.ThingPresent
+
 	def met?(u, _ctx) do
 		case File.ls(u.path) do
 			{:ok, children} -> children == []
@@ -340,10 +351,7 @@ defimpl Unit, for: Converge.DirectoryEmpty do
 	def meet(u, _) do
 		for child <- File.ls!(u.path) do
 			child_path = Path.join(u.path, child)
-			case File.dir?(child_path) do
-				true  -> File.rmdir!(child_path)
-				false -> File.rm!(child_path)
-			end
+			remove_existing(child_path)
 		end
 	end
 end
