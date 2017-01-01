@@ -123,6 +123,7 @@ defimpl Unit, for: Converge.DirectoryPresent do
 				# we still need to fix the mode/user/group.
 				case File.dir?(u.path) do
 					true  ->
+						# Must make mutable before we can chmod
 						make_mutable(u)
 						File.chmod!(u.path, u.mode)
 						meet_user_group_owner(u)
