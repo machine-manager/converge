@@ -340,7 +340,7 @@ defimpl Unit, for: Converge.DirectoryEmpty do
 	def meet(u, _) do
 		for child <- File.ls!(u.path) do
 			child_path = Path.join(u.path, child)
-			case File.dir?(child) do
+			case File.dir?(child_path) do
 				true  -> File.rmdir!(child_path)
 				false -> File.rm!(child_path)
 			end

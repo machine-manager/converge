@@ -215,13 +215,31 @@ defmodule Converge.DirectoryEmptyTest do
 		assert_raise(File.Error, fn -> Runner.converge(u, TestingContext.get_context()) end)
 	end
 
-	test "deletes regular files and dotfiles" do
+	test "deletes regular files and dotfiles and empty directories" do
 		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
 		File.mkdir!(p)
 		File.touch!(Path.join(p, "a-file"))
 		File.touch!(Path.join(p, ".a-dotfile"))
+		File.mkdir!(Path.join(p, "empty-directory"))
 		u = %DirectoryEmpty{path: p}
 		Runner.converge(u, TestingContext.get_context())
+	end
+
+	test "deletes (immutable) regular files and dotfiles and empty directories" do
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		File.mkdir!(p)
+		File.touch!(Path.join(p, "a-file"))
+		File.touch!(Path.join(p, ".a-dotfile"))
+		File.mkdir!(Path.join(p, "empty-directory"))
+		make_immutable(Path.join(p, "a-file"))
+		make_immutable(Path.join(p, ".a-dotfile"))
+		make_immutable(Path.join(p, "empty-directory"))
+		u = %DirectoryEmpty{path: p}
+		Runner.converge(u, TestingContext.get_context())
+	end
+
+	defp make_immutable(p) do
+		{"", 0} = System.cmd("chattr", ["+i", "--", p], stderr_to_stdout: true)
 	end
 
 	test "deletes symlink, not target" do
