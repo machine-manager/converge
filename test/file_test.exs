@@ -45,6 +45,30 @@ defmodule Converge.DirectoryPresentTest do
 		Runner.converge(u, TestingContext.get_context())
 		assert_raise(File.Error, fn -> File.touch!(Path.join(d, "file-3")) end)
 	end
+
+	test "immutable directory when mutable directory already exists" do
+		d = Path.join(@dir, "immutable")
+
+		# setup
+		u = %DirectoryPresent{path: d, mode: 0o666}
+		Runner.converge(u, TestingContext.get_context())
+
+		# test
+		u = %DirectoryPresent{path: d, mode: 0o777, immutable: true}
+		Runner.converge(u, TestingContext.get_context())
+	end
+
+	test "immutable directory when immutable directory already exists but with wrong permissions" do
+		d = Path.join(@dir, "immutable")
+
+		# setup
+		u = %DirectoryPresent{path: d, mode: 0o666, immutable: true}
+		Runner.converge(u, TestingContext.get_context())
+
+		# test
+		u = %DirectoryPresent{path: d, mode: 0o777, immutable: true}
+		Runner.converge(u, TestingContext.get_context())
+	end
 end
 
 defmodule Converge.FilePresentTest do
