@@ -163,38 +163,38 @@ end
 defmodule Converge.FileMissingTest do
 	use ExUnit.Case, async: true
 
-	@dir       FileUtil.temp_dir("converge-test")
-	@deleteme  Path.join(@dir, "deleteme")
-	@immutable Path.join(@dir, "immutable")
-
 	test "works if file doesn't exist" do
-		FileUtil.rm_f!(@deleteme)
-		m = %FileMissing{path: @deleteme}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		m = %FileMissing{path: p}
 		Runner.converge(m, TestingContext.get_context())
 	end
 
 	test "works if file exists" do
-		m = %FileMissing{path: @deleteme}
-		File.touch!(@deleteme)
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		File.touch!(p)
+		m = %FileMissing{path: p}
 		Runner.converge(m, TestingContext.get_context())
 	end
 
 	test "works if file exists and is immutable" do
-		m = %FileMissing{path: @immutable}
-		File.touch!(@immutable)
-		{"", 0} = System.cmd("chattr", ["+i", "--", @immutable])
+		p = Path.join(FileUtil.temp_dir("converge-test"), "immutable")
+		File.touch!(p)
+		{"", 0} = System.cmd("chattr", ["+i", "--", p])
+		m = %FileMissing{path: p}
 		Runner.converge(m, TestingContext.get_context())
 	end
 
 	test "does not remove symlink target when pointing FileMissing at symlink" do
+		p = FileUtil.temp_dir("converge-test")
+
 		# setup
-		target = Path.join(@dir, "target")
+		target = Path.join(p, "target")
 		File.touch!(target)
-		u = %SymlinkPresent{path: @deleteme, target: target}
+		u = %SymlinkPresent{path: Path.join(p, "link"), target: target}
 		Runner.converge(u, TestingContext.get_context())
 
 		# test
-		m = %FileMissing{path: @deleteme}
+		m = %FileMissing{path: Path.join(p, "link")}
 		Runner.converge(m, TestingContext.get_context())
 		assert File.exists?(target)
 	end
