@@ -75,46 +75,48 @@ end
 defmodule Converge.FilePresentTest do
 	use ExUnit.Case, async: true
 
-	@dir      FileUtil.temp_dir("converge-test")
-	@deleteme Path.join(@dir, "deleteme")
-
 	test "file with mode 0600" do
-		u = %FilePresent{path: @deleteme, content: "multiple\nlines", mode: 0o600}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %FilePresent{path: p, content: "multiple\nlines", mode: 0o600}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "file with mode 0666" do
-		u = %FilePresent{path: @deleteme, content: "multiple\nlines", mode: 0o666}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %FilePresent{path: p, content: "multiple\nlines", mode: 0o666}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "file with user nobody" do
-		u = %FilePresent{path: @deleteme, content: "multiple\nlines", mode: 0o666, user: "nobody"}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %FilePresent{path: p, content: "multiple\nlines", mode: 0o666, user: "nobody"}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "file with user nobody and group daemon" do
-		u = %FilePresent{path: @deleteme, content: "multiple\nlines", mode: 0o666, user: "nobody", group: "daemon"}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %FilePresent{path: p, content: "multiple\nlines", mode: 0o666, user: "nobody", group: "daemon"}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "file can be changed even if immutable" do
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+
 		# setup
-		u = %FilePresent{path: @deleteme, content: "content", mode: 0o600, immutable: true}
+		u = %FilePresent{path: p, content: "content", mode: 0o600, immutable: true}
 		Runner.converge(u, TestingContext.get_context())
 
 		# test
-		u = %FilePresent{path: @deleteme, content: "changed", mode: 0o600, immutable: true}
+		u = %FilePresent{path: p, content: "changed", mode: 0o600, immutable: true}
 		Runner.converge(u, TestingContext.get_context())
 
-		u = %FilePresent{path: @deleteme, content: "changed and mutable", mode: 0o600}
+		u = %FilePresent{path: p, content: "changed and mutable", mode: 0o600}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "file can replace an empty directory" do
-		deleteme = FileUtil.temp_dir("converge-test")
-
-		u = %FilePresent{path: deleteme, content: "changed", mode: 0o600}
+		p = FileUtil.temp_dir("converge-test")
+		u = %FilePresent{path: p, content: "changed", mode: 0o600}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
