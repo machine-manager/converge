@@ -5,68 +5,69 @@ alias Gears.FileUtil
 defmodule Converge.DirectoryPresentTest do
 	use ExUnit.Case, async: true
 
-	@dir      FileUtil.temp_dir("converge-test")
-	@deleteme Path.join(@dir, "deleteme")
-
 	test "directory with mode 0600" do
-		u = %DirectoryPresent{path: @deleteme, mode: 0o600}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %DirectoryPresent{path: p, mode: 0o600}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "directory with mode 0666" do
-		u = %DirectoryPresent{path: @deleteme, mode: 0o666}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %DirectoryPresent{path: p, mode: 0o666}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "directory with user nobody" do
-		u = %DirectoryPresent{path: @deleteme, mode: 0o666, user: "nobody"}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %DirectoryPresent{path: p, mode: 0o666, user: "nobody"}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "directory with user nobody and group daemon" do
-		u = %DirectoryPresent{path: @deleteme, mode: 0o666, user: "nobody", group: "daemon"}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %DirectoryPresent{path: p, mode: 0o666, user: "nobody", group: "daemon"}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "immutable directory" do
-		d = Path.join(@dir, "immutable")
+		p = Path.join(FileUtil.temp_dir("converge-test"), "immutable")
 
-		u = %DirectoryPresent{path: d, mode: 0o777, immutable: true}
+		u = %DirectoryPresent{path: p, mode: 0o777, immutable: true}
 		Runner.converge(u, TestingContext.get_context())
-		assert_raise(File.Error, fn -> File.touch!(Path.join(d, "file-1")) end)
+		assert_raise(File.Error, fn -> File.touch!(Path.join(p, "file-1")) end)
 
 		# remove +i attr, make sure we can change the mode, make sure we can
 		# touch a file in the now-mutable directory
-		u = %DirectoryPresent{path: d, mode: 0o770}
+		u = %DirectoryPresent{path: p, mode: 0o770}
 		Runner.converge(u, TestingContext.get_context())
-		File.touch!(Path.join(d, "file-2"))
+		File.touch!(Path.join(p, "file-2"))
 
-		u = %DirectoryPresent{path: d, mode: 0o776, immutable: true}
+		u = %DirectoryPresent{path: p, mode: 0o776, immutable: true}
 		Runner.converge(u, TestingContext.get_context())
-		assert_raise(File.Error, fn -> File.touch!(Path.join(d, "file-3")) end)
+		assert_raise(File.Error, fn -> File.touch!(Path.join(p, "file-3")) end)
 	end
 
 	test "immutable directory when mutable directory already exists" do
-		d = Path.join(@dir, "immutable")
+		p = Path.join(FileUtil.temp_dir("converge-test"), "immutable")
 
 		# setup
-		u = %DirectoryPresent{path: d, mode: 0o666}
+		u = %DirectoryPresent{path: p, mode: 0o666}
 		Runner.converge(u, TestingContext.get_context())
 
 		# test
-		u = %DirectoryPresent{path: d, mode: 0o777, immutable: true}
+		u = %DirectoryPresent{path: p, mode: 0o777, immutable: true}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "immutable directory when immutable directory already exists but with wrong permissions" do
-		d = Path.join(@dir, "immutable")
+		p = Path.join(FileUtil.temp_dir("converge-test"), "immutable")
 
 		# setup
-		u = %DirectoryPresent{path: d, mode: 0o666, immutable: true}
+		u = %DirectoryPresent{path: p, mode: 0o666, immutable: true}
 		Runner.converge(u, TestingContext.get_context())
 
 		# test
-		u = %DirectoryPresent{path: d, mode: 0o777, immutable: true}
+		u = %DirectoryPresent{path: p, mode: 0o777, immutable: true}
 		Runner.converge(u, TestingContext.get_context())
 	end
 end
