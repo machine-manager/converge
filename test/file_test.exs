@@ -129,32 +129,33 @@ end
 defmodule Converge.SymlinkPresentTest do
 	use ExUnit.Case, async: true
 
-	@dir       FileUtil.temp_dir("converge-test")
-	@deleteme  Path.join(@dir, "deleteme")
-	@immutable Path.join(@dir, "immutable")
-
 	test "symlink" do
-		u = %SymlinkPresent{path: @deleteme, target: "/root/some-target"}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %SymlinkPresent{path: p, target: "/root/some-target"}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "symlink with user nobody" do
-		u = %SymlinkPresent{path: @deleteme, target: "/root/some-target", user: "nobody"}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %SymlinkPresent{path: p, target: "/root/some-target", user: "nobody"}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "symlink with user nobody and group daemon" do
-		u = %SymlinkPresent{path: @deleteme, target: "/root/some-target", user: "nobody", group: "daemon"}
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %SymlinkPresent{path: p, target: "/root/some-target", user: "nobody", group: "daemon"}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "symlink that replaces an immutable file" do
+		p = Path.join(FileUtil.temp_dir("converge-test"), "immutable")
+
 		# setup
-		u = %FilePresent{path: @immutable, content: "content", mode: 0o600, immutable: true}
+		u = %FilePresent{path: p, content: "content", mode: 0o600, immutable: true}
 		Runner.converge(u, TestingContext.get_context())
 
 		# test
-		u = %SymlinkPresent{path: @immutable, target: "/root/some-target"}
+		u = %SymlinkPresent{path: p, target: "/root/some-target"}
 		Runner.converge(u, TestingContext.get_context())
 	end
 end
