@@ -69,6 +69,9 @@ defimpl Unit, for: Converge.Sysfs do
 	end
 
 	defp variable_to_row({key, value}) do
-		[key, "=", value]
+		[key, "=", value_to_string(value)]
 	end
+
+	defp value_to_string(value) when is_binary(value),  do: value
+	defp value_to_string(value) when is_integer(value), do: to_string(value)
 end
