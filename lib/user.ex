@@ -350,3 +350,11 @@ defimpl Unit, for: Converge.RegularUsersPresent do
 		}
 	end
 end
+
+# TODO: ExtraGroupsPresent
+# does not control a user's primary group
+# does not control nogroup
+# does not control system groups
+
+# <ivan> usermod -G sets the groups for a user, but I want to set users for a group
+# (because there may be system-managed groups that I'm not aware of)
