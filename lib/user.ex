@@ -119,7 +119,6 @@ end
 
 defimpl Unit, for: Converge.UserPresent do
 	import Gears.LangUtil, only: [oper_if: 3]
-	import ExUnit.Assertions, only: [assert: 2]
 	alias Converge.UserUtil
 
 	def met?(u, _ctx) do
@@ -180,9 +179,9 @@ defimpl Unit, for: Converge.UserPresent do
 		# Note: we refuse to change uid or gid, because it's dangerous
 		# and possibly a configuration mistake.
 		{out, 0} = System.cmd("usermod", args ++ ["--", u.name], stderr_to_stdout: true)
-		assert \
-			out == "" or out == "usermod: no changes\n",
-			"Unexpected output from useradd: #{inspect out}"
+		if not (out == "" or out == "usermod: no changes\n") do
+			raise UnitError, message: "Unexpected output from usermod: #{inspect out}"
+		end
 	end
 
 	defp meet_add(u) do
@@ -197,14 +196,13 @@ defimpl Unit, for: Converge.UserPresent do
 			|> oper_if(true,          ["--create-home"])
 			|> elem(0)
 		{out, 0} = System.cmd("useradd", args ++ ["--", u.name], stderr_to_stdout: true)
-		assert \
-			out == "" or
-			out ==
+		if not (out == "" or out ==
 				"""
 				useradd: warning: the home directory already exists.
 				Not copying any file from skel directory into it.
-				""",
-			"Unexpected output from useradd: #{inspect out}"
+				""") do
+			raise UnitError, message: "Unexpected output from useradd: #{inspect out}"
+		end
 	end
 end
 
