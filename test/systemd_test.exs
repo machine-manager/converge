@@ -1,4 +1,4 @@
-alias Converge.{Runner, UnitError, SystemdUnitStarted, SystemdUnitStopped}
+alias Converge.{Runner, SystemdUnitStarted, SystemdUnitStopped}
 alias Converge.TestHelpers.{TestingContext}
 
 defmodule Converge.Runner.SystemdUnitStartedTest do
