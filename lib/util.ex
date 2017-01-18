@@ -13,15 +13,37 @@ defmodule Converge.Util do
 		|> String.replace_suffix("\n", "")
 		|> String.split("\n")
 		|> Enum.map(fn line ->
-			case line |> String.split(~r/\s+/) do
-				[label, number, "kB"] ->
-					{label |> String.replace_suffix(":", ""), (number |> String.to_integer) * 1024}
-				[label, number] ->
-					{label |> String.replace_suffix(":", ""),  number |> String.to_integer}
+			case line |> String.split(~r/:?\s+/, parts: 3) do
+				[label, number, "kB"] -> {label, (number |> String.to_integer) * 1024}
+				[label, number]       -> {label,  number |> String.to_integer}
 			end
 		end)
 		|> Enum.into(%{})
 	end
+
+	def get_cpuinfo() do
+		{out, 0} = System.cmd("lscpu", [])
+		info = out
+			|> String.replace_suffix("\n", "")
+			|> String.split("\n")
+			|> Enum.map(fn line -> line |> String.split(~r/:\s+/, parts: 2) |> List.to_tuple end)
+			|> Enum.into(%{})
+		%{
+			sockets:      int(info["Socket(s)"]),
+			cores:        int(info["Socket(s)"]) * int(info["Core(s) per socket"]),
+			threads:      int(info["CPU(s)"]),
+			architecture: info["Architecture"],
+			vendor_id:    info["Vendor ID"],
+			model:        int(info["Model"]),
+			model_name:   info["Model name"],
+			stepping:     int(info["Stepping"]),
+			cpu_max_mhz:  float(info["CPU max MHz"]),
+			flags:        info["Flags"] |> String.split(" "),
+		}
+	end
+
+	defp int(s),   do: String.to_integer(s)
+	defp float(s), do: String.to_float(s)
 
 	@doc false
 	def get_control_line(lines, name) do

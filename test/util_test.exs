@@ -16,6 +16,22 @@ defmodule Converge.UtilTest do
 		assert is_integer(info["HugePages_Total"])
 	end
 
+	test "get_cpuinfo" do
+		info = Util.get_cpuinfo()
+
+		assert is_integer(info.cores)
+		assert is_integer(info.threads)
+		assert is_integer(info.sockets)
+		assert info.threads >= info.cores
+		assert info.cores   >= info.sockets
+		assert is_binary(info.architecture)
+		assert is_binary(info.model_name)
+		assert is_binary(info.vendor_id)
+		assert is_integer(info.stepping)
+		assert is_float(info.cpu_max_mhz)
+		assert is_list(info.flags)
+	end
+
 	test "installed?" do
 		assert Util.installed?("procps")      == true
 		assert Util.installed?("not-a-thing") == false
