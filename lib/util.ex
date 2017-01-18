@@ -29,21 +29,26 @@ defmodule Converge.Util do
 			|> Enum.map(fn line -> line |> String.split(~r/:\s+/, parts: 2) |> List.to_tuple end)
 			|> Enum.into(%{})
 		%{
-			sockets:      int(info["Socket(s)"]),
-			cores:        int(info["Socket(s)"]) * int(info["Core(s) per socket"]),
-			threads:      int(info["CPU(s)"]),
-			architecture: info["Architecture"],
-			vendor_id:    info["Vendor ID"],
-			model:        int(info["Model"]),
-			model_name:   info["Model name"],
-			stepping:     int(info["Stepping"]),
-			cpu_max_mhz:  float(info["CPU max MHz"]),
-			flags:        info["Flags"] |> String.split(" "),
+			sockets:           int(info["Socket(s)"]),
+			cores:             int(info["Socket(s)"]) * int(info["Core(s) per socket"]),
+			threads:           int(info["CPU(s)"]),
+			architecture:      info["Architecture"],
+			vendor_id:         info["Vendor ID"],
+			hypervisor_vendor: info["Hypervisor vendor"],
+			model:             int(info["Model"]),
+			model_name:        info["Model name"],
+			stepping:          int(info["Stepping"]),
+			cpu_mhz:           float(info["CPU MHz"]),
+			cpu_max_mhz:       float(info["CPU max MHz"]),
+			cpu_min_mhz:       float(info["CPU min MHz"]),
+			flags:             info["Flags"] |> String.split(" "),
 		}
 	end
 
-	defp int(s),   do: String.to_integer(s)
-	defp float(s), do: String.to_float(s)
+	defp int(nil),   do: nil
+	defp int(s),     do: String.to_integer(s)
+	defp float(nil), do: nil
+	defp float(s),   do: String.to_float(s)
 
 	@doc false
 	def get_control_line(lines, name) do

@@ -27,8 +27,11 @@ defmodule Converge.UtilTest do
 		assert is_binary(info.architecture)
 		assert is_binary(info.model_name)
 		assert is_binary(info.vendor_id)
+		assert info.hypervisor_vendor == nil or is_binary(info.hypervisor_vendor)
 		assert is_integer(info.stepping)
-		assert is_float(info.cpu_max_mhz)
+		assert is_float(info.cpu_mhz)
+		assert info.cpu_max_mhz == nil or is_float(info.cpu_max_mhz)
+		assert info.cpu_min_mhz == nil or is_float(info.cpu_min_mhz)
 		assert is_list(info.flags)
 	end
 
