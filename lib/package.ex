@@ -213,12 +213,12 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		temp = FileUtil.temp_dir(u.name)
 		control_tar_gz = Path.join(temp, "control.tar.gz")
 
-		data_tar_xz = Path.join(temp, "data.tar.xz")
-		{_, 0} = System.cmd("tar", ["-cJf", data_tar_xz, "--files-from=/dev/null"])
+		data_tar_gz = Path.join(temp, "data.tar.gz")
+		{_, 0} = System.cmd("tar", ["-czf", data_tar_gz, "--files-from=/dev/null"])
 
 		deb = Path.join(temp, "metapackage.deb")
 		Debpress.write_control_tar_gz(control_tar_gz, Debpress.control_file(make_control(u)), %{})
-		Debpress.write_deb(deb, control_tar_gz, data_tar_xz)
+		Debpress.write_deb(deb, control_tar_gz, data_tar_gz)
 		deb
 	end
 
