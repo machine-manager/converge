@@ -1,5 +1,5 @@
 alias Gears.TableFormatter
-alias Converge.{Unit, Runner, AfterMeet, FilePresent}
+alias Converge.{Unit, Runner, FilePresent}
 
 defmodule Converge.Sysctl do
 	@moduledoc """
@@ -21,6 +21,9 @@ defimpl Unit, for: Converge.Sysctl do
 
 	def meet(u, ctx) do
 		Runner.converge(make_unit(u), ctx)
+		# Always run this after converging the FilePresent unit; just because the
+		# file was up-to-date does not mean the correct values were in the kernel.
+		{_, 0} = System.cmd("service", ["procps", "restart"])
 	end
 
 	# Are our desired values loaded in the kernel?
@@ -53,10 +56,7 @@ defimpl Unit, for: Converge.Sysctl do
 	end
 
 	defp make_unit(u) do
-		%AfterMeet{
-			unit:    %FilePresent{path: "/etc/sysctl.conf", content: parameters_to_sysctl(u.parameters), mode: 0o644},
-			trigger: fn -> {_, 0} = System.cmd("service", ["procps", "restart"]) end
-		}
+		%FilePresent{path: "/etc/sysctl.conf", content: parameters_to_sysctl(u.parameters), mode: 0o644}
 	end
 
 	# Returns a string containing a sysctl.conf with the parameters given
