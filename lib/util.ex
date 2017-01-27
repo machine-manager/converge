@@ -91,7 +91,7 @@ defmodule Converge.Util do
 		case File.read(@country_file) do
 			{:ok, content} -> content |> String.trim_trailing
 			_              ->
-				{out, 0} = System.cmd("curl", ["-q", "--silent", "http://freegeoip.net/json/"])
+				{out, 0} = System.cmd("curl", ["-q", "--silent", "--max-time", "8", "http://freegeoip.net/json/"])
 				country =
 					Regex.run(~r/"country_code": ?"(..)"/, out, capture: :all_but_first)
 					|> hd
