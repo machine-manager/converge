@@ -66,6 +66,7 @@ end
 
 defimpl Unit, for: Converge.DanglingPackagesPurged do
 	def met?(_, _ctx) do
+		{_,   0} = System.cmd("dpkg", ["--configure", "-a"])
 		{out, 0} = System.cmd("apt-get", ["autoremove", "--purge", "--simulate"])
 		actions = StringUtil.grep(out, ~r"^Purg ")
 		case actions do
@@ -75,6 +76,7 @@ defimpl Unit, for: Converge.DanglingPackagesPurged do
 	end
 
 	def meet(_, _) do
+		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
 		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y"])
 	end
 end
@@ -148,6 +150,7 @@ defimpl Unit, for: Converge.PackagePurged do
 	end
 
 	def meet(u, _) do
+		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
 		{_, 0} = System.cmd("apt-get", ["remove", "--purge", "-y", "--", u.name])
 	end
 end
@@ -190,6 +193,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 			"-o", "Dpkg::Options::=--force-confdef",
 			"-o", "Dpkg::Options::=--force-confold",
 		]
+		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
 		{_, 0} = System.cmd("apt-get", ["install", "-y"] ++ args ++ ["--", deb], env: env)
 	end
 
@@ -239,6 +243,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 
 	# Returns `true` if `apt-get -f install` doesn't need to do anything.
 	defp met_nothing_to_fix?() do
+		{_,   0} = System.cmd("dpkg", ["--configure", "-a"])
 		{out, 0} = System.cmd("apt-get", ["--simulate", "--fix-broken", "install"])
 		actions = StringUtil.grep(out, ~r"^(Inst|Conf|Remv) ")
 		case actions do
