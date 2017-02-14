@@ -103,10 +103,30 @@ defimpl Converge.Reporter, for: Converge.TerminalReporter do
 	end
 end
 
+
+defmodule Converge.SilentReporter do
+	defstruct []
+	def new() do
+		%Converge.SilentReporter{}
+	end
+end
+
+defimpl Converge.Reporter, for: Converge.SilentReporter do
+	def open(_reporter, unit, _which) do
+		# Exercise inspect() but don't actually print
+		_ = inspect(unit)
+	end
+	def close(_reporter, unit, _result) do
+		_ = inspect(unit)
+	end
+end
+
+
 defmodule Converge.Context do
 	@enforce_keys [:reporter, :run_meet]
 	defstruct reporter: nil, run_meet: nil
 end
+
 
 defmodule Converge.Runner do
 	alias Converge.{Unit, UnitError, Context, Reporter}

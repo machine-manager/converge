@@ -68,27 +68,8 @@ defimpl Unit, for: Converge.TestHelpers.ConvergeableUnit do
 end
 
 
-defmodule Converge.TestHelpers.SilentReporter do
-	defstruct []
-	def new() do
-		%Converge.TestHelpers.SilentReporter{}
-	end
-end
-
-defimpl Converge.Reporter, for: Converge.TestHelpers.SilentReporter do
-	def open(_reporter, unit, _which) do
-		# Exercise inspect() but don't actually print
-		_ = inspect(unit)
-	end
-	def close(_reporter, unit, _result) do
-		_ = inspect(unit)
-	end
-end
-
-
 defmodule Converge.TestHelpers.TestingContext do
-	alias Converge.Context
-	alias Converge.TestHelpers.SilentReporter
+	alias Converge.{Context, SilentReporter}
 
 	def get_context() do
 		%Context{reporter: SilentReporter.new(), run_meet: true}
