@@ -105,7 +105,7 @@ defmodule Converge.DirectoryPresent do
 	owned by `user` and `group`.
 	"""
 	@enforce_keys [:path, :mode]
-	defstruct path: nil, mode: nil, immutable: false, user: "root", group: "root"
+	defstruct path: nil, mode: nil, immutable: false, user: System.get_env("USER"), group: System.get_env("USER")
 end
 
 defimpl Unit, for: Converge.DirectoryPresent do
@@ -181,7 +181,7 @@ defmodule Converge.FilePresent do
 	owned by `user` and `group`.
 	"""
 	@enforce_keys [:path, :content, :mode]
-	defstruct path: nil, content: nil, mode: nil, immutable: false, user: "root", group: "root"
+	defstruct path: nil, content: nil, mode: nil, immutable: false, user: System.get_env("USER"), group: System.get_env("USER")
 end
 
 defimpl Unit, for: Converge.FilePresent do
@@ -263,7 +263,7 @@ defmodule Converge.SymlinkPresent do
 	by `user` and `group`.
 	"""
 	@enforce_keys [:path, :target]
-	defstruct path: nil, target: nil, user: "root", group: "root"
+	defstruct path: nil, target: nil, user: System.get_env("USER"), group: System.get_env("USER")
 end
 
 defimpl Unit, for: Converge.SymlinkPresent do
