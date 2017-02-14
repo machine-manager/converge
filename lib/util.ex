@@ -122,4 +122,17 @@ defmodule Converge.Util do
 			end
 		end
 	end
+
+	defmacro conf_dir(p, mode \\ 0o755) do
+		quote do
+			%Converge.DirectoryPresent{path: unquote(p), mode: unquote(mode)}
+		end
+	end
+
+	defmacro conf_file(p, mode \\ 0o644) do
+		data = File.read!("files/" <> p)
+		quote do
+			%Converge.FilePresent{path: unquote(p), content: unquote(data), mode: unquote(mode)}
+		end
+	end
 end
