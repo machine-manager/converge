@@ -2,11 +2,15 @@ alias Converge.{Unit, UnitError, Runner}
 
 defmodule Converge.UserUtil do
 	def get_users() do
-		shadow = File.read!("/etc/shadow")
-			|> String.trim_trailing("\n")
-			|> String.split("\n")
-			|> Enum.map(&shadow_line_to_tuple/1)
-			|> Enum.into(%{})
+		shadow = case File.read("/etc/shadow") do
+			{:error, _}    -> %{}
+			{:ok, content} ->
+				content
+				|> String.trim_trailing("\n")
+				|> String.split("\n")
+				|> Enum.map(&shadow_line_to_tuple/1)
+				|> Enum.into(%{})
+		end
 
 		File.read!("/etc/passwd")
 		|> String.trim_trailing("\n")
