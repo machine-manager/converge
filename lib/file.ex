@@ -34,11 +34,17 @@ defmodule Converge.ThingPresent do
 	end
 
 	def meet_user_group_owner(u) do
-		want_user  = get_user_info(u.user)
-		want_group = get_group_info(u.group)
-
-		{_, 0} = System.cmd("chown",
-			["--no-dereference", "#{want_user.uid}:#{want_group.gid}", "--", u.path])
+		want_user    = if u.user  != nil, do: get_user_info(u.user)
+		want_group   = if u.group != nil, do: get_group_info(u.group)
+		chown_string = case {want_user, want_group} do
+			{nil,  nil}   -> nil
+			{user, nil}   -> "#{user.uid}"
+			{nil,  group} -> ":#{group.gid}"
+			{user, group} -> "#{user.uid}:#{group.gid}"
+		end
+		if chown_string do
+			{_, 0} = System.cmd("chown", ["--no-dereference", chown_string, "--", u.path])
+		end
 	end
 
 	def mode_without_type(mode) do
@@ -68,13 +74,13 @@ defmodule Converge.ThingPresent do
 	end
 
 	def met_user_group_mode?(u) do
-		want_user  = get_user_info(u.user)
-		want_group = get_group_info(u.group)
+		want_user  = if u.user  != nil, do: get_user_info(u.user)
+		want_group = if u.group != nil, do: get_group_info(u.group)
 		case :file.read_link_info(u.path) do
 			{:ok, file_info(mode: mode, uid: uid, gid: gid)} ->
-				mode_without_type(mode) == u.mode and
-				uid == want_user.uid and
-				gid == want_group.gid
+				mode_without_type(mode) == u.mode           and
+				(want_user  == nil or uid == want_user.uid) and
+				(want_group == nil or gid == want_group.gid)
 			_ -> false
 		end
 	end
@@ -102,10 +108,12 @@ end
 defmodule Converge.DirectoryPresent do
 	@moduledoc """
 	A directory exists at `path` with a specific `mode` and `immutable` flag,
-	owned by `user` and `group`.
+	owned by `user` and `group`.  `user` or `group` (or both) may be `nil`, in
+	which case the current user/group is used and the corresponding ownership
+	check is skipped.
 	"""
 	@enforce_keys [:path, :mode]
-	defstruct path: nil, mode: nil, immutable: false, user: System.get_env("USER"), group: System.get_env("USER")
+	defstruct path: nil, mode: nil, immutable: false, user: nil, group: nil
 end
 
 defimpl Unit, for: Converge.DirectoryPresent do
@@ -177,11 +185,13 @@ end
 
 defmodule Converge.FilePresent do
 	@moduledoc """
-	A file exists at `path` with content `content`, a specific `mode`, `immutable` flag,
-	owned by `user` and `group`.
+	A file exists at `path` with content `content`, a specific `mode`,
+	`immutable` flag, owned by `user` and `group`.  `user` or `group` (or both)
+	may be `nil`, in which case the current user/group is used and the
+	corresponding ownership check is skipped.
 	"""
 	@enforce_keys [:path, :content, :mode]
-	defstruct path: nil, content: nil, mode: nil, immutable: false, user: System.get_env("USER"), group: System.get_env("USER")
+	defstruct path: nil, content: nil, mode: nil, immutable: false, user: nil, group: nil
 end
 
 defimpl Unit, for: Converge.FilePresent do
@@ -260,10 +270,12 @@ end
 defmodule Converge.SymlinkPresent do
 	@moduledoc """
 	A symlink exists at `path` pointing to `target`.  The symlink is owned
-	by `user` and `group`.
+	by `user` and `group`.  `user` or `group` (or both) may be `nil`, in which
+	case the current user/group is used and the corresponding ownership check is
+	skipped.
 	"""
 	@enforce_keys [:path, :target]
-	defstruct path: nil, target: nil, user: System.get_env("USER"), group: System.get_env("USER")
+	defstruct path: nil, target: nil, user: nil, group: nil
 end
 
 defimpl Unit, for: Converge.SymlinkPresent do
@@ -296,12 +308,12 @@ defimpl Unit, for: Converge.SymlinkPresent do
 	end
 
 	def met_user_group?(u) do
-		want_user  = get_user_info(u.user)
-		want_group = get_group_info(u.group)
+		want_user  = if u.user  != nil, do: get_user_info(u.user)
+		want_group = if u.group != nil, do: get_group_info(u.group)
 		case :file.read_link_info(u.path) do
 			{:ok, file_info(type: :symlink, uid: uid, gid: gid)} ->
-				uid == want_user.uid and
-				gid == want_group.gid
+				(want_user  == nil or uid == want_user.uid) and
+				(want_group == nil or gid == want_group.gid)
 			_ -> false
 		end
 	end

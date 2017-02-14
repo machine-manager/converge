@@ -11,7 +11,7 @@ defmodule Converge.GPGSimpleKeyring do
 	https://lists.debian.org/deity/2016/11/msg00073.html
 	"""
 	@enforce_keys [:path, :keys, :mode]
-	defstruct path: nil, keys: [], mode: nil, immutable: false, user: System.get_env("USER"), group: System.get_env("USER")
+	defstruct path: nil, keys: [], mode: nil, immutable: false, user: nil, group: nil
 end
 
 defimpl Unit, for: Converge.GPGSimpleKeyring do

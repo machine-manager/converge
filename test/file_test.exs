@@ -23,6 +23,12 @@ defmodule Converge.DirectoryPresentTest do
 		Runner.converge(u, TestingContext.get_context())
 	end
 
+	test "directory with group daemon" do
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %DirectoryPresent{path: p, mode: 0o666, group: "daemon"}
+		Runner.converge(u, TestingContext.get_context())
+	end
+
 	test "directory with user nobody and group daemon" do
 		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
 		u = %DirectoryPresent{path: p, mode: 0o666, user: "nobody", group: "daemon"}
@@ -93,6 +99,12 @@ defmodule Converge.FilePresentTest do
 		Runner.converge(u, TestingContext.get_context())
 	end
 
+	test "file with group daemon" do
+		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
+		u = %FilePresent{path: p, content: "multiple\nlines", mode: 0o666, group: "daemon"}
+		Runner.converge(u, TestingContext.get_context())
+	end
+
 	test "file with user nobody and group daemon" do
 		p = Path.join(FileUtil.temp_dir("converge-test"), "deleteme")
 		u = %FilePresent{path: p, content: "multiple\nlines", mode: 0o666, user: "nobody", group: "daemon"}
@@ -122,7 +134,7 @@ defmodule Converge.FilePresentTest do
 
 	test "inspect shows content length, not contents; mode in octal" do
 		u = %FilePresent{path: "/tmp/not-written", content: "changed", mode: 0o600, immutable: true}
-		assert inspect(u) == ~s(%Converge.FilePresent{path: "/tmp/not-written", content: 7 bytes, mode: 0o600, immutable: true, user: "root", group: "root"})
+		assert inspect(u) == ~s(%Converge.FilePresent{path: "/tmp/not-written", content: 7 bytes, mode: 0o600, immutable: true, user: nil, group: nil})
 	end
 end
 
