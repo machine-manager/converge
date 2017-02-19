@@ -123,16 +123,18 @@ defmodule Converge.Util do
 		end
 	end
 
-	defmacro conf_dir(p, mode \\ 0o755) do
+	defmacro conf_dir(p, mode \\ 0o755, opts \\ []) do
+		immutable = opts[:immutable] || false
 		quote do
-			%Converge.DirectoryPresent{path: unquote(p), mode: unquote(mode)}
+			%Converge.DirectoryPresent{path: unquote(p), mode: unquote(mode), immutable: unquote(immutable)}
 		end
 	end
 
-	defmacro conf_file(p, mode \\ 0o644) do
-		data = File.read!("files/" <> p)
+	defmacro conf_file(p, mode \\ 0o644, opts \\ []) do
+		immutable = opts[:immutable] || false
+		data      = File.read!("files/" <> p)
 		quote do
-			%Converge.FilePresent{path: unquote(p), content: unquote(data), mode: unquote(mode)}
+			%Converge.FilePresent{path: unquote(p), content: unquote(data), mode: unquote(mode), immutable: unquote(immutable)}
 		end
 	end
 
