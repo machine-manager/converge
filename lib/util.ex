@@ -135,4 +135,8 @@ defmodule Converge.Util do
 			%Converge.FilePresent{path: unquote(p), content: unquote(data), mode: unquote(mode)}
 		end
 	end
+
+	defmacro content(filename) do
+		File.read!(filename)
+	end
 end
