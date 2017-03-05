@@ -74,6 +74,12 @@ defmodule Converge.Util do
 		end
 	end
 
+	def update_package_index() do
+		# `stderr_to_stdout: true` so that this message is not shown:
+		# "AppStream cache update completed, but some metadata was ignored due to errors."
+		{_, 0} = System.cmd("apt-get", ["update"], stderr_to_stdout: true)
+	end
+
 	def remove_cached_package_index() do
 		FileUtil.rm_f!("/var/cache/apt/pkgcache.bin")
 	end

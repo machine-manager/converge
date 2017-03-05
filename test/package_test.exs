@@ -1,23 +1,8 @@
 alias Gears.StringUtil
 alias Converge.{
-	PackageIndexUpdated, PackageCacheEmptied, PackagesMarkedAutoInstalled,
-	PackagesMarkedManualInstalled, DanglingPackagesPurged, PackagePurged,
-	MetaPackageInstalled, Runner}
+	PackageCacheEmptied, PackagesMarkedAutoInstalled, PackagesMarkedManualInstalled,
+	DanglingPackagesPurged, PackagePurged, MetaPackageInstalled, Runner}
 alias Converge.TestHelpers.TestingContext
-
-defmodule Converge.PackageIndexUpdatedTest do
-	use ExUnit.Case
-
-	test "package index is updated" do
-		p = %PackageIndexUpdated{}
-		Runner.converge(p, TestingContext.get_context())
-	end
-
-	test "package index is updated when using a max_age" do
-		p = %PackageIndexUpdated{max_age: 1800}
-		Runner.converge(p, TestingContext.get_context())
-	end
-end
 
 
 defmodule Converge.PackageCacheEmptiedTest do

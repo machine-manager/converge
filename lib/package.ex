@@ -1,40 +1,6 @@
 alias Gears.{FileUtil, StringUtil}
 alias Converge.Unit
-import Converge.Util, only: [get_control_line: 2]
-
-defmodule Converge.PackageIndexUpdated do
-	@moduledoc """
-	The system package manager's package index was updated within
-	the last `max_age` seconds.
-	"""
-	defstruct max_age: 3600
-end
-
-defimpl Unit, for: Converge.PackageIndexUpdated do
-	@moduledoc """
-	The system package manager's package index was updated within the last
-	`max_age` seconds.
-
-	If you need to clear the cached package index manually (e.g. inside an
-	`AfterMeet` after updating `/etc/apt/sources.list`, call
-	`Converge.Util.remove_cached_package_index()`.
-	"""
-	def met?(u, _ctx) do
-		stat = File.stat("/var/cache/apt/pkgcache.bin", time: :posix)
-		updated = case stat do
-			{:ok, info} -> info.mtime
-			{:error, _} -> 0
-		end
-		now = :os.system_time(:second)
-		updated > now - u.max_age
-	end
-
-	def meet(_, _) do
-		# `stderr_to_stdout: true` so that this message is not shown:
-		# "AppStream cache update completed, but some metadata was ignored due to errors."
-		{_, 0} = System.cmd("apt-get", ["update"], stderr_to_stdout: true)
-	end
-end
+import Converge.Util, only: [get_control_line: 2, update_package_index: 0]
 
 
 defmodule Converge.PackageCacheEmptied do
@@ -194,6 +160,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 			"-o", "Dpkg::Options::=--force-confold",
 		]
 		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
+		update_package_index()
 		{_, 0} = System.cmd("apt-get", ["install", "-y"] ++ args ++ ["--", deb], env: env)
 	end
 
