@@ -161,7 +161,11 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		]
 		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
 		update_package_index()
-		{_, 0} = System.cmd("apt-get", ["install", "-y"] ++ args ++ ["--", deb], env: env)
+		# capture stderr because apt outputs
+		# "N: Ignoring file '50unattended-upgrades.ucf-dist' in directory '/etc/apt/apt.conf.d/'
+		#  as it has an invalid filename extension"
+		{_, 0} = System.cmd("apt-get", ["install", "-y"] ++ args ++ ["--", deb],
+		                    env: env, stderr_to_stdout: true)
 	end
 
 	@spec make_control(%Converge.MetaPackageInstalled{}) :: %Debpress.Control{}
