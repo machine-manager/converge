@@ -1,5 +1,5 @@
 alias Gears.TableFormatter
-alias Converge.{Unit, UnitError, Runner, FilePresent, FstabEntry}
+alias Converge.{Unit, UnitError, Runner, FilePresent}
 
 defmodule Converge.FstabEntry do
 	@moduledoc """
@@ -85,7 +85,7 @@ defmodule Converge.Fstab do
 		[spec, mount_point, type, options, dump_frequency, fsck_pass_number] = String.split(line, [" ", "\t"], trim: true)
 		dump_frequency   = String.to_integer(dump_frequency)
 		fsck_pass_number = String.to_integer(fsck_pass_number)
-		%FstabEntry{
+		%Converge.FstabEntry{
 			spec:             spec,
 			mount_point:      mount_point,
 			type:             type,
