@@ -30,6 +30,7 @@ end
 defmodule Converge.DanglingPackagesPurged do
 	@moduledoc """
 	All auto-installed packages that are no longer depended-on are purged.
+	All packages that are mere recommends or suggests are purged.
 	"""
 	defstruct []
 end
@@ -37,7 +38,7 @@ end
 defimpl Unit, for: Converge.DanglingPackagesPurged do
 	def met?(_, _ctx) do
 		{_,   0} = System.cmd("dpkg", ["--configure", "-a"])
-		{out, 0} = System.cmd("apt-get", ["autoremove", "--purge", "--simulate"])
+		{out, 0} = System.cmd("apt-get", get_purge_args() ++ ["--simulate"])
 		actions = StringUtil.grep(out, ~r"^Purg ")
 		case actions do
 			[] -> true
@@ -47,7 +48,16 @@ defimpl Unit, for: Converge.DanglingPackagesPurged do
 
 	def meet(_, _) do
 		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
-		{_, 0} = System.cmd("apt-get", ["autoremove", "--purge", "-y"])
+		{_, 0} = System.cmd("apt-get", get_purge_args() ++ ["-y"])
+	end
+
+	defp get_purge_args() do
+		[
+			"autoremove",
+			"-o", "APT::AutoRemove::RecommendsImportant=false",
+			"-o", "APT::AutoRemove::SuggestsImportant=false",
+			"--purge",
+		]
 	end
 end
 
