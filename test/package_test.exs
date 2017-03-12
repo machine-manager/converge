@@ -1,7 +1,8 @@
 alias Gears.StringUtil
 alias Converge.{
 	PackageCacheEmptied, PackagesMarkedAutoInstalled, PackagesMarkedManualInstalled,
-	DanglingPackagesPurged, PackagePurged, MetaPackageInstalled, Runner}
+	PackageRoots, DanglingPackagesPurged, PackagePurged, MetaPackageInstalled,
+	Runner, All, Util}
 alias Converge.TestHelpers.TestingContext
 
 
@@ -53,6 +54,30 @@ defmodule Converge.PackagesMarkedManualInstalledTest do
 		Runner.converge(p, TestingContext.get_context())
 		p = %DanglingPackagesPurged{}
 		Runner.converge(p, TestingContext.get_context())
+	end
+end
+
+
+defmodule Converge.PackageRootsTest do
+	use ExUnit.Case
+
+	@tag :slow
+	test "PackageRoots" do
+		# Save information about which packages are marked auto and manual so that
+		# we can restore these markings after running the test.
+		originally_manual = Util.get_packages_marked(:manual)
+		originally_auto   = Util.get_packages_marked(:auto)
+		try do
+			# Assume that the test machine was configured with converge + base_system
+			p = %PackageRoots{names: ["converge-desired-packages"]}
+			Runner.converge(p, TestingContext.get_context())
+		after
+			cleanup = %All{units: [
+				%PackagesMarkedManualInstalled{names: originally_manual},
+				%PackagesMarkedAutoInstalled{names: originally_auto},
+			]}
+			Runner.converge(cleanup, TestingContext.get_context())
+		end
 	end
 end
 

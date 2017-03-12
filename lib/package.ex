@@ -1,6 +1,10 @@
 alias Gears.{FileUtil, StringUtil}
-alias Converge.Unit
-import Converge.Util, only: [get_control_line: 2, update_package_index: 0]
+alias Converge.{Unit, Runner, All}
+import Converge.Util, only: [
+	get_control_line: 2,
+	update_package_index: 0,
+	get_packages_marked: 1
+]
 
 
 defmodule Converge.PackageCacheEmptied do
@@ -59,14 +63,13 @@ end
 
 defimpl Unit, for: Converge.PackagesMarkedAutoInstalled do
 	def met?(u, _ctx) do
-		{out, 0} = System.cmd("apt-mark", ["showauto"])
-		installed_auto = out |> String.split("\n") |> MapSet.new
+		installed_auto = get_packages_marked(:auto)
 		diff = MapSet.difference(MapSet.new(u.names), installed_auto)
 		MapSet.size(diff) == 0
 	end
 
 	def meet(u, _ctx) do
-		{_, 0} = System.cmd("apt-mark", ["auto", "--"] ++ u.names)
+		{_, 0} = System.cmd("apt-mark", ["auto", "--"] ++ (u.names |> Enum.into([])))
 	end
 end
 
@@ -82,14 +85,44 @@ end
 
 defimpl Unit, for: Converge.PackagesMarkedManualInstalled do
 	def met?(u, _ctx) do
-		{out, 0} = System.cmd("apt-mark", ["showmanual"])
-		installed_manual = out |> String.split("\n") |> MapSet.new
+		installed_manual = get_packages_marked(:manual)
 		diff = MapSet.difference(MapSet.new(u.names), installed_manual)
 		MapSet.size(diff) == 0
 	end
 
 	def meet(u, _ctx) do
-		{_, 0} = System.cmd("apt-mark", ["manual", "--"] ++ u.names)
+		{_, 0} = System.cmd("apt-mark", ["manual", "--"] ++ (u.names |> Enum.into([])))
+	end
+end
+
+
+defmodule Converge.PackageRoots do
+	@moduledoc """
+	Packages `names` are marked manual-installed and all other installed
+	packages are marked auto-installed.
+	"""
+	@enforce_keys [:names]
+	defstruct names: []
+end
+
+defimpl Unit, for: Converge.PackageRoots do
+	alias Converge.{PackagesMarkedAutoInstalled, PackagesMarkedManualInstalled}
+
+	def met?(u, ctx) do
+		Runner.met?(make_unit(u), ctx)
+	end
+
+	def meet(u, ctx) do
+		Runner.converge(make_unit(u), ctx)
+	end
+
+	defp make_unit(u) do
+		packages_wrongly_marked_manual =
+			MapSet.difference(get_packages_marked(:manual), MapSet.new(u.names))
+		%All{units: [
+			%PackagesMarkedManualInstalled{names: u.names},
+			%PackagesMarkedAutoInstalled{names: packages_wrongly_marked_manual},
+		]}
 	end
 end
 

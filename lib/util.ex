@@ -74,6 +74,16 @@ defmodule Converge.Util do
 		end
 	end
 
+	def get_packages_marked(:manual) do
+		{out, 0} = System.cmd("apt-mark", ["showmanual"])
+		out |> String.trim_trailing("\n") |> String.split("\n") |> MapSet.new
+	end
+
+	def get_packages_marked(:auto) do
+		{out, 0} = System.cmd("apt-mark", ["showauto"])
+		out |> String.trim_trailing("\n") |> String.split("\n") |> MapSet.new
+	end
+
 	def update_package_index() do
 		# `stderr_to_stdout: true` so that this message is not shown:
 		# "AppStream cache update completed, but some metadata was ignored due to errors."
