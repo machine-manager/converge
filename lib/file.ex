@@ -322,8 +322,8 @@ end
 
 defmodule Converge.FileMissing do
 	@moduledoc """
-	A file at `path` does not exist.  Fails to converge if `path` points to
-	a directory.
+	A file at `path` does not exist.  Converging may remove a file or empty
+	directory.
 	"""
 	@enforce_keys [:path]
 	defstruct path: nil
