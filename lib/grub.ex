@@ -26,7 +26,7 @@ defimpl Unit, for: Converge.Grub do
 	GRUB_CMDLINE_LINUX_DEFAULT=<%= inspect(u.cmdline_normal_only) %>
 	GRUB_CMDLINE_LINUX=<%= inspect(u.cmdline_normal_and_recovery) %>
 	<%= if u.gfxpayload != nil do %>
-	GRUB_GFXPAYLOAD_LINUX=<% u.gfxpayload %>
+	GRUB_GFXPAYLOAD_LINUX=<%= u.gfxpayload %>
 	<% end %>
 	"""
 
