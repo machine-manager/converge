@@ -31,6 +31,13 @@ defmodule Converge.DanglingPackagesPurged do
 	@moduledoc """
 	All auto-installed packages that are no longer depended-on are purged.
 	All packages that are mere recommends or suggests are purged.
+
+	Caveat: when used in combination with `PackageRoots`, this unit will not
+	result in the purging of absolutely all unnecessary packages because
+		1) apt may assume that every package providing some virtual package is
+		   still necessary
+		2) /etc/apt/apt.conf.d/01autoremove-kernels will prevent the removal of
+		   some linux-* packages.
 	"""
 	defstruct []
 end
