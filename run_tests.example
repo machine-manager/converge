@@ -29,6 +29,6 @@ rsync -a --delete --delete-excluded --exclude=.git \
 
 ssh root@"$remote" "
 cd ~/hex &&
-PATH=/root/elixir/bin:\$PATH mix install > /dev/null &&
+HEX_OFFLINE=1 PATH=/root/elixir/bin:\$PATH mix install > /dev/null &&
 cd ~/converge &&
-PATH=/root/elixir/bin:\$PATH mix test --no-elixir-version-check --no-deps-check --no-archives-check --trace --color $@"
+HEX_OFFLINE=1 PATH=/root/elixir/bin:\$PATH mix test --no-elixir-version-check --no-deps-check --no-archives-check --trace --color $@"
