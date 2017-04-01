@@ -63,12 +63,17 @@ defimpl Unit, for: Converge.SystemdUnitEnabled do
 		case {code, out |> get_last_line} do
 			{0, "enabled"}  -> true
 			{1, "disabled"} -> false
-			_               -> raise UnitError, message: """
-			                                             Failed to get enabled/disabled status for #{inspect u.name}; \
-			                                             did you run `systemctl daemon-reload` first?
-			                                             {exit_code, stdout_and_stderr}: #{inspect {code, out}}
-			                                             """
+			_               -> raise_error(u, code, out)
 		end
+	end
+
+	defp raise_error(u, code, out) do
+		raise(UnitError,
+			"""
+			Failed to get enabled/disabled status for #{inspect u.name}; \
+			did you run `systemctl daemon-reload` first?
+			{exit_code, stdout_and_stderr}: #{inspect {code, out}}
+			""")
 	end
 
 	def meet(u, _ctx) do

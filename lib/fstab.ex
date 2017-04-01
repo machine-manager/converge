@@ -116,12 +116,12 @@ defimpl Unit, for: Converge.Fstab do
 		|> Enum.map(fn value ->
 			s = to_string(value)
 			if s =~ ~r/^([ \t]+)?$/ do
-				raise UnitError, message:
+				raise(UnitError,
 					"""
 					Cannot write an fstab file where any value is empty or \
 					consists only of whitespace, because the file would not be \
 					parsed correctly by the system.\
-					"""
+					""")
 			end
 			s
 		end)

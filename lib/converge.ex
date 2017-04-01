@@ -166,7 +166,7 @@ defmodule Converge.Runner do
 			Unit.meet(u, ctx)
 			ctx.reporter |> Reporter.close(u, :ran_meet)
 			if not met?(u, ctx) do
-				raise UnitError, message: "Failed to converge: #{inspect u}"
+				raise(UnitError, "Failed to converge: #{inspect u}")
 			end
 		end
 		nil

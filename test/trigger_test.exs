@@ -6,13 +6,13 @@ defmodule Converge.Runner.AfterMeetTest do
 
 	test "AfterMeet does not call trigger function if meet was not called" do
 		acu = %AlreadyConvergedUnit{}
-		t   = %AfterMeet{unit: acu, trigger: fn -> raise UnitError, message: "from trigger" end}
+		t   = %AfterMeet{unit: acu, trigger: fn -> raise(UnitError, "from trigger") end}
 		Runner.converge(t, TestingContext.get_context())
 	end
 
 	test "AfterMeet does not call trigger function if wrapped unit fails to converge" do
 		ftc = %FailsToConvergeUnit{}
-		t   = %AfterMeet{unit: ftc, trigger: fn -> raise UnitError, message: "from trigger" end}
+		t   = %AfterMeet{unit: ftc, trigger: fn -> raise(UnitError, "from trigger") end}
 		# Make sure we got "Failed to converge", not "from trigger"
 		assert_raise(
 			UnitError, ~r/^Failed to converge: /,
@@ -22,7 +22,7 @@ defmodule Converge.Runner.AfterMeetTest do
 
 	test "AfterMeet calls trigger function if meet was called" do
 		cu = ConvergeableUnit.new()
-		t  = %AfterMeet{unit: cu, trigger: fn -> raise UnitError, message: "from trigger" end}
+		t  = %AfterMeet{unit: cu, trigger: fn -> raise(UnitError, "from trigger") end}
 		assert_raise(
 			UnitError, ~r/^from trigger$/,
 			fn -> Runner.converge(t, TestingContext.get_context()) end
@@ -36,7 +36,7 @@ defmodule Converge.Runner.AfterMeetTest do
 		cu = ConvergeableUnit.new()
 		t  = %AfterMeet{unit: cu, trigger: fn ctx ->
 			if is_context?(ctx) do
-				raise UnitError, message: "object is Context"
+				raise(UnitError, "object is Context")
 			end
 		end}
 		assert_raise(
@@ -52,13 +52,13 @@ defmodule Converge.Runner.BeforeMeetTest do
 
 	test "BeforeMeet does not call trigger function if meet was not called" do
 		acu = %AlreadyConvergedUnit{}
-		t   = %BeforeMeet{unit: acu, trigger: fn -> raise UnitError, message: "from trigger" end}
+		t   = %BeforeMeet{unit: acu, trigger: fn -> raise(UnitError, "from trigger") end}
 		Runner.converge(t, TestingContext.get_context())
 	end
 
 	test "BeforeMeet does not call meet if trigger function raises an error" do
 		ftc = %FailsToConvergeUnit{}
-		t   = %BeforeMeet{unit: ftc, trigger: fn -> raise UnitError, message: "from trigger" end}
+		t   = %BeforeMeet{unit: ftc, trigger: fn -> raise(UnitError, "from trigger") end}
 		# Make sure we got "from trigger", not "Failed to converge"
 		assert_raise(
 			UnitError, ~r/^from trigger$/,
@@ -73,7 +73,7 @@ defmodule Converge.Runner.BeforeMeetTest do
 		cu = ConvergeableUnit.new()
 		t  = %BeforeMeet{unit: cu, trigger: fn ctx ->
 			if is_context?(ctx) do
-				raise UnitError, message: "object is Context"
+				raise(UnitError, "object is Context")
 			end
 		end}
 		assert_raise(

@@ -60,7 +60,7 @@ defmodule Converge.ThingPresent do
 			|> String.split("\n")
 		case lines do
 			[line] -> line |> String.split(" ") |> hd
-			_      -> raise UnitError, message: "Expected 1 line from lsattr but got #{inspect lines}"
+			_      -> raise(UnitError, "Expected 1 line from lsattr but got #{inspect lines}")
 		end
 	end
 
@@ -89,7 +89,7 @@ defmodule Converge.ThingPresent do
 		users     = UserUtil.get_users()
 		user_info = users[user]
 		if ! user_info do
-			raise UnitError, message: "User database is missing user #{inspect user}"
+			raise(UnitError, "User database is missing user #{inspect user}")
 		end
 		user_info
 	end
@@ -98,7 +98,7 @@ defmodule Converge.ThingPresent do
 		groups     = GroupUtil.get_groups()
 		group_info = groups[group]
 		if ! group_info do
-			raise UnitError, message: "Group database is missing group #{inspect group}"
+			raise(UnitError, "Group database is missing group #{inspect group}")
 		end
 		group_info
 	end
@@ -147,7 +147,7 @@ defimpl Unit, for: Converge.DirectoryPresent do
 							make_immutable(u.path)
 						end
 					false ->
-						raise UnitError, message: "mkdir failed to create a directory: #{out}"
+						raise(UnitError, "mkdir failed to create a directory: #{out}")
 				end
 		end
 	end
@@ -292,8 +292,7 @@ defimpl Unit, for: Converge.SymlinkPresent do
 			:ok ->
 				meet_user_group_owner(u)
 			{:error, reason} ->
-				raise UnitError, message:
-					"failed to create symlink: #{inspect u.path}; reason: #{reason}"
+				raise(UnitError, "failed to create symlink: #{inspect u.path}; reason: #{reason}")
 		end
 	end
 

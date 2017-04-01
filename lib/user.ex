@@ -161,10 +161,8 @@ defimpl Unit, for: Converge.UserPresent do
 		if u.locked != nil and u.crypted_password != nil do
 			if not UserUtil.crypted_password_is_locked(u.crypted_password) == u.locked do
 				case u.locked do
-					true  -> raise UnitError,
-						message: ~s(Expected crypted_password to be locked, but it lacked a leading "!")
-					false -> raise UnitError,
-						message: ~s(Expected crypted_password to be unlocked, but it had a leading "!")
+					true  -> raise(UnitError, ~s(Expected crypted_password to be locked, but it lacked a leading "!"))
+					false -> raise(UnitError, ~s(Expected crypted_password to be unlocked, but it had a leading "!"))
 				end
 			end
 		end
@@ -184,7 +182,7 @@ defimpl Unit, for: Converge.UserPresent do
 		# and possibly a configuration mistake.
 		{out, 0} = System.cmd("usermod", args ++ ["--", u.name], stderr_to_stdout: true)
 		if not (out == "" or out == "usermod: no changes\n") do
-			raise UnitError, message: "Unexpected output from usermod: #{inspect out}"
+			raise(UnitError, "Unexpected output from usermod: #{inspect out}")
 		end
 	end
 
@@ -205,7 +203,7 @@ defimpl Unit, for: Converge.UserPresent do
 				useradd: warning: the home directory already exists.
 				Not copying any file from skel directory into it.
 				""") do
-			raise UnitError, message: "Unexpected output from useradd: #{inspect out}"
+			raise(UnitError, "Unexpected output from useradd: #{inspect out}")
 		end
 	end
 end
@@ -243,7 +241,7 @@ defimpl Unit, for: Converge.UserDisabled do
 		no_such_user_error = ~s(usermod: user '#{u.name}' does not exist\n)
 		case {out, status} do
 			{"",                  0} -> nil
-			{^no_such_user_error, 6} -> raise UnitError, message: "User #{inspect u.name} does not exist"
+			{^no_such_user_error, 6} -> raise(UnitError, "User #{inspect u.name} does not exist")
 		end
 	end
 end
@@ -308,11 +306,11 @@ defimpl Unit, for: Converge.RegularUsersPresent do
 
 		userpresent_units = for user <- u.users do
 			if user.uid != nil && not (user.uid >= uid_min && user.uid <= uid_max) do
-				raise UnitError, message:
+				raise(UnitError,
 					"""
 					UID for regular user #{inspect user.name} must be \
 					>= #{uid_min} and <= #{uid_max}; was #{inspect user.uid}
-					"""
+					""")
 			end
 			user_to_userpresent(user)
 		end

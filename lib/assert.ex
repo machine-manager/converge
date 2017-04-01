@@ -17,6 +17,6 @@ defimpl Unit, for: Converge.Assert do
 	end
 
 	def meet(u, _) do
-		raise UnitError, message: "meet() called on an Assert: #{inspect u}"
+		raise(UnitError, "meet() called on an Assert: #{inspect u}")
 	end
 end
