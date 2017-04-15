@@ -52,4 +52,13 @@ defmodule Converge.Runner.SystemdUnitsPresent do
 		u = %SystemdUnitsPresent{units: []}
 		Runner.converge(u, TestingContext.get_context())
 	end
+
+	test "SystemdUnitsPresent with invalid path in unit" do
+		u = %SystemdUnitsPresent{units: [
+			%FilePresent{path: "/tmp/etc/systemd/system/deleteme.service", mode: 0o644, content: ""},
+		]}
+		assert_raise RuntimeError, ~r/ has path that does not start with /, fn ->
+			Runner.converge(u, TestingContext.get_context())
+		end
+	end
 end
