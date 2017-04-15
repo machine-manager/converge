@@ -1,4 +1,4 @@
-alias Converge.{Unit, UnitError}
+alias Converge.{Unit, UnitError, All, FileMissing, Runner}
 
 defmodule Converge.SystemdUnitStarted do
 	@moduledoc """
@@ -104,5 +104,55 @@ defimpl Unit, for: Converge.SystemdUnitDisabled do
 
 	def meet(u, _ctx) do
 		{_, 0} = System.cmd("systemctl", ["disable", "--", u.name], stderr_to_stdout: true)
+	end
+end
+
+
+defmodule Converge.SystemdUnitsPresent do
+	@moduledoc """
+	Ensures that the given file-related units (which must be in
+	/etc/systemd/system) are all met and that other regular (non-symlink)
+	.service files in /etc/systemd/system are missing.
+
+	This is used to ensure that leftover .service files aren't left
+	in /etc/systemd/system after roles are removed.
+	"""
+	@enforce_keys [:units]
+	defstruct units: nil
+end
+
+defimpl Unit, for: Converge.SystemdUnitsPresent do
+	@etc_units "/etc/systemd/system"
+
+	def met?(u, ctx) do
+		Runner.met?(make_unit(u), ctx)
+	end
+
+	def meet(u, ctx) do
+		Runner.converge(make_unit(u), ctx)
+	end
+
+	defp make_unit(u) do
+		keep_basenames = for unit <- u.units do
+			if not String.starts_with?(unit.path, @etc_units) do
+				raise(RuntimeError, "Unit #{inspect unit} has path that does not start with #{@etc_units}")
+			end
+			Path.basename(unit.path)
+		end
+		%All{units: u.units ++ remove_other_service_files_units(keep_basenames)}
+	end
+
+	defp remove_other_service_files_units(keep_basenames) do
+		current_basenames = get_regular_service_file_basenames() |> MapSet.new
+		keep_basenames    = keep_basenames                       |> MapSet.new
+		remove_basenames  = MapSet.difference(current_basenames, keep_basenames)
+		remove_basenames
+		|> Enum.map(fn basename -> %FileMissing{path: Path.join(@etc_units, basename)} end)
+	end
+
+	defp get_regular_service_file_basenames() do
+		File.ls!(@etc_units)
+		|> Enum.filter(fn basename -> String.ends_with?(basename, ".service") end)
+		|> Enum.filter(fn basename -> File.regular?(Path.join(@etc_units, basename)) end)
 	end
 end

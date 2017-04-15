@@ -1,4 +1,4 @@
-alias Converge.{Runner, SystemdUnitStarted, SystemdUnitStopped, SystemdUnitEnabled, SystemdUnitDisabled}
+alias Converge.{Runner, SystemdUnitStarted, SystemdUnitStopped, SystemdUnitEnabled, SystemdUnitDisabled, SystemdUnitsPresent, FilePresent}
 alias Converge.TestHelpers.{TestingContext}
 
 defmodule Converge.Runner.SystemdUnitStartedTest do
@@ -35,6 +35,21 @@ defmodule Converge.Runner.SystemdUnitDisabled do
 
 	test "SystemdUnitDisabled" do
 		u = %SystemdUnitDisabled{name: "chrony.service"}
+		Runner.converge(u, TestingContext.get_context())
+	end
+end
+
+
+defmodule Converge.Runner.SystemdUnitsPresent do
+	use ExUnit.Case
+
+	test "SystemdUnitsPresent" do
+		u = %SystemdUnitsPresent{units: [
+			%FilePresent{path: "/etc/systemd/system/deleteme.service", mode: 0o644, content: ""},
+		]}
+		Runner.converge(u, TestingContext.get_context())
+
+		u = %SystemdUnitsPresent{units: []}
 		Runner.converge(u, TestingContext.get_context())
 	end
 end
