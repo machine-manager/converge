@@ -110,12 +110,15 @@ end
 
 defmodule Converge.SystemdUnitsPresent do
 	@moduledoc """
-	Ensures that the given file-related units (which must be in
-	/etc/systemd/system) are all met and that other regular (non-symlink)
-	.service files in /etc/systemd/system are missing.
+	Ensures that the given units (which must have a path starting with
+	"/etc/systemd/system") are all met and that any other regular (non-symlink)
+	.service files in /etc/systemd/system are not present.
 
-	This is used to ensure that leftover .service files aren't left
-	in /etc/systemd/system after roles are removed.
+	This is used to ensure that leftover .service files aren't left in
+	/etc/systemd/system after roles are removed.
+
+	This does not enable or start any units because it wouldn't know what to do
+	with instantiated services (those with an '@' in the filename).
 	"""
 	@enforce_keys [:units]
 	defstruct units: nil
