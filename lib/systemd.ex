@@ -1,3 +1,4 @@
+alias Gears.FileUtil
 alias Converge.{Unit, UnitError, All, FileMissing, AfterMeet, Runner}
 
 defmodule Converge.SystemdUnitStarted do
@@ -160,7 +161,10 @@ defimpl Unit, for: Converge.EtcSystemdUnitFiles do
 
 	defp get_regular_service_file_basenames() do
 		File.ls!(@etc_units)
-		|> Enum.filter(fn basename -> String.ends_with?(basename, ".service") end)
-		|> Enum.filter(fn basename -> File.regular?(Path.join(@etc_units, basename)) end)
+		|> Enum.filter(fn basename ->
+				path = Path.join(@etc_units, basename)
+				String.ends_with?(path, ".service") and \
+					not FileUtil.symlink?(path) and File.regular?(path)
+			end)
 	end
 end
