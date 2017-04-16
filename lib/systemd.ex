@@ -113,7 +113,8 @@ defmodule Converge.EtcSystemdUnitFiles do
 	Ensures that the given converge units (which must have a path starting with
 	"/etc/systemd/system") are all met and that any other regular (non-symlink)
 	.service files in /etc/systemd/system not created by those converge units
-	are *not* present.
+	are *not* present.  If any files were added/changed/removed, this then runs
+	`systemctl daemon-reload`.
 
 	This is used to ensure that leftover .service files are not left around in
 	/etc/systemd/system.
