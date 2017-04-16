@@ -1,4 +1,4 @@
-alias Converge.{Runner, SystemdUnitStarted, SystemdUnitStopped, SystemdUnitEnabled, SystemdUnitDisabled, SystemdUnitsPresent, FilePresent}
+alias Converge.{Runner, SystemdUnitStarted, SystemdUnitStopped, SystemdUnitEnabled, SystemdUnitDisabled, EtcSystemdUnitFiles, FilePresent}
 alias Converge.TestHelpers.{TestingContext}
 
 defmodule Converge.Runner.SystemdUnitStartedTest do
@@ -40,21 +40,21 @@ defmodule Converge.Runner.SystemdUnitDisabled do
 end
 
 
-defmodule Converge.Runner.SystemdUnitsPresent do
+defmodule Converge.Runner.EtcSystemdUnitFiles do
 	use ExUnit.Case
 
-	test "SystemdUnitsPresent" do
-		u = %SystemdUnitsPresent{units: [
+	test "EtcSystemdUnitFiles" do
+		u = %EtcSystemdUnitFiles{units: [
 			%FilePresent{path: "/etc/systemd/system/deleteme.service", mode: 0o644, content: ""},
 		]}
 		Runner.converge(u, TestingContext.get_context())
 
-		u = %SystemdUnitsPresent{units: []}
+		u = %EtcSystemdUnitFiles{units: []}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
-	test "SystemdUnitsPresent with invalid path in unit" do
-		u = %SystemdUnitsPresent{units: [
+	test "EtcSystemdUnitFiles with invalid path in unit" do
+		u = %EtcSystemdUnitFiles{units: [
 			%FilePresent{path: "/tmp/etc/systemd/system/deleteme.service", mode: 0o644, content: ""},
 		]}
 		assert_raise RuntimeError, ~r/ has path that does not start with /, fn ->

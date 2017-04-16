@@ -108,14 +108,15 @@ defimpl Unit, for: Converge.SystemdUnitDisabled do
 end
 
 
-defmodule Converge.SystemdUnitsPresent do
+defmodule Converge.EtcSystemdUnitFiles do
 	@moduledoc """
-	Ensures that the given units (which must have a path starting with
+	Ensures that the given converge units (which must have a path starting with
 	"/etc/systemd/system") are all met and that any other regular (non-symlink)
-	.service files in /etc/systemd/system are not present.
+	.service files in /etc/systemd/system not created by those converge units
+	are *not* present.
 
-	This is used to ensure that leftover .service files aren't left in
-	/etc/systemd/system after roles are removed.
+	This is used to ensure that leftover .service files are not left around in
+	/etc/systemd/system.
 
 	This does not enable or start any units because it wouldn't know what to do
 	with instantiated services (those with an '@' in the filename).
@@ -124,7 +125,7 @@ defmodule Converge.SystemdUnitsPresent do
 	defstruct units: nil
 end
 
-defimpl Unit, for: Converge.SystemdUnitsPresent do
+defimpl Unit, for: Converge.EtcSystemdUnitFiles do
 	@etc_units "/etc/systemd/system"
 
 	def met?(u, ctx) do
