@@ -1,4 +1,4 @@
-alias Converge.{Unit, UnitError, All, FileMissing, Runner}
+alias Converge.{Unit, UnitError, All, FileMissing, AfterMeet, Runner}
 
 defmodule Converge.SystemdUnitStarted do
 	@moduledoc """
@@ -143,7 +143,10 @@ defimpl Unit, for: Converge.EtcSystemdUnitFiles do
 			end
 			Path.basename(unit.path)
 		end
-		%All{units: u.units ++ remove_other_service_files_units(keep_basenames)}
+		%AfterMeet{
+			unit:    %All{units: u.units ++ remove_other_service_files_units(keep_basenames)},
+			trigger: fn -> {_, 0} = System.cmd("systemctl", ["daemon-reload"]) end,
+		}
 	end
 
 	defp remove_other_service_files_units(keep_basenames) do
