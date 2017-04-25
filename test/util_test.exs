@@ -48,4 +48,13 @@ defmodule Converge.UtilTest do
 	test "get_hostname" do
 		assert is_binary(Util.get_hostname())
 	end
+
+	test "tag_values" do
+		assert Util.tag_values([], "")               == []
+		assert Util.tag_values([], "a")              == []
+		assert Util.tag_values(["a"], "a")           == []
+		assert Util.tag_values(["a:x"], "a")         == ["x"]
+		assert Util.tag_values(["a:x", "a:yy"], "a") == ["x", "yy"]
+		assert Util.tag_values(["ab:x", "a:y"], "a") == ["y"]
+	end
 end

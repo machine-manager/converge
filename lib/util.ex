@@ -1,6 +1,10 @@
 alias Gears.FileUtil
 
 defmodule Converge.Util do
+	@moduledoc """
+	Helper functions used by base_system and roles.
+	"""
+
 	@doc """
 	Returns a map with information from /proc/meminfo.  Note that any kB values
 	are given as bytes, not as kB.
@@ -156,5 +160,11 @@ defmodule Converge.Util do
 
 	defmacro content(filename) do
 		File.read!(filename)
+	end
+
+	def tag_values(tags, prefix) do
+		tags
+		|> Enum.filter(fn tag -> String.starts_with?(tag, prefix <> ":") end)
+		|> Enum.map(fn tag -> [^prefix, value] = String.split(tag, ":", parts: 2); value end)
 	end
 end
