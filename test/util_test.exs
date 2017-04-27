@@ -1,4 +1,4 @@
-alias Converge.Util
+alias Converge.{Util, TagValueError}
 
 defmodule Converge.UtilTest do
 	use ExUnit.Case, async: true
@@ -47,6 +47,24 @@ defmodule Converge.UtilTest do
 
 	test "get_hostname" do
 		assert is_binary(Util.get_hostname())
+	end
+
+	test "tag_value!" do
+		assert_raise TagValueError, ~r/^No tag with prefix /, fn -> Util.tag_value!([], "") end
+		assert_raise TagValueError, ~r/^No tag with prefix /, fn -> Util.tag_value!([], "a") end
+		assert_raise TagValueError, ~r/^No tag with prefix /, fn -> Util.tag_value!(["a"], "a") end
+		assert Util.tag_value!(["a:x"], "a")         == "x"
+		assert_raise TagValueError, ~r/^Multiple tags /, fn -> Util.tag_value!(["a:x", "a:yy"], "a") end
+		assert Util.tag_value!(["ab:x", "a:y"], "a") == "y"
+	end
+
+	test "tag_value" do
+		assert Util.tag_value([], "")               == nil
+		assert Util.tag_value([], "a")              == nil
+		assert Util.tag_value(["a"], "a")           == nil
+		assert Util.tag_value(["a:x"], "a")         == "x"
+		assert_raise TagValueError, ~r/^Multiple tags /, fn -> Util.tag_value(["a:x", "a:yy"], "a") end
+		assert Util.tag_value(["ab:x", "a:y"], "a") == "y"
 	end
 
 	test "tag_values" do

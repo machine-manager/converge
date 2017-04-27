@@ -1,5 +1,9 @@
 alias Gears.FileUtil
 
+defmodule Converge.TagValueError do
+	defexception [:message]
+end
+
 defmodule Converge.Util do
 	@moduledoc """
 	Helper functions used by base_system and roles.
@@ -9,6 +13,9 @@ defmodule Converge.Util do
 	Returns a map with information from /proc/meminfo.  Note that any kB values
 	are given as bytes, not as kB.
 	"""
+
+	alias Converge.TagValueError
+
 	def get_meminfo() do
 		# Need cat because File.read! and :file.read_file return "" because
 		# procfs says the file has a size of 0.
@@ -160,6 +167,21 @@ defmodule Converge.Util do
 
 	defmacro content(filename) do
 		File.read!(filename)
+	end
+
+	def tag_value!(tags, prefix) do
+		case tag_value(tags, prefix) do
+			nil   -> raise(TagValueError, "No tag with prefix #{inspect prefix} in list #{inspect tags}")
+			other -> other
+		end
+	end
+
+	def tag_value(tags, prefix) do
+		case tag_values(tags, prefix) do
+			[]       -> nil
+			[value]  -> value
+			multiple -> raise(TagValueError, "Multiple tags with prefix #{inspect prefix}: #{inspect multiple}")
+		end
 	end
 
 	def tag_values(tags, prefix) do
