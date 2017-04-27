@@ -171,7 +171,7 @@ defmodule Converge.Util do
 
 	def tag_value!(tags, prefix) do
 		case tag_value(tags, prefix) do
-			nil   -> raise(TagValueError, "No tag with prefix #{inspect prefix} in list #{inspect tags}")
+			nil   -> raise(TagValueError, "No tag with prefix #{inspect prefix} in #{inspect tags}")
 			other -> other
 		end
 	end
