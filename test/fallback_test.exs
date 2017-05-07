@@ -1,4 +1,4 @@
-alias Converge.{Fallback, Runner, Unit}
+alias Converge.{Fallback, Runner, Unit, UnitError}
 alias Converge.TestHelpers.{ConvergeableUnit, AlreadyConvergedUnit, FailsToConvergeUnit, TestingContext}
 
 defmodule Converge.FallbackTest do
@@ -26,5 +26,14 @@ defmodule Converge.FallbackTest do
 		fb  = %Fallback{primary: %FailsToConvergeUnit{}, fallback: u2}
 		Runner.converge(fb, ctx)
 		assert Unit.met?(u2, ctx) == true
+	end
+
+	test "Fallback with primary and fallback that fail to converge" do
+		ctx = TestingContext.get_context()
+		fb  = %Fallback{primary: %FailsToConvergeUnit{}, fallback: %FailsToConvergeUnit{}}
+		assert_raise(
+			UnitError, ~r/^Failed to converge: /,
+			fn -> Runner.converge(fb, ctx) end
+		)
 	end
 end
