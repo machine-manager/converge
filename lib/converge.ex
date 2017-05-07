@@ -140,13 +140,13 @@ defmodule Converge.Runner do
 	"""
 	@spec met?(Unit, Context) :: boolean
 	def met?(u, ctx) do
-		ctx.reporter |> Reporter.open(u, :met?)
+		Reporter.open(ctx.reporter, u, :met?)
 		met = Unit.met?(u, ctx)
 		result = case met do
 			true  -> :met
 			false -> :unmet
 		end
-		ctx.reporter |> Reporter.close(u, result)
+		Reporter.close(ctx.reporter, u, result)
 		met
 	end
 
@@ -162,9 +162,9 @@ defmodule Converge.Runner do
 	@spec converge(Unit, Context) :: nil
 	def converge(u, ctx) do
 		if not met?(u, ctx) and ctx.run_meet do
-			ctx.reporter |> Reporter.open(u, :meet)
+			Reporter.open(ctx.reporter, u, :meet)
 			Unit.meet(u, ctx)
-			ctx.reporter |> Reporter.close(u, :ran_meet)
+			Reporter.close(ctx.reporter, u, :ran_meet)
 			if not met?(u, ctx) do
 				raise(UnitError, "Failed to converge: #{inspect u}")
 			end
