@@ -35,11 +35,11 @@ defmodule Converge.DanglingPackagesPurged do
 	Caveat: when used in combination with `PackageRoots`, this unit will not
 	result in the purging of absolutely all unnecessary packages because
 		1) apt may assume that every package providing some virtual package is
-		   still necessary
+		   still necessary.
 		2) /etc/apt/apt.conf.d/01autoremove-kernels will prevent the removal of
 		   some linux-* packages.
-		3) autoremove doesn't properly remove foreign architecture (e.g. i386)
-		   packages when there is a depends on the native architecture package
+		3) autoremove doesn't properly remove some base set of foreign architecture
+		   packages.
 	"""
 	defstruct []
 end
