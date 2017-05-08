@@ -38,6 +38,8 @@ defmodule Converge.DanglingPackagesPurged do
 		   still necessary
 		2) /etc/apt/apt.conf.d/01autoremove-kernels will prevent the removal of
 		   some linux-* packages.
+		3) autoremove doesn't properly remove foreign architecture (e.g. i386)
+		   packages when there is a depends on the native architecture package
 	"""
 	defstruct []
 end
