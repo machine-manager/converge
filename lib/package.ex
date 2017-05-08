@@ -210,6 +210,8 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 			"-o", "Dpkg::Options::=--force-confold",
 		]
 		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
+		# Make sure amd64 machines also have access to i386 packages
+		{_, 0} = System.cmd("dpkg", ["--add-architecture", "i386"])
 		update_package_index()
 		# capture stderr because apt outputs
 		# "N: Ignoring file '50unattended-upgrades.ucf-dist' in directory '/etc/apt/apt.conf.d/'
