@@ -1,4 +1,6 @@
-alias Converge.{Runner, SystemdUnitStarted, SystemdUnitStopped, SystemdUnitEnabled, SystemdUnitDisabled, EtcSystemdUnitFiles, FilePresent}
+alias Converge.{
+	Runner, UnitError, SystemdUnitStarted, SystemdUnitStopped,
+	SystemdUnitEnabled, SystemdUnitDisabled, EtcSystemdUnitFiles, FilePresent}
 alias Converge.TestHelpers.{TestingContext}
 
 defmodule Converge.Runner.SystemdUnitStartedTest do
@@ -8,13 +10,25 @@ defmodule Converge.Runner.SystemdUnitStartedTest do
 		u = %SystemdUnitStarted{name: "chrony.service"}
 		Runner.converge(u, TestingContext.get_context())
 	end
+
+	test "SystemdUnitStarted on a nonexistent unit" do
+		u = %SystemdUnitStarted{name: "nonexistent.service"}
+		assert_raise(UnitError, ~r/Failed to start/, fn -> Runner.converge(u, TestingContext.get_context()) end)
+	end
 end
+
 
 defmodule Converge.Runner.SystemdUnitStoppedTest do
 	use ExUnit.Case
 
 	test "SystemdUnitStopped" do
 		u = %SystemdUnitStopped{name: "chrony.service"}
+		Runner.converge(u, TestingContext.get_context())
+	end
+
+	test "SystemdUnitStopped on a nonexistent unit" do
+		u = %SystemdUnitStopped{name: "nonexistent.service"}
+		# systemd unit doesn't need to exist because of the met? check
 		Runner.converge(u, TestingContext.get_context())
 	end
 end

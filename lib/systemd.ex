@@ -17,7 +17,15 @@ defimpl Unit, for: Converge.SystemdUnitStarted do
 	end
 
 	def meet(u, _ctx) do
-		{"", 0} = System.cmd("systemctl", ["start", "--", u.name])
+		case System.cmd("systemctl", ["start", "--", u.name], stderr_to_stdout: true) do
+			{"", 0}          -> nil
+			{out, exit_code} ->
+				raise(UnitError,
+					"""
+					Failed to start #{u.name}: `systemctl start` returned exit code
+					#{exit_code}, output #{inspect out}
+					""")
+		end
 	end
 end
 
@@ -38,7 +46,15 @@ defimpl Unit, for: Converge.SystemdUnitStopped do
 	end
 
 	def meet(u, _ctx) do
-		{"", 0} = System.cmd("systemctl", ["stop", "--", u.name])
+		case System.cmd("systemctl", ["stop", "--", u.name], stderr_to_stdout: true) do
+			{"", 0}          -> nil
+			{out, exit_code} ->
+				raise(UnitError,
+					"""
+					Failed to stop #{u.name}: `systemctl stop` returned exit code
+					#{exit_code}, output #{inspect out}
+					""")
+		end
 	end
 end
 
