@@ -1,4 +1,5 @@
-alias Converge.{Runner, Context, UnitError, AfterMeet, BeforeMeet}
+alias Gears.FileUtil
+alias Converge.{Unit, Runner, Context, UnitError, AfterMeet, BeforeMeet, TaintableAfterMeet}
 alias Converge.TestHelpers.{FailsToConvergeUnit, AlreadyConvergedUnit, ConvergeableUnit, TestingContext}
 
 defmodule Converge.Runner.AfterMeetTest do
@@ -80,5 +81,35 @@ defmodule Converge.Runner.BeforeMeetTest do
 			UnitError, ~r/^object is Context$/,
 			fn -> Runner.converge(t, TestingContext.get_context()) end
 		)
+	end
+end
+
+
+defmodule Converge.Runner.TaintableAfterMeetTest do
+	use ExUnit.Case, async: true
+
+	test "TaintableAfterMeetTest runs the trigger again if trigger failed last time" do
+		FileUtil.rm_f!("/tmp/converge-trigger_test/TaintableAfterMeetTest-1")
+		ctx = TestingContext.get_context()
+		cu  = ConvergeableUnit.new()
+		t   = %TaintableAfterMeet{
+			taint_filename: "/tmp/converge-trigger_test/TaintableAfterMeetTest-1",
+			unit:           cu,
+			trigger:        fn -> raise(UnitError, "from trigger") end,
+		}
+		assert_raise(
+			UnitError, ~r/^from trigger$/,
+			fn -> Runner.converge(t, ctx) end
+		)
+		assert File.regular?("/tmp/converge-trigger_test/TaintableAfterMeetTest-1")
+		# Unit should be already converged at this point
+		assert Unit.met?(cu, ctx)
+		t = %TaintableAfterMeet{
+			taint_filename: "/tmp/converge-trigger_test/TaintableAfterMeetTest-1",
+			unit:           cu,
+			trigger:        fn -> :ok end,
+		}
+		Runner.converge(t, ctx)
+		assert not File.regular?("/tmp/converge-trigger_test/TaintableAfterMeetTest-1")
 	end
 end
