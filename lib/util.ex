@@ -189,4 +189,11 @@ defmodule Converge.Util do
 		|> Enum.filter(fn tag -> String.starts_with?(tag, prefix <> ":") end)
 		|> Enum.map(fn tag -> [^prefix, value] = String.split(tag, ":", parts: 2); value end)
 	end
+
+	defmacro marker(basename) do
+		quote do
+			directory = Path.join("/tmp/converge/markers", Atom.to_string(__MODULE__))
+			Path.join(directory, unquote(basename))
+		end
+	end
 end

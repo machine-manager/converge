@@ -2,6 +2,7 @@ alias Converge.{Util, TagValueError}
 
 defmodule Converge.UtilTest do
 	use ExUnit.Case, async: true
+	require Util
 
 	test "get_meminfo" do
 		info = Util.get_meminfo()
@@ -74,5 +75,9 @@ defmodule Converge.UtilTest do
 		assert Util.tag_values(["a:x"], "a")         == ["x"]
 		assert Util.tag_values(["a:x", "a:yy"], "a") == ["x", "yy"]
 		assert Util.tag_values(["ab:x", "a:y"], "a") == ["y"]
+	end
+
+	test "marker" do
+		assert Util.marker("demo") == "/tmp/converge/markers/Elixir.Converge.UtilTest/demo"
 	end
 end
