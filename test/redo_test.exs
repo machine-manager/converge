@@ -29,6 +29,13 @@ defmodule Converge.Runner.RedoTest do
 		# Marker file should no longer exist
 		assert not File.regular?("/tmp/converge-RedoTest/1")
 	end
+
+	test "Redo.met? and Redo.meet with relative path for marker raise UnitError" do
+		ctx = TestingContext.get_context()
+		u   = %Redo{marker: "relative", unit: ConvergeableUnit.new()}
+		assert_raise(UnitError, ~r/not absolute/, fn -> Unit.met?(u, ctx) end)
+		assert_raise(UnitError, ~r/not absolute/, fn -> Unit.meet(u, ctx) end)
+	end
 end
 
 
@@ -60,5 +67,12 @@ defmodule Converge.Runner.RedoAfterMeetTest do
 		Runner.converge(t, ctx)
 		# Marker file should no longer exist
 		assert not File.regular?("/tmp/converge-RedoAfterMeet/1")
+	end
+
+	test "RedoAfterMeet.met? and RedoAfterMeet.meet with relative path for marker raise UnitError" do
+		ctx = TestingContext.get_context()
+		u   = %Redo{marker: "relative", unit: ConvergeableUnit.new()}
+		assert_raise(UnitError, ~r/not absolute/, fn -> Unit.met?(u, ctx) end)
+		assert_raise(UnitError, ~r/not absolute/, fn -> Unit.meet(u, ctx) end)
 	end
 end
