@@ -155,13 +155,16 @@ defmodule Converge.Runner do
 	it it does, run `meet`, then `met?` again to ensure that `meet` worked
 	correctly.  If `met?` returns `false` the second time, raise `UnitError`.
 
-	If `ctx.run_meet == false`, never run `meet` on units.
+	If `override_met? == true`, run `meet` on `u` without checking `met?` on
+	`u` first.  Do not use this except to modify unit behavior in rare cases.
+
+	If `ctx.run_meet == false`, never run `meet` on any units.
 
 	Everything is logged to `ctx.reporter`.
 	"""
 	@spec converge(Unit, Context) :: nil
-	def converge(u, ctx) do
-		if not met?(u, ctx) and ctx.run_meet do
+	def converge(u, ctx, override_met? \\ false) do
+		if (override_met? or not met?(u, ctx)) and ctx.run_meet do
 			Reporter.open(ctx.reporter, u, :meet)
 			Unit.meet(u, ctx)
 			Reporter.close(ctx.reporter, u, :ran_meet)
