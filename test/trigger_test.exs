@@ -1,4 +1,4 @@
-alias Converge.{Unit, Runner, Context, UnitError, AfterMeet, BeforeMeet}
+alias Converge.{Runner, Context, UnitError, AfterMeet, BeforeMeet}
 alias Converge.TestHelpers.{FailsToConvergeUnit, AlreadyConvergedUnit, ConvergeableUnit, TestingContext}
 
 defmodule Converge.Runner.AfterMeetTest do

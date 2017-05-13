@@ -1,5 +1,5 @@
 alias Gears.FileUtil
-alias Converge.{Unit, Runner}
+alias Converge.{Unit, Runner, AfterMeet, Redo}
 
 defmodule Converge.Redo do
 	@moduledoc """
@@ -24,5 +24,33 @@ defimpl Unit, for: Converge.Redo do
 		File.touch!(u.marker)
 		Runner.converge(u.unit, ctx, true)
 		FileUtil.rm_f!(u.marker)
+	end
+end
+
+
+defmodule Converge.RedoAfterMeet do
+	@moduledoc """
+	Like `AfterMeet`, but forces the trigger to run again if it raised any
+	exception last time.  Equivalent do nesting an `AfterMeet` into a
+	`Redo` yourself.
+	"""
+	@enforce_keys [:marker, :unit, :trigger]
+	defstruct marker: nil, unit: nil, trigger: nil
+end
+
+defimpl Unit, for: Converge.RedoAfterMeet do
+	def met?(u, ctx) do
+		Runner.met?(make_unit(u), ctx)
+	end
+
+	def meet(u, ctx) do
+		Runner.converge(make_unit(u), ctx)
+	end
+
+	defp make_unit(u) do
+		%Redo{
+			marker: u.marker,
+			unit:   %AfterMeet{unit: u.unit, trigger: u.trigger}
+		}
 	end
 end
