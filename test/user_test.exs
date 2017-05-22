@@ -45,7 +45,7 @@ defmodule Converge.UserPresentTest do
 		}, TestingContext.get_context())
 	end
 
-	test "can create a user with a specific uid, locked, crypted_password" do
+	test "can create a user with a specific uid, locked, crypted_password, authorized_keys" do
 		Runner.converge(%Converge.UserMissing{name: "converge-test-userpresent"}, TestingContext.get_context())
 		Runner.converge(%Converge.UserPresent{
 			name:             "converge-test-userpresent",
@@ -54,6 +54,7 @@ defmodule Converge.UserPresentTest do
 			uid:              2000,
 			locked:           false,
 			crypted_password: "$1$HK1.P14i$3uOXlDCZbK8TmSXWOO5cV/",
+			authorized_keys:  ["ssh-rsa bogus-key name@host"],
 		}, TestingContext.get_context())
 	end
 

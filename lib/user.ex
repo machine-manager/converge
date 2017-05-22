@@ -1,4 +1,4 @@
-alias Converge.{Unit, UnitError, Runner}
+alias Converge.{Unit, UnitError, Runner, All, DirectoryPresent, FilePresent}
 
 defmodule Converge.UserUtil do
 	def get_users() do
@@ -101,7 +101,7 @@ defmodule Converge.User do
 	@enforce_keys [:name, :home, :shell]
 	defstruct \
 		name: nil, uid: nil, gid: nil, comment: nil, home: nil, shell: nil,
-		locked: nil, crypted_password: nil, allow_ssh: false
+		locked: nil, crypted_password: nil, allow_ssh: false, authorized_keys: []
 end
 
 
@@ -122,14 +122,14 @@ defmodule Converge.UserPresent do
 	@enforce_keys [:name, :home, :shell]
 	defstruct \
 		name: nil, uid: nil, gid: nil, comment: nil, home: nil, shell: nil,
-		locked: nil, crypted_password: nil
+		locked: nil, crypted_password: nil, authorized_keys: []
 end
 
 defimpl Unit, for: Converge.UserPresent do
 	import Gears.LangUtil, only: [oper_if: 3]
 	alias Converge.UserUtil
 
-	def met?(u, _ctx) do
+	def met?(u, ctx) do
 		ensure_password_and_locked_consistency(u)
 		user = UserUtil.get_users()[u.name]
 		case user do
@@ -140,16 +140,17 @@ defimpl Unit, for: Converge.UserPresent do
 					|> without_nil_values
 				current = user |> Map.take(Map.keys(wanted))
 				current == wanted
-		end
+		end and Runner.met?(authorized_keys_unit(u), ctx)
 	end
 
-	def meet(u, _) do
+	def meet(u, ctx) do
 		ensure_password_and_locked_consistency(u)
 		exists = UserUtil.get_users() |> Map.has_key?(u.name)
 		case exists do
 			true  -> meet_modify(u)
 			false -> meet_add(u)
 		end
+		Runner.converge(authorized_keys_unit(u), ctx)
 	end
 
 	# Take a map and return a new map without any k/v pairs that have a nil value
@@ -209,6 +210,21 @@ defimpl Unit, for: Converge.UserPresent do
 				""") do
 			raise(UnitError, "Unexpected output from useradd: #{inspect out}")
 		end
+	end
+
+	defp authorized_keys_unit(u) do
+		%All{units: [
+			# home directory might not exist if it was changed
+			%DirectoryPresent{path: u.home,                      mode: 0o750, user: u.name, group: u.name},
+			%DirectoryPresent{path: "#{u.home}/.ssh",            mode: 0o700, user: u.name, group: u.name},
+			%FilePresent{path: "#{u.home}/.ssh/authorized_keys", mode: 0o600, user: u.name, group: u.name, content: authorized_keys_file(u)},
+		]}
+	end
+
+	defp authorized_keys_file(u) do
+		u.authorized_keys
+		|> Enum.map(fn key -> "#{key}\n" end)
+		|> Enum.join
 	end
 end
 
@@ -350,7 +366,8 @@ defimpl Unit, for: Converge.RegularUsersPresent do
 			home:             user.home,
 			shell:            user.shell,
 			locked:           user.locked,
-			crypted_password: user.crypted_password
+			crypted_password: user.crypted_password,
+			authorized_keys:  user.authorized_keys,
 		}
 	end
 end
