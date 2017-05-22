@@ -244,9 +244,10 @@ defimpl Unit, for: Converge.UserDisabled do
 	def met?(u, _ctx) do
 		user = UserUtil.get_users()[u.name]
 		cond do
-			user == nil                                -> false
-			user.locked and user.shell == "/bin/false" -> true
-			true                                       -> false
+			user == nil -> false
+			# if no :locked key, /etc/shadow entry is missing; assume locked
+			user[:locked] in [nil, true] and user.shell == "/bin/false" -> true
+			true -> false
 		end
 	end
 
