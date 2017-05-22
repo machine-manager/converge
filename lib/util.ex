@@ -169,6 +169,10 @@ defmodule Converge.Util do
 		File.read!(filename)
 	end
 
+	defmacro path_expand_content(filename) do
+		File.read!(Path.expand(filename))
+	end
+
 	def tag_value!(tags, prefix) do
 		case tag_value(tags, prefix) do
 			nil   -> raise(TagValueError, "No tag with prefix #{inspect prefix} in #{inspect tags}")
