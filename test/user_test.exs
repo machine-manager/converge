@@ -165,20 +165,6 @@ defmodule Converge.UserMissingTest do
 end
 
 
-defmodule Converge.UserTest do
-	use ExUnit.Case, async: true
-
-	test "allow_ssh on User defaults to false" do
-		user = %Converge.User{name: "converge-nsup-1", home: "/home/converge-nsup-1", shell: "/bin/zsh"}
-		assert user.allow_ssh == false
-	end
-
-	test "can create User with allow_ssh set to true" do
-		%Converge.User{name: "converge-nsup-1", home: "/home/converge-nsup-1", shell: "/bin/zsh", allow_ssh: true}
-	end
-end
-
-
 defmodule Converge.RegularUsersPresentTest do
 	use ExUnit.Case, async: true
 
