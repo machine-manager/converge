@@ -92,12 +92,16 @@ defmodule Converge.User do
 	@moduledoc """
 	See the documentation for `Converge.UserPresent`.
 
+	`allow_ssh` is present because it is useful when generating the `AllowUsers`
+	line in `sshd_config`, but it is not actually handled by any of the User
+	units here.
+
 	`User` is used only by `RegularUsersPresent`, so it does not implement `Unit`.
 	"""
 	@enforce_keys [:name, :home, :shell]
 	defstruct \
 		name: nil, uid: nil, gid: nil, comment: nil, home: nil, shell: nil,
-		locked: nil, crypted_password: nil
+		locked: nil, crypted_password: nil, allow_ssh: false
 end
 
 
