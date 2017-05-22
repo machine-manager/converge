@@ -25,7 +25,7 @@ defmodule Converge.UserUtil do
 		{name,
 			%{
 				crypted_password: crypted_password,
-				locked: crypted_password_is_locked(crypted_password)
+				locked:           crypted_password_is_locked(crypted_password)
 			}
 		}
 	end
