@@ -242,9 +242,11 @@ defimpl Unit, for: Converge.UserDisabled do
 	alias Converge.UserUtil
 
 	def met?(u, _ctx) do
-		case UserUtil.get_users()[u.name] do
-			nil                             -> false
-			%{shell: shell, locked: locked} -> locked and shell == "/bin/false"
+		user = UserUtil.get_users()[u.name]
+		cond do
+			user == nil                                -> false
+			user.locked and user.shell == "/bin/false" -> true
+			true                                       -> false
 		end
 	end
 
