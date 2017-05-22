@@ -208,3 +208,13 @@ defmodule Converge.RegularUsersPresentTest do
 			fn -> Runner.converge(u, TestingContext.get_context()) end
 	end
 end
+
+
+defmodule Converge.UserAuthorizedKeysTest do
+	use ExUnit.Case, async: true
+
+	test "UserAuthorizedKeys" do
+		u = %Converge.UserAuthorizedKeys{name: "_chrony", authorized_keys: ["ssh-rsa bogus"]}
+		Runner.converge(u, TestingContext.get_context())
+	end
+end

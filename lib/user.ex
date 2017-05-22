@@ -1,4 +1,6 @@
-alias Converge.{Unit, UnitError, Runner, All, DirectoryPresent, FilePresent}
+alias Converge.{
+	Unit, UnitError, Runner, All, DirectoryPresent, FilePresent,
+	UserAuthorizedKeys, UserUtil, UserPresent, UserDisabled}
 
 defmodule Converge.UserUtil do
 	def get_users() do
@@ -88,6 +90,38 @@ defmodule Converge.GroupUtil do
 end
 
 
+defmodule Converge.UserAuthorizedKeys do
+	@enforce_keys [:name, :authorized_keys]
+	defstruct name: nil, authorized_keys: nil
+end
+
+defimpl Unit, for: Converge.UserAuthorizedKeys do
+	def met?(u, ctx) do
+		Runner.met?(make_unit(u), ctx)
+	end
+
+	def meet(u, ctx) do
+		Runner.converge(make_unit(u), ctx)
+	end
+
+	def make_unit(u) do
+		home = UserUtil.get_users()[u.name].home
+		%All{units: [
+			# home directory might not exist if it was changed
+			%DirectoryPresent{path: home,                      mode: 0o750, user: u.name, group: u.name},
+			%DirectoryPresent{path: "#{home}/.ssh",            mode: 0o700, user: u.name, group: u.name},
+			%FilePresent{path: "#{home}/.ssh/authorized_keys", mode: 0o600, user: u.name, group: u.name, content: authorized_keys_file(u)},
+		]}
+	end
+
+	defp authorized_keys_file(u) do
+		u.authorized_keys
+		|> Enum.map(fn key -> "#{key}\n" end)
+		|> Enum.join
+	end
+end
+
+
 defmodule Converge.User do
 	@moduledoc """
 	See the documentation for `Converge.UserPresent`.
@@ -124,7 +158,6 @@ end
 
 defimpl Unit, for: Converge.UserPresent do
 	import Gears.LangUtil, only: [oper_if: 3]
-	alias Converge.UserUtil
 
 	def met?(u, ctx) do
 		ensure_password_and_locked_consistency(u)
@@ -210,18 +243,7 @@ defimpl Unit, for: Converge.UserPresent do
 	end
 
 	defp authorized_keys_unit(u) do
-		%All{units: [
-			# home directory might not exist if it was changed
-			%DirectoryPresent{path: u.home,                      mode: 0o750, user: u.name, group: u.name},
-			%DirectoryPresent{path: "#{u.home}/.ssh",            mode: 0o700, user: u.name, group: u.name},
-			%FilePresent{path: "#{u.home}/.ssh/authorized_keys", mode: 0o600, user: u.name, group: u.name, content: authorized_keys_file(u)},
-		]}
-	end
-
-	defp authorized_keys_file(u) do
-		u.authorized_keys
-		|> Enum.map(fn key -> "#{key}\n" end)
-		|> Enum.join
+		%UserAuthorizedKeys{name: u.name, authorized_keys: u.authorized_keys}
 	end
 end
 
@@ -239,8 +261,6 @@ defmodule Converge.UserDisabled do
 end
 
 defimpl Unit, for: Converge.UserDisabled do
-	alias Converge.UserUtil
-
 	def met?(u, _ctx) do
 		user = UserUtil.get_users()[u.name]
 		cond do
@@ -280,8 +300,6 @@ defmodule Converge.UserMissing do
 end
 
 defimpl Unit, for: Converge.UserMissing do
-	alias Converge.UserUtil
-
 	def met?(u, _ctx) do
 		UserUtil.get_users()
 		|> Map.has_key?(u.name)
@@ -310,8 +328,6 @@ defmodule Converge.RegularUsersPresent do
 end
 
 defimpl Unit, for: Converge.RegularUsersPresent do
-	alias Converge.{UserUtil, UserPresent, UserDisabled}
-
 	def met?(u, ctx) do
 		Runner.met?(make_unit(u), ctx)
 	end
