@@ -107,7 +107,8 @@ end
 
 defmodule Converge.UserPresent do
 	@moduledoc """
-	A user exists and and has a certain uid, gid, comment, home, and shell.
+	A user exists and and has a certain uid, gid, comment, home, and shell,
+	and authorized_keys.
 
 	`uid`, `gid`, `comment`, and `locked` are optional, and if not specified,
 	will be automatically assigned for new users, or left unchanged for existing
