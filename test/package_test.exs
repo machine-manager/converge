@@ -2,7 +2,7 @@ alias Gears.StringUtil
 alias Converge.{
 	PackageCacheEmptied, PackagesMarkedAutoInstalled, PackagesMarkedManualInstalled,
 	PackageRoots, DanglingPackagesPurged, PackagePurged, MetaPackageInstalled,
-	Runner, All, Util}
+	Runner, All, Util, NoPackagesUnavailableInSource, UnitError}
 alias Converge.TestHelpers.TestingContext
 
 
@@ -131,5 +131,21 @@ defmodule Converge.MetaPackageInstalledTest do
 			[] -> false
 			_  -> true
 		end
+	end
+end
+
+
+defmodule Converge.NoPackagesUnavailableInSourceTest do
+	use ExUnit.Case
+
+	test "NoPackagesUnavailableInSource with whitelist" do
+		u = %NoPackagesUnavailableInSource{whitelist: ["converge-desired-packages", "converge-desired-packages-early"]}
+		Runner.converge(u, TestingContext.get_context())
+	end
+
+	test "NoPackagesUnavailableInSource with empty whitelist" do
+		u = %NoPackagesUnavailableInSource{whitelist: []}
+		assert_raise UnitError, ~r/installed packages that are unavailable in any package source/,
+			fn -> Runner.converge(u, TestingContext.get_context()) end
 	end
 end

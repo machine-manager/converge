@@ -1,5 +1,5 @@
 alias Gears.{FileUtil, StringUtil}
-alias Converge.{Unit, Runner, All}
+alias Converge.{Unit, Runner, All, UnitError}
 import Converge.Util, only: [
 	get_control_line: 2,
 	update_package_index: 0,
@@ -275,5 +275,43 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 			[] -> true
 			_  -> false
 		end
+	end
+end
+
+
+defmodule Converge.NoPackagesUnavailableInSource do
+	@moduledoc """
+	No installed packages are unavailable in any package source.
+
+	Packages in `whitelist` will be allowed despite not being in any package
+	source.
+
+	`meet` on this unit just raises `UnitError` because this unit not being met
+	is a rare situation that typically warrants manual inspection.
+
+	`aptitude` must be installed for this unit to work.
+	"""
+	@enforce_keys [:whitelist]
+	defstruct whitelist: []
+end
+
+defimpl Unit, for: Converge.NoPackagesUnavailableInSource do
+	def met?(u, _ctx) do
+		MapSet.size(get_unexpected_packages(u)) == 0
+	end
+
+	def meet(u, _) do
+		raise(UnitError, """
+			System has installed packages that are unavailable in any package source: \
+			#{inspect get_unexpected_packages(u)}\
+			""")
+	end
+
+	# Get packages that are not present in any package source and are not
+	# whitelisted.
+	defp get_unexpected_packages(u) do
+		{out, 0}    = System.cmd("aptitude", ["search", "-F", "%p", "?obsolete"])
+		unavailable = out |> String.split |> MapSet.new
+		MapSet.difference(unavailable, MapSet.new(u.whitelist))
 	end
 end
