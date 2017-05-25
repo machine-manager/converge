@@ -136,7 +136,6 @@ defmodule Converge.Util do
 	# Not necessarily the "WAN" IP when behind a NAT
 	def get_internet_source_ip() do
 		{out, 0} = System.cmd("ip", ["route", "get", "8.8.8.8"])
-		IO.inspect(out)
 		out
 		|> String.split("\n")
 		|> hd
