@@ -322,8 +322,8 @@ defmodule Converge.NoPackagesNewerThanInSource do
 	No installed packages are newer than the highest version available in the
 	package sources.
 
-	Package names matched by `whitelist_regexp` will be allowed despite not
-	being in any package source.
+	Package names matched by `whitelist_regexp` will be allowed despite being
+	newer.
 
 	`meet` on this unit just raises `UnitError` because this unit not being met
 	is a rare situation that typically warrants manual inspection.
