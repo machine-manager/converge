@@ -2,7 +2,8 @@ alias Gears.StringUtil
 alias Converge.{
 	PackageCacheEmptied, PackagesMarkedAutoInstalled, PackagesMarkedManualInstalled,
 	PackageRoots, DanglingPackagesPurged, PackagePurged, MetaPackageInstalled,
-	Runner, All, Util, NoPackagesUnavailableInSource, UnitError}
+	Runner, All, Util, NoPackagesUnavailableInSource, NoPackagesNewerThanInSource,
+	UnitError}
 alias Converge.TestHelpers.TestingContext
 
 
@@ -146,6 +147,22 @@ defmodule Converge.NoPackagesUnavailableInSourceTest do
 	test "NoPackagesUnavailableInSource with empty whitelist" do
 		u = %NoPackagesUnavailableInSource{whitelist: []}
 		assert_raise UnitError, ~r/installed packages that are unavailable in any package source/,
+			fn -> Runner.converge(u, TestingContext.get_context()) end
+	end
+end
+
+
+defmodule Converge.NoPackagesNewerThanInSourceTest do
+	use ExUnit.Case
+
+	test "NoPackagesNewerThanInSource with whitelist_regexp" do
+		u = %NoPackagesNewerThanInSource{whitelist_regexp: ~r/^linux-(image|headers)-/}
+		Runner.converge(u, TestingContext.get_context())
+	end
+
+	test "NoPackagesNewerThanInSource with no whitelist_regexp" do
+		u = %NoPackagesNewerThanInSource{}
+		assert_raise UnitError, ~r/installed packages that are newer than available in package sources/,
 			fn -> Runner.converge(u, TestingContext.get_context()) end
 	end
 end

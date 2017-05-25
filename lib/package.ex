@@ -315,3 +315,41 @@ defimpl Unit, for: Converge.NoPackagesUnavailableInSource do
 		MapSet.difference(unavailable, MapSet.new(u.whitelist))
 	end
 end
+
+
+defmodule Converge.NoPackagesNewerThanInSource do
+	@moduledoc """
+	No installed packages are newer than the highest version available in the
+	package sources.
+
+	Package names matched by `whitelist_regexp` will be allowed despite not
+	being in any package source.
+
+	`meet` on this unit just raises `UnitError` because this unit not being met
+	is a rare situation that typically warrants manual inspection.
+
+	`apt-show-versions` must be installed for this unit to work.
+	"""
+	defstruct whitelist_regexp: ~r/^$/
+end
+
+defimpl Unit, for: Converge.NoPackagesNewerThanInSource do
+	def met?(u, _ctx) do
+		get_unexpected_packages(u) == []
+	end
+
+	def meet(u, _) do
+		raise(UnitError, """
+			System has installed packages that are newer than available in package sources: \
+			#{inspect get_unexpected_packages(u)}\
+			""")
+	end
+
+	defp get_unexpected_packages(u) do
+		{out, 0} = System.cmd("apt-show-versions", [])
+		out
+		|> StringUtil.grep(~r/ newer than version in archive$/)
+		|> Enum.map(fn line -> [package, version | _] = String.split(line); {package, version} end)
+		|> Enum.reject(fn {package, _} -> package =~ u.whitelist_regexp end)
+	end
+end
