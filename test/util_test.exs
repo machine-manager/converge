@@ -50,8 +50,8 @@ defmodule Converge.UtilTest do
 		assert is_binary(Util.get_hostname())
 	end
 
-	test "get_ip" do
-		ip = Util.get_ip()
+	test "get_internet_source_ip" do
+		ip = Util.get_internet_source_ip()
 		assert is_binary(ip)
 		assert ip =~ ~r/^[\d\.]+$/
 	end
