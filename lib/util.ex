@@ -133,6 +133,17 @@ defmodule Converge.Util do
 		File.read!("/etc/hostname") |> String.trim_trailing
 	end
 
+	# Not necessarily the "WAN" IP when behind a NAT
+	def get_ip() do
+		{out, 0} = System.cmd("ip", ["route", "get", "8.8.8.8"])
+		IO.inspect(out)
+		out
+		|> String.split("\n")
+		|> hd
+		|> String.split
+		|> List.last
+	end
+
 	@doc """
 	@external_resource is used to tell mix which resource files affect the build
 	output.  But typing them all out is annoying if you have many files.  This

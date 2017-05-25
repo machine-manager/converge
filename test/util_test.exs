@@ -50,6 +50,12 @@ defmodule Converge.UtilTest do
 		assert is_binary(Util.get_hostname())
 	end
 
+	test "get_ip" do
+		ip = Util.get_ip()
+		assert is_binary(ip)
+		assert ip =~ ~r/^[\d\.]+$/
+	end
+
 	test "tag_value!" do
 		assert_raise TagValueError, ~r/^No tag with prefix /, fn -> Util.tag_value!([], "") end
 		assert_raise TagValueError, ~r/^No tag with prefix /, fn -> Util.tag_value!([], "a") end
