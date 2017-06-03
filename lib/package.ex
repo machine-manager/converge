@@ -286,8 +286,8 @@ defmodule Converge.NoPackagesUnavailableInSource do
 	Packages in `whitelist` will be allowed despite not being in any package
 	source.
 
-	`meet` on this unit just raises `UnitError` because this unit not being met
-	is a rare situation that typically warrants manual inspection.
+	`meet` on this unit just raises `UnitError` because this unit being unmet
+	is a rare situation that warrants manual inspection.
 
 	`aptitude` must be installed for this unit to work.
 	"""
