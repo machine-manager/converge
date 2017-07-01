@@ -283,21 +283,21 @@ defmodule Converge.NoPackagesUnavailableInSource do
 	@moduledoc """
 	No installed packages are unavailable in any package source.
 
-	Packages in `whitelist` will be allowed despite not being in any package
-	source.
+	Package names matched by `whitelist_regexp` will be allowed despite not
+	being in any package source.
 
 	`meet` on this unit just raises `UnitError` because this unit being unmet
 	is a rare situation that warrants manual inspection.
 
 	`aptitude` must be installed for this unit to work.
 	"""
-	@enforce_keys [:whitelist]
-	defstruct whitelist: []
+	@enforce_keys [:whitelist_regexp]
+	defstruct whitelist_regexp: ~r/^$/
 end
 
 defimpl Unit, for: Converge.NoPackagesUnavailableInSource do
 	def met?(u, _ctx) do
-		MapSet.size(get_unexpected_packages(u)) == 0
+		get_unexpected_packages(u) == []
 	end
 
 	def meet(u, _) do
@@ -310,9 +310,10 @@ defimpl Unit, for: Converge.NoPackagesUnavailableInSource do
 	# Get packages that are not present in any package source and are not
 	# whitelisted.
 	defp get_unexpected_packages(u) do
-		{out, 0}    = System.cmd("aptitude", ["search", "-F", "%p", "?obsolete"])
-		unavailable = out |> String.split |> MapSet.new
-		MapSet.difference(unavailable, MapSet.new(u.whitelist))
+		{out, 0} = System.cmd("aptitude", ["search", "-F", "%p", "?obsolete"])
+		out
+		|> String.split
+		|> Enum.reject(fn package -> package =~ u.whitelist_regexp end)
 	end
 end
 
@@ -330,6 +331,7 @@ defmodule Converge.NoPackagesNewerThanInSource do
 
 	`apt-show-versions` must be installed for this unit to work.
 	"""
+	@enforce_keys [:whitelist_regexp]
 	defstruct whitelist_regexp: ~r/^$/
 end
 

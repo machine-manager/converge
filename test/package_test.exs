@@ -139,13 +139,13 @@ end
 defmodule Converge.NoPackagesUnavailableInSourceTest do
 	use ExUnit.Case
 
-	test "NoPackagesUnavailableInSource with whitelist" do
-		u = %NoPackagesUnavailableInSource{whitelist: ["converge-desired-packages", "converge-desired-packages-early"]}
+	test "NoPackagesUnavailableInSource can be met" do
+		u = %NoPackagesUnavailableInSource{whitelist_regexp: ~r/^(converge-desired-packages(-early)?|linux-(image|headers)-.*)$/}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
-	test "NoPackagesUnavailableInSource with empty whitelist" do
-		u = %NoPackagesUnavailableInSource{whitelist: []}
+	test "NoPackagesUnavailableInSource can raise UnitError" do
+		u = %NoPackagesUnavailableInSource{whitelist_regexp: ~r/^$/}
 		assert_raise UnitError, ~r/installed packages that are unavailable in any package source/,
 			fn -> Runner.converge(u, TestingContext.get_context()) end
 	end
@@ -155,13 +155,13 @@ end
 defmodule Converge.NoPackagesNewerThanInSourceTest do
 	use ExUnit.Case
 
-	test "NoPackagesNewerThanInSource with whitelist_regexp" do
+	test "NoPackagesNewerThanInSource can be met" do
 		u = %NoPackagesNewerThanInSource{whitelist_regexp: ~r/^linux-(image|headers)-/}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
-	test "NoPackagesNewerThanInSource with no whitelist_regexp" do
-		u = %NoPackagesNewerThanInSource{}
+	test "NoPackagesNewerThanInSource can raise UnitError" do
+		u = %NoPackagesNewerThanInSource{whitelist_regexp: ~r/^$/}
 		assert_raise UnitError, ~r/installed packages that are newer than available in package sources/,
 			fn -> Runner.converge(u, TestingContext.get_context()) end
 	end
