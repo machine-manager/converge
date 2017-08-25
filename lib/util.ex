@@ -70,6 +70,19 @@ defmodule Converge.Util do
 		end
 	end
 
+	def systemd_unit_active?(name) do
+		case System.cmd("systemctl", ["-q", "is-active", "--", name], stderr_to_stdout: true) do
+			{_, 0} -> true
+			{_, 3} -> false
+		end
+	end
+
+	def systemd_unit_reload_or_restart_if_active(name) do
+		if systemd_unit_active?(name) do
+			{_, 0} = System.cmd("systemctl", ["try-reload-or-restart", "--", name])
+		end
+	end
+
 	@doc """
 	Returns `true` if package `name` is installed, otherwise `false`.
 	"""
