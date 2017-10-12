@@ -140,7 +140,7 @@ defmodule Converge.NoPackagesUnavailableInSourceTest do
 	use ExUnit.Case
 
 	test "NoPackagesUnavailableInSource can be met" do
-		u = %NoPackagesUnavailableInSource{whitelist_regexp: ~r/^(converge-desired-packages(-early)?|linux-(image|headers)-.*)$/}
+		u = %NoPackagesUnavailableInSource{whitelist_regexp: ~r/^(converge-.*|linux-(image|tools|headers)-.*)$/}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
