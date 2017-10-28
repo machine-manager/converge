@@ -35,7 +35,7 @@ defimpl Unit, for: Converge.Sysctl do
 
 	defp stringify_values(parameters) do
 		parameters
-		|> Enum.map(fn {k, v} -> {k, to_string(v)} end)
+		|> Enum.map(fn {k, v} -> {k, value_to_string(v)} end)
 		|> Enum.into(%{})
 	end
 
@@ -73,4 +73,5 @@ defimpl Unit, for: Converge.Sysctl do
 
 	defp value_to_string(value) when is_binary(value),  do: value
 	defp value_to_string(value) when is_integer(value), do: to_string(value)
+	defp value_to_string(value) when is_list(value),    do: Enum.map(value, &value_to_string/1) |> Enum.join("\t")
 end
