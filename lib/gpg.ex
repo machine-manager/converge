@@ -1,5 +1,5 @@
 alias Gears.FileUtil
-alias Converge.{Unit, Runner, FilePresent}
+alias Converge.{Unit, Runner, FilePresent, Util}
 
 defmodule Converge.GPGSimpleKeyring do
 	@moduledoc """
@@ -88,6 +88,7 @@ defimpl Unit, for: Converge.GPGKeybox do
 	end
 
 	defp get_keybox_content(keys) do
+		maybe_install_gnug2()
 		keybox_file = FileUtil.temp_path("converge-gpg2-keybox")
 		# Create an empty keybox, because `keys` may be empty
 		create_empty_keybox(keybox_file)
@@ -100,6 +101,13 @@ defimpl Unit, for: Converge.GPGKeybox do
 		content = File.read!(keybox_file)
 		FileUtil.rm_f!(keybox_file)
 		content
+	end
+
+	defp maybe_install_gnug2() do
+		unless File.exists?("/usr/bin/gpg2") do
+			Util.update_package_index()
+			Util.install_package("gnupg2")
+		end
 	end
 
 	defp create_empty_keybox(keybox_file) do

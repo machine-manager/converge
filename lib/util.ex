@@ -114,6 +114,18 @@ defmodule Converge.Util do
 		{_, 0} = System.cmd("apt-get", ["update"], stderr_to_stdout: true)
 	end
 
+	def install_package(name) do
+		{_, 0} = System.cmd("apt-get", ["--quiet", "--assume-yes", "install", name], env: get_noninteractive_apt_env())
+	end
+
+	def get_noninteractive_apt_env() do
+		[
+			{"DEBIAN_FRONTEND",          "noninteractive"},
+			{"APT_LISTCHANGES_FRONTEND", "none"},
+			{"APT_LISTBUGS_FRONTEND",    "none"}
+		]
+	end
+
 	def remove_cached_package_index() do
 		FileUtil.rm_f!("/var/cache/apt/pkgcache.bin")
 	end

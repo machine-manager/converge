@@ -3,7 +3,9 @@ alias Converge.{Unit, Runner, All, UnitError}
 import Converge.Util, only: [
 	get_control_line: 2,
 	update_package_index: 0,
-	get_packages_marked: 1
+	get_packages_marked: 1,
+	get_noninteractive_apt_env: 0,
+	install_package: 1,
 ]
 
 
@@ -198,14 +200,9 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		{_, 0} = System.cmd("dpkg", ["--add-architecture", "i386"])
 		update_package_index()
 
-		noninteractive_env = [
-			{"DEBIAN_FRONTEND",          "noninteractive"},
-			{"APT_LISTCHANGES_FRONTEND", "none"},
-			{"APT_LISTBUGS_FRONTEND",    "none"}
-		]
 		# make_deb requires ar, so if it is not available, install binutils
 		unless File.exists?("/usr/bin/ar") do
-			{_, 0} = System.cmd("apt-get", ["--quiet", "--assume-yes", "install", "binutils"], env: noninteractive_env)
+			install_package("binutils")
 		end
 		deb = make_deb(u)
 		args = [
@@ -224,7 +221,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		# "N: Ignoring file '50unattended-upgrades.ucf-dist' in directory '/etc/apt/apt.conf.d/'
 		#  as it has an invalid filename extension"
 		{_, 0} = System.cmd("apt-get", ["install", "-y"] ++ args ++ ["--", deb],
-		                    env: noninteractive_env, stderr_to_stdout: true)
+		                    env: get_noninteractive_apt_env(), stderr_to_stdout: true)
 	end
 
 	@spec make_control(%Converge.MetaPackageInstalled{}) :: %Debpress.Control{}
