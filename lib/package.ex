@@ -193,12 +193,21 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 	end
 
 	def meet(u, _) do
-		deb = make_deb(u)
-		env = [
+		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
+		# Make sure amd64 machines also have access to i386 packages
+		{_, 0} = System.cmd("dpkg", ["--add-architecture", "i386"])
+		update_package_index()
+
+		noninteractive_env = [
 			{"DEBIAN_FRONTEND",          "noninteractive"},
 			{"APT_LISTCHANGES_FRONTEND", "none"},
 			{"APT_LISTBUGS_FRONTEND",    "none"}
 		]
+		# make_deb requires ar, so if it is not available, install binutils
+		unless File.exists?("/usr/bin/ar") do
+			{_, 0} = System.cmd("apt-get", ["--quiet", "--assume-yes", "install", "binutils"], env: noninteractive_env)
+		end
+		deb = make_deb(u)
 		args = [
 			# This is the only reasonable behavior, both to reduce our exposure to
 			# security bugs, and because when the recommends are missing, apt will
@@ -211,15 +220,11 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 			"-o", "Dpkg::Options::=--force-confdef",
 			"-o", "Dpkg::Options::=--force-confold",
 		]
-		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
-		# Make sure amd64 machines also have access to i386 packages
-		{_, 0} = System.cmd("dpkg", ["--add-architecture", "i386"])
-		update_package_index()
 		# capture stderr because apt outputs
 		# "N: Ignoring file '50unattended-upgrades.ucf-dist' in directory '/etc/apt/apt.conf.d/'
 		#  as it has an invalid filename extension"
 		{_, 0} = System.cmd("apt-get", ["install", "-y"] ++ args ++ ["--", deb],
-		                    env: env, stderr_to_stdout: true)
+		                    env: noninteractive_env, stderr_to_stdout: true)
 	end
 
 	@spec make_control(%Converge.MetaPackageInstalled{}) :: %Debpress.Control{}
