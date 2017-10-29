@@ -95,7 +95,7 @@ defimpl Unit, for: Converge.GPGKeybox do
 		for key <- keys do
 			key_file = FileUtil.temp_path("converge-gpg2-key")
 			File.write!(key_file, key)
-			{"", 0} = System.cmd("gpg2", get_gpg_opts(keybox_file) ++ ["--import", key_file])
+			{_, 0} = faketime_gpg2(get_gpg_opts(keybox_file) ++ ["--import", key_file], stderr_to_stdout: true)
 			FileUtil.rm_f!(key_file)
 		end
 		content = File.read!(keybox_file)
@@ -104,20 +104,32 @@ defimpl Unit, for: Converge.GPGKeybox do
 	end
 
 	defp maybe_install_gnug2() do
-		unless File.exists?("/usr/bin/gpg2") do
+		unless File.exists?("/usr/bin/gpg2") and File.exists?("/usr/bin/faketime") do
 			Util.update_package_index()
+		end
+		unless File.exists?("/usr/bin/gpg2") do
 			Util.install_package("gnupg2")
+		end
+		unless File.exists?("/usr/bin/faketime") do
+			Util.install_package("faketime")
 		end
 	end
 
 	defp create_empty_keybox(keybox_file) do
 		{"gpg: no valid OpenPGP data found.\n", 2} =
-			System.cmd("gpg2", get_gpg_opts(keybox_file) ++ ["--import", "/dev/null"], stderr_to_stdout: true)
+			faketime_gpg2(get_gpg_opts(keybox_file) ++ ["--import", "/dev/null"], stderr_to_stdout: true)
+	end
+
+	defp faketime_gpg2(args, opts \\ []) do
+		# Use faketime because gnupg2 --faked-system-time=0 doesn't make the `created-at:`
+		# and `last-maint:` timestamps on the keybox deterministic.
+		System.cmd("faketime", ["1970-01-01 00:00:00", "gpg2"] ++ args, opts)
 	end
 
 	defp get_gpg_opts(keybox_file) do
 		[
 			"--quiet",
+			# Don't read options from ~/.gnupg
 			"--no-options",
 			"--ignore-time-conflict",
 			# This also avoids creating a ~/.gnupg/trustdb.gpg
