@@ -1,5 +1,5 @@
 alias Gears.FileUtil
-alias Converge.{GPGSimpleKeyring, GPGKeybox, Runner}
+alias Converge.{GPGSimpleKeyring, GPGKeybox, Runner, Unit}
 alias Converge.TestHelpers.TestingContext
 
 defmodule Converge.GPGSimpleKeyringTest do
@@ -49,5 +49,9 @@ defmodule Converge.GPGKeyboxTest do
 		p = FileUtil.temp_path("converge-gpg-test")
 		u = %GPGKeybox{path: p, keys: [@wine_ppa_key, @graphics_drivers_ppa_key], mode: 0o644}
 		Runner.converge(u, TestingContext.get_context())
+
+		# Make sure the generated keybox is fully deterministic (no embedded timestamps)
+		:timer.sleep(1000)
+		assert Unit.met?(u, TestingContext.get_context())
 	end
 end
