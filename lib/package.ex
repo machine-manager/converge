@@ -1,13 +1,5 @@
 alias Gears.{FileUtil, StringUtil}
-alias Converge.{Unit, Runner, All, UnitError}
-import Converge.Util, only: [
-	get_control_line: 2,
-	update_package_index: 0,
-	get_packages_marked: 1,
-	get_noninteractive_apt_env: 0,
-	install_package: 1,
-]
-
+alias Converge.{Unit, Util, Runner, All, UnitError}
 
 defmodule Converge.PackageCacheEmptied do
 	@moduledoc """
@@ -84,7 +76,7 @@ end
 
 defimpl Unit, for: Converge.PackagesMarkedAutoInstalled do
 	def met?(u, _ctx) do
-		installed_auto = get_packages_marked(:auto)
+		installed_auto = Util.get_packages_marked(:auto)
 		diff = MapSet.difference(MapSet.new(u.names), installed_auto)
 		MapSet.size(diff) == 0
 	end
@@ -106,7 +98,7 @@ end
 
 defimpl Unit, for: Converge.PackagesMarkedManualInstalled do
 	def met?(u, _ctx) do
-		installed_manual = get_packages_marked(:manual)
+		installed_manual = Util.get_packages_marked(:manual)
 		diff = MapSet.difference(MapSet.new(u.names), installed_manual)
 		MapSet.size(diff) == 0
 	end
@@ -139,7 +131,7 @@ defimpl Unit, for: Converge.PackageRoots do
 
 	defp make_unit(u) do
 		packages_wrongly_marked_manual =
-			MapSet.difference(get_packages_marked(:manual), MapSet.new(u.names))
+			MapSet.difference(Util.get_packages_marked(:manual), MapSet.new(u.names))
 		%All{units: [
 			%PackagesMarkedManualInstalled{names: u.names},
 			%PackagesMarkedAutoInstalled{names: packages_wrongly_marked_manual},
@@ -198,30 +190,17 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
 		# Make sure amd64 machines also have access to i386 packages
 		{_, 0} = System.cmd("dpkg", ["--add-architecture", "i386"])
-		update_package_index()
+		Util.update_package_index()
 
 		# make_deb requires ar, so if it is not available, install binutils
 		unless File.exists?("/usr/bin/ar") do
-			install_package("binutils")
+			Util.install_package("binutils")
 		end
-		deb = make_deb(u)
-		args = [
-			# This is the only reasonable behavior, both to reduce our exposure to
-			# security bugs, and because when the recommends are missing, apt will
-			# not automatically install them.  If you want any of the recommended
-			# packages, list them in the `depends` for this unit.
-			"--no-install-recommends",
-			# --force-confold, when combined with --force-confdef, will overwrite
-			# a configuration file only if it has not been modified from the
-			# package default.
-			"-o", "Dpkg::Options::=--force-confdef",
-			"-o", "Dpkg::Options::=--force-confold",
-		]
 		# capture stderr because apt outputs
 		# "N: Ignoring file '50unattended-upgrades.ucf-dist' in directory '/etc/apt/apt.conf.d/'
 		#  as it has an invalid filename extension"
-		{_, 0} = System.cmd("apt-get", ["install", "-y"] ++ args ++ ["--", deb],
-		                    env: get_noninteractive_apt_env(), stderr_to_stdout: true)
+		{_, 0} = System.cmd("apt-get", Util.get_apt_install_args() ++ ["install", "--", make_deb(u)],
+		                    env: Util.get_noninteractive_apt_env(), stderr_to_stdout: true)
 	end
 
 	@spec make_control(%Converge.MetaPackageInstalled{}) :: %Debpress.Control{}
@@ -258,10 +237,10 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		case status do
 			0 ->
 				control = out |> String.split("\n")
-				depends = get_control_line(control, "Depends") || ""
+				depends = Util.get_control_line(control, "Depends") || ""
 				# https://anonscm.debian.org/cgit/dpkg/dpkg.git/tree/lib/dpkg/pkg-namevalue.c#n52
 				# http://manpages.ubuntu.com/manpages/precise/man1/dpkg.1.html
-				installed = get_control_line(control, "Status") == "install ok installed"
+				installed = Util.get_control_line(control, "Status") == "install ok installed"
 				same_depends = depends == u.depends |> Enum.join(", ")
 				installed and same_depends
 			_ -> false

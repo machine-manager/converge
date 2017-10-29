@@ -115,7 +115,7 @@ defmodule Converge.Util do
 	end
 
 	def install_package(name) do
-		{_, 0} = System.cmd("apt-get", ["--quiet", "--assume-yes", "install", name], env: get_noninteractive_apt_env())
+		{_, 0} = System.cmd("apt-get", get_apt_install_args() ++ ["install", "--", name], env: get_noninteractive_apt_env())
 	end
 
 	def get_noninteractive_apt_env() do
@@ -123,6 +123,22 @@ defmodule Converge.Util do
 			{"DEBIAN_FRONTEND",          "noninteractive"},
 			{"APT_LISTCHANGES_FRONTEND", "none"},
 			{"APT_LISTBUGS_FRONTEND",    "none"}
+		]
+	end
+
+	def get_apt_install_args() do
+		[
+			"--assume-yes",
+			# This is the only reasonable behavior, both to reduce our exposure to
+			# security bugs, and because when the recommends are missing, apt will
+			# not automatically install them.  If you want any of the recommended
+			# packages, list them in the `depends` for this unit.
+			"--no-install-recommends",
+			# --force-confold, when combined with --force-confdef, will overwrite
+			# a configuration file only if it has not been modified from the
+			# package default.
+			"-o", "Dpkg::Options::=--force-confdef",
+			"-o", "Dpkg::Options::=--force-confold",
 		]
 	end
 
