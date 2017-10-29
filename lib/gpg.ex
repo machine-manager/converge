@@ -4,7 +4,7 @@ alias Converge.{Unit, Runner, FilePresent}
 defmodule Converge.GPGSimpleKeyring do
 	@moduledoc """
 	A GPG simple keyring (not GPG2 keybox) file exists at `path` and contains
-	just keys `keys` (a list of strings, one armored key per string).  Passes
+	just keys `keys` (a list of strings, one unarmored key per string).  Passes
 	`mode`, `immutable`, `user`, and `group` through to `FilePresent`.
 
 	The simple keyring format is used to make the output usable with apt
@@ -25,19 +25,8 @@ defimpl Unit, for: Converge.GPGSimpleKeyring do
 	end
 
 	defp make_unit(u) do
-		content = u.keys
-			|> Enum.map(&decode_armored_key/1)
-			|> Enum.join
+		content = Enum.join(u.keys)
 		%FilePresent{path: u.path, content: content, mode: u.mode, immutable: u.immutable, user: u.user, group: u.group}
-	end
-
-	defp decode_armored_key(key) do
-		key
-		|> String.split("\n")
-		# Skip "-----{BEGIN,END} PGP PUBLIC KEY BLOCK-----", "Version: ", "=checksum"
-		|> Enum.filter(&(&1 =~ ~r/^[^ =]+$/))
-		|> Enum.join
-		|> Base.decode64!
 	end
 end
 
@@ -74,7 +63,7 @@ end
 defmodule Converge.GPGKeybox do
 	@moduledoc """
 	A GPG2 keybox file exists at `path` and contains just keys `keys` (a list of
-	strings, one armored key per string).  Passes `mode`, `immutable`, `user`,
+	strings, one unarmored key per string).  Passes `mode`, `immutable`, `user`,
 	and `group` through to `FilePresent`.
 
 	Use GPGKeybox for /etc/apt/trusted.gpg on stretch because it does not support
@@ -114,9 +103,8 @@ defimpl Unit, for: Converge.GPGKeybox do
 	end
 
 	defp create_empty_keybox(keybox_file) do
-		{"gpg: no valid OpenPGP data found.\n", 2} = System.cmd("gpg2", get_gpg_opts(keybox_file) ++ [
-			"--import", "/dev/null"
-		], stderr_to_stdout: true)
+		{"gpg: no valid OpenPGP data found.\n", 2} =
+			System.cmd("gpg2", get_gpg_opts(keybox_file) ++ ["--import", "/dev/null"], stderr_to_stdout: true)
 	end
 
 	defp get_gpg_opts(keybox_file) do

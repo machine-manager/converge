@@ -5,8 +5,8 @@ alias Converge.TestHelpers.TestingContext
 defmodule Converge.GPGSimpleKeyringTest do
 	use ExUnit.Case, async: true
 
-	@wine_ppa_key             File.read!(Path.join(__DIR__, "gpg_keys/wina_ppa_key.gpg.asc"))
-	@graphics_drivers_ppa_key File.read!(Path.join(__DIR__, "gpg_keys/graphics_drivers_ppa_key.gpg.asc"))
+	@wine_ppa_key             File.read!(Path.join(__DIR__, "gpg_keys/wina_ppa_key.gpg"))
+	@graphics_drivers_ppa_key File.read!(Path.join(__DIR__, "gpg_keys/graphics_drivers_ppa_key.gpg"))
 
 	test "empty keyring" do
 		p = FileUtil.temp_path("converge-gpg-test")
@@ -30,8 +30,8 @@ end
 defmodule Converge.GPGKeyboxTest do
 	use ExUnit.Case, async: true
 
-	@wine_ppa_key             File.read!(Path.join(__DIR__, "gpg_keys/wina_ppa_key.gpg.asc"))
-	@graphics_drivers_ppa_key File.read!(Path.join(__DIR__, "gpg_keys/graphics_drivers_ppa_key.gpg.asc"))
+	@wine_ppa_key             File.read!(Path.join(__DIR__, "gpg_keys/wina_ppa_key.gpg"))
+	@graphics_drivers_ppa_key File.read!(Path.join(__DIR__, "gpg_keys/graphics_drivers_ppa_key.gpg"))
 
 	test "empty keybox" do
 		p = FileUtil.temp_path("converge-gpg-test")
