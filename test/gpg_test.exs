@@ -28,7 +28,7 @@ defmodule Converge.GPGSimpleKeyringTest do
 end
 
 defmodule Converge.GPGKeyboxTest do
-	use ExUnit.Case, async: true
+	use ExUnit.Case
 
 	@wine_ppa_key             File.read!(Path.join(__DIR__, "gpg_keys/wina_ppa_key.gpg"))
 	@graphics_drivers_ppa_key File.read!(Path.join(__DIR__, "gpg_keys/graphics_drivers_ppa_key.gpg"))
