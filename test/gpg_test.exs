@@ -53,5 +53,8 @@ defmodule Converge.GPGKeyboxTest do
 		# Make sure the generated keybox is fully deterministic (no embedded timestamps)
 		:timer.sleep(1000)
 		assert Unit.met?(u, TestingContext.get_context())
+
+		:timer.sleep(1000)
+		assert Unit.met?(u, TestingContext.get_context())
 	end
 end
