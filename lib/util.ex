@@ -130,30 +130,6 @@ defmodule Converge.Util do
 		FileUtil.rm_f!("/var/cache/apt/pkgcache.bin")
 	end
 
-	@country_file "/etc/country"
-
-	@doc """
-	Determines which country this server is located in, returning a lowercase
-	two-letter country code.
-
-	Writes the cached country to `/etc/country` so that we don't have to ask
-	the Internet again.
-	"""
-	def get_country() do
-		case File.read(@country_file) do
-			{:ok, content} -> content |> String.trim_trailing
-			_              ->
-				{out, 0} = System.cmd("curl", ["-q", "--silent", "--max-time", "8", "http://freegeoip.net/json/"])
-				country =
-					Regex.run(~r/"country_code": ?"(..)"/, out, capture: :all_but_first)
-					|> hd
-					|> String.downcase
-				File.write(@country_file, country)
-				File.chmod!(@country_file, 0o644)
-				country
-		end
-	end
-
 	def get_hostname() do
 		File.read!("/etc/hostname") |> String.trim_trailing
 	end

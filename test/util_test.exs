@@ -41,11 +41,6 @@ defmodule Converge.UtilTest do
 		assert Util.installed?("not-a-thing") == false
 	end
 
-	test "get_country" do
-		assert is_binary(Util.get_country())
-		assert Util.get_country() =~ ~r/^[a-z]{2}$/
-	end
-
 	test "get_hostname" do
 		assert is_binary(Util.get_hostname())
 	end
