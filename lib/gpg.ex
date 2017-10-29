@@ -124,6 +124,10 @@ defimpl Unit, for: Converge.GPGKeybox do
 			"--trust-model", "direct",
 			"--no-auto-check-trustdb",
 			"--no-default-keyring",
+			# Prevent "gpg: Fatal: /root/.gnupg: directory does not exist!" after
+			# it successfully writes to keybox_file (note: gpg2 does not seem to
+			# actually write anything to /tmp)
+			"--homedir", "/tmp",
 			"--primary-keyring", keybox_file,
 		]
 	end
