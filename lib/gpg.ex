@@ -95,7 +95,7 @@ defimpl Unit, for: Converge.GPGKeybox do
 		for key <- keys do
 			key_file = FileUtil.temp_path("converge-gpg2-key")
 			File.write!(key_file, key)
-			{_, 0} = faketime_gpg2(get_gpg_opts(keybox_file) ++ ["--import", key_file], stderr_to_stdout: true)
+			{_, 0} = faketime_gpg2_import(keybox_file, key_file)
 			FileUtil.rm_f!(key_file)
 		end
 		content = File.read!(keybox_file)
@@ -116,32 +116,40 @@ defimpl Unit, for: Converge.GPGKeybox do
 	end
 
 	defp create_empty_keybox(keybox_file) do
-		{"gpg: no valid OpenPGP data found.\n", 2} =
-			faketime_gpg2(get_gpg_opts(keybox_file) ++ ["--import", "/dev/null"], stderr_to_stdout: true)
+		{"gpg: no valid OpenPGP data found.\n", 2} = faketime_gpg2_import(keybox_file, "/dev/null")
 	end
 
-	defp faketime_gpg2(args, opts) do
-		# Use faketime because gnupg2 --faked-system-time=0 doesn't make the `created-at:`
-		# and `last-maint:` timestamps on the keybox deterministic.  Note that we also
-		# need to stop the clock with "x0" because otherwise the time may be 1 instead of
-		# 0 by the time gnupg2 makes a call to get the time.
-		System.cmd("faketime", ["-f", "1970-01-01 00:00:00 x0", "gpg2"] ++ args, opts)
+	defp faketime_gpg2_import(keybox_file, key_file) do
+		homedir = FileUtil.temp_dir("converge_gpg_homedir")
+		File.chmod!(homedir, 0o700)
+		try do
+			# Use faketime because gnupg2 --faked-system-time=0 doesn't make the `created-at:`
+			# and `last-maint:` timestamps on the keybox deterministic.  Note that we also
+			# need to stop the clock with "x0" because otherwise the time may be 1 instead of
+			# 0 by the time gnupg2 makes a call to get the time.
+			epoch = "1970-01-01 00:00:00"
+			args = ["-f", "#{epoch} x0", "gpg2"] ++ get_gpg_opts(keybox_file, homedir) ++ ["--import", key_file]
+			System.cmd("faketime", args, stderr_to_stdout: true)
+		after
+			File.rmdir!(homedir)
+		end
 	end
 
-	defp get_gpg_opts(keybox_file) do
+	defp get_gpg_opts(keybox_file, homedir) do
 		[
 			"--quiet",
 			# Don't read options from ~/.gnupg
 			"--no-options",
 			"--ignore-time-conflict",
-			# This also avoids creating a ~/.gnupg/trustdb.gpg
-			"--trust-model", "direct",
+			# This also avoids creating a $homedir/trustdb.gpg
+			"--trust-model", "always",
+			# This avoids starting gpg-agent and creating a $homdir/S.gpg-agent and $homedir/private-keys-v1.d/
+			"--no-autostart",
 			"--no-auto-check-trustdb",
 			"--no-default-keyring",
-			# Prevent "gpg: Fatal: /root/.gnupg: directory does not exist!" after
-			# it successfully writes to keybox_file (note: gpg2 does not seem to
-			# actually write anything to /tmp)
-			"--homedir", "/tmp",
+			# Default is $HOME/.gnupg; set this to avoid "gpg: Fatal: /root/.gnupg: directory does not exist!"
+			# after it successfully writes to keybox_file.
+			"--homedir", homedir,
 			"--primary-keyring", keybox_file,
 		]
 	end
