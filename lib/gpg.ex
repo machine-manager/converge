@@ -122,8 +122,10 @@ defimpl Unit, for: Converge.GPGKeybox do
 
 	defp faketime_gpg2(args, opts) do
 		# Use faketime because gnupg2 --faked-system-time=0 doesn't make the `created-at:`
-		# and `last-maint:` timestamps on the keybox deterministic.
-		System.cmd("faketime", ["1970-01-01 00:00:00", "gpg2"] ++ args, opts)
+		# and `last-maint:` timestamps on the keybox deterministic.  Note that we also
+		# need to stop the clock with "x0" because otherwise the time may be 1 instead of
+		# 0 by the time gnupg2 makes a call to get the time.
+		System.cmd("faketime", ["-f", "1970-01-01 00:00:00 x0", "gpg2"] ++ args, opts)
 	end
 
 	defp get_gpg_opts(keybox_file) do
