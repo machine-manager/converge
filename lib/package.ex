@@ -236,7 +236,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		{out, status} = System.cmd("dpkg-query", ["--status", "--", u.name], stderr_to_stdout: true)
 		case status do
 			0 ->
-				control = out |> String.split("\n")
+				control = String.split(out, "\n")
 				depends = Util.get_control_line(control, "Depends") || ""
 				# https://anonscm.debian.org/cgit/dpkg/dpkg.git/tree/lib/dpkg/pkg-namevalue.c#n52
 				# http://manpages.ubuntu.com/manpages/precise/man1/dpkg.1.html
@@ -256,6 +256,39 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 			[] -> true
 			_  -> false
 		end
+	end
+end
+
+
+defmodule Converge.BootstrapPackageInstalled do
+	@moduledoc """
+	A package with a given name is installed.
+
+	`meet` on this unit will install the package using `deb_content` which must be
+	a string containing a .deb file.
+
+	Useful for embedded .deb files in a role, in the rare case where that is useful.
+	"""
+	@enforce_keys [:name, :deb_content]
+	defstruct name: nil, deb_content: []
+end
+
+
+defimpl Unit, for: Converge.BootstrapPackageInstalled do
+	def met?(u, _ctx) do
+		{out, status} = System.cmd("dpkg-query", ["--status", "--", u.name], stderr_to_stdout: true)
+		case status do
+			0 ->
+				control = String.split(out, "\n")
+				Util.get_control_line(control, "Status") == "install ok installed"
+			_ -> false
+		end
+	end
+
+	def meet(u, _) do
+		deb_path = FileUtil.temp_path("Converge.BootstrapPackageInstalled", "deb")
+		File.write!(deb_path, u.deb_content)
+		Util.install_package(deb_path)
 	end
 end
 
