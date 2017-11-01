@@ -139,9 +139,18 @@ end
 defmodule Converge.BootstrapPackageInstalledTest do
 	use ExUnit.Case
 
+	test "bootstrap package" do
+		# setup
+		p = %PackagePurged{name: "dummy"}
+		Runner.converge(p, TestingContext.get_context())
+
+		b = %BootstrapPackageInstalled{name: "dummy", deb_content: File.read!(Path.join(__DIR__, "packages/dummy_1.0.1.deb"))}
+		Runner.converge(b, TestingContext.get_context())
+	end
+
 	test "inspect shows content length, not contents" do
-		u = %BootstrapPackageInstalled{name: "dummy", deb_content: ""}
-		assert inspect(u) == ~s(%Converge.BootstrapPackageInstalled{name: "dummy", deb_content: 0 bytes})
+		u = %BootstrapPackageInstalled{name: "dummy", deb_content: "abc"}
+		assert inspect(u) == ~s(%Converge.BootstrapPackageInstalled{name: "dummy", deb_content: 3 bytes})
 	end
 end
 
@@ -150,7 +159,7 @@ defmodule Converge.NoPackagesUnavailableInSourceTest do
 	use ExUnit.Case
 
 	test "NoPackagesUnavailableInSource can be met" do
-		u = %NoPackagesUnavailableInSource{whitelist_regexp: ~r/^(converge-.*|linux-(image|tools|headers)-.*)$/}
+		u = %NoPackagesUnavailableInSource{whitelist_regexp: ~r/^(dummy|converge-.*|linux-(image|tools|headers)-.*)$/}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
