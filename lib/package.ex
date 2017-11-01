@@ -287,7 +287,6 @@ defmodule Converge.BootstrapPackageInstalled do
 	defstruct name: nil, deb_content: []
 end
 
-
 defimpl Unit, for: Converge.BootstrapPackageInstalled do
 	def met?(u, _ctx) do
 		{out, status} = System.cmd("dpkg-query", ["--status", "--", u.name], stderr_to_stdout: true)
@@ -306,6 +305,24 @@ defimpl Unit, for: Converge.BootstrapPackageInstalled do
 	end
 
 	def package_dependencies(_, _release), do: ["apt"]
+end
+
+defimpl Inspect, for: Converge.BootstrapPackageInstalled do
+	import Inspect.Algebra
+	import Gears.StringUtil, only: [counted_noun: 3]
+
+	def inspect(u, opts) do
+		len = byte_size(u.deb_content)
+		concat([
+			color("%Converge.BootstrapPackageInstalled{", :map, opts),
+			color("name: ",        :atom, opts),
+			to_doc(u.name,                opts),
+			color(", ",            :map,  opts),
+			color("deb_content: ", :atom, opts),
+			counted_noun(len, "byte", "bytes"),
+			color("}",             :map,  opts),
+		])
+	end
 end
 
 

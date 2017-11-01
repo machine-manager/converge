@@ -247,7 +247,7 @@ defimpl Inspect, for: Converge.FilePresent do
 	import Gears.StringUtil, only: [counted_noun: 3]
 
 	def inspect(u, opts) do
-		len = u.content |> byte_size
+		len = byte_size(u.content)
 		concat([
 			color("%Converge.FilePresent{", :map, opts),
 			color("path: ",      :atom, opts),
@@ -267,7 +267,7 @@ defimpl Inspect, for: Converge.FilePresent do
 			color(", ",          :map,  opts),
 			color("group: ",     :atom, opts),
 			to_doc(u.group,             opts),
-			color("}",           :map,  opts)
+			color("}",           :map,  opts),
 		])
 	end
 end

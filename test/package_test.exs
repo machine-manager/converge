@@ -3,7 +3,7 @@ alias Converge.{
 	PackageCacheEmptied, PackagesMarkedAutoInstalled, PackagesMarkedManualInstalled,
 	PackageRoots, DanglingPackagesPurged, PackagePurged, MetaPackageInstalled,
 	Runner, All, Util, NoPackagesUnavailableInSource, NoPackagesNewerThanInSource,
-	UnitError}
+	BootstrapPackageInstalled, UnitError}
 alias Converge.TestHelpers.TestingContext
 
 
@@ -132,6 +132,16 @@ defmodule Converge.MetaPackageInstalledTest do
 			[] -> false
 			_  -> true
 		end
+	end
+end
+
+
+defmodule Converge.BootstrapPackageInstalledTest do
+	use ExUnit.Case
+
+	test "inspect shows content length, not contents" do
+		u = %BootstrapPackageInstalled{name: "dummy", deb_content: ""}
+		assert inspect(u) == ~s(%Converge.BootstrapPackageInstalled{name: "dummy", deb_content: 0 bytes})
 	end
 end
 
