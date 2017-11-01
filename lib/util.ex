@@ -83,21 +83,6 @@ defmodule Converge.Util do
 		end
 	end
 
-	@doc """
-	Returns `true` if package `name` is installed, otherwise `false`.
-	"""
-	def installed?(name) do
-		{out, status} = System.cmd("dpkg-query", ["--status", "--", name], stderr_to_stdout: true)
-		case status do
-			0 ->
-				control = out |> String.split("\n")
-				# https://anonscm.debian.org/cgit/dpkg/dpkg.git/tree/lib/dpkg/pkg-namevalue.c#n52
-				# http://manpages.ubuntu.com/manpages/precise/man1/dpkg.1.html
-				get_control_line(control, "Status") == "install ok installed"
-			_ -> false
-		end
-	end
-
 	def get_packages_marked(:manual) do
 		{out, 0} = System.cmd("apt-mark", ["showmanual"])
 		out |> String.trim_trailing("\n") |> String.split("\n") |> MapSet.new
@@ -112,6 +97,21 @@ defmodule Converge.Util do
 		# `stderr_to_stdout: true` so that this message is not shown:
 		# "AppStream cache update completed, but some metadata was ignored due to errors."
 		{_, 0} = System.cmd("apt-get", ["update"], stderr_to_stdout: true)
+	end
+
+	@doc """
+	Returns `true` if package `name` is installed, otherwise `false`.
+	"""
+	def installed?(name) do
+		{out, status} = System.cmd("dpkg-query", ["--status", "--", name], stderr_to_stdout: true)
+		case status do
+			0 ->
+				control = out |> String.split("\n")
+				# https://anonscm.debian.org/cgit/dpkg/dpkg.git/tree/lib/dpkg/pkg-namevalue.c#n52
+				# http://manpages.ubuntu.com/manpages/precise/man1/dpkg.1.html
+				get_control_line(control, "Status") == "install ok installed"
+			_ -> false
+		end
 	end
 
 	def install_package(name) do
