@@ -18,6 +18,8 @@ defimpl Unit, for: Converge.PackageCacheEmptied do
 	def meet(_, _) do
 		{_, 0} = System.cmd("apt-get", ["clean"])
 	end
+
+	def package_dependencies(_release), do: ["apt"]
 end
 
 
@@ -62,6 +64,8 @@ defimpl Unit, for: Converge.DanglingPackagesPurged do
 			"--purge",
 		]
 	end
+
+	def package_dependencies(_release), do: ["dpkg", "apt"]
 end
 
 
@@ -84,6 +88,8 @@ defimpl Unit, for: Converge.PackagesMarkedAutoInstalled do
 	def meet(u, _ctx) do
 		{_, 0} = System.cmd("apt-mark", ["auto", "--"] ++ (u.names |> Enum.into([])))
 	end
+
+	def package_dependencies(_release), do: ["apt"]
 end
 
 
@@ -106,6 +112,8 @@ defimpl Unit, for: Converge.PackagesMarkedManualInstalled do
 	def meet(u, _ctx) do
 		{_, 0} = System.cmd("apt-mark", ["manual", "--"] ++ (u.names |> Enum.into([])))
 	end
+
+	def package_dependencies(_release), do: ["apt"]
 end
 
 
@@ -137,6 +145,11 @@ defimpl Unit, for: Converge.PackageRoots do
 			%PackagesMarkedAutoInstalled{names: packages_wrongly_marked_manual},
 		]}
 	end
+
+	def package_dependencies(release) do
+		Converge.Unit.Converge.PackagesMarkedManualInstalled.package_dependencies(release) ++
+		Converge.Unit.Converge.PackagesMarkedAutoInstalled.package_dependencies(release)
+	end
 end
 
 
@@ -165,6 +178,8 @@ defimpl Unit, for: Converge.PackagePurged do
 		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
 		{_, 0} = System.cmd("apt-get", ["remove", "--purge", "-y", "--", u.name])
 	end
+
+	def package_dependencies(_release), do: ["dpkg", "apt"]
 end
 
 
@@ -192,10 +207,6 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		{_, 0} = System.cmd("dpkg", ["--add-architecture", "i386"])
 		Util.update_package_index()
 
-		# make_deb requires ar, so if it is not available, install binutils
-		unless File.exists?("/usr/bin/ar") do
-			Util.install_package("binutils")
-		end
 		# capture stderr because apt outputs
 		# "N: Ignoring file '50unattended-upgrades.ucf-dist' in directory '/etc/apt/apt.conf.d/'
 		#  as it has an invalid filename extension"
@@ -257,6 +268,9 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 			_  -> false
 		end
 	end
+
+	# make_deb requires ar from binutils
+	def package_dependencies(_release), do: ["binutils", "dpkg", "apt"]
 end
 
 
@@ -290,6 +304,8 @@ defimpl Unit, for: Converge.BootstrapPackageInstalled do
 		File.write!(deb_path, u.deb_content)
 		Util.install_package(deb_path)
 	end
+
+	def package_dependencies(_release), do: ["apt"]
 end
 
 
@@ -302,8 +318,6 @@ defmodule Converge.NoPackagesUnavailableInSource do
 
 	`meet` on this unit just raises `UnitError` because this unit being unmet
 	is a rare situation that warrants manual inspection.
-
-	`aptitude` must be installed for this unit to work.
 	"""
 	@enforce_keys [:whitelist_regexp]
 	defstruct whitelist_regexp: ~r/^$/
@@ -329,6 +343,8 @@ defimpl Unit, for: Converge.NoPackagesUnavailableInSource do
 		|> String.split
 		|> Enum.reject(fn package -> package =~ u.whitelist_regexp end)
 	end
+
+	def package_dependencies(_release), do: ["aptitude"]
 end
 
 
@@ -342,8 +358,6 @@ defmodule Converge.NoPackagesNewerThanInSource do
 
 	`meet` on this unit just raises `UnitError` because this unit not being met
 	is a rare situation that typically warrants manual inspection.
-
-	`apt-show-versions` must be installed for this unit to work.
 	"""
 	@enforce_keys [:whitelist_regexp]
 	defstruct whitelist_regexp: ~r/^$/
@@ -368,4 +382,6 @@ defimpl Unit, for: Converge.NoPackagesNewerThanInSource do
 		|> Enum.map(fn line -> [package, version | _] = String.split(line); {package, version} end)
 		|> Enum.reject(fn {package, _} -> package =~ u.whitelist_regexp end)
 	end
+
+	def package_dependencies(_release), do: ["apt-show-versions"]
 end

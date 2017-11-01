@@ -19,4 +19,6 @@ defimpl Unit, for: Converge.Assert do
 	def meet(u, _) do
 		raise(UnitError, "meet() called on an Assert: #{inspect u}")
 	end
+
+	def package_dependencies(_), do: []
 end

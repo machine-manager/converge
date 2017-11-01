@@ -24,4 +24,6 @@ defimpl Unit, for: Converge.Fallback do
 				Runner.converge(u.fallback, ctx)
 		end
 	end
+
+	def package_dependencies(_), do: []
 end

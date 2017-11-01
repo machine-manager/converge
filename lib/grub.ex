@@ -49,4 +49,6 @@ defimpl Unit, for: Converge.Grub do
 		EEx.eval_string(@template, [u: u])
 		|> StringUtil.remove_empty_lines
 	end
+
+	def package_dependencies(_release), do: ["grub2-common"]
 end

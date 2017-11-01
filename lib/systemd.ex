@@ -27,6 +27,8 @@ defimpl Unit, for: Converge.SystemdUnitStarted do
 					""")
 		end
 	end
+
+	def package_dependencies(_release), do: ["systemd"]
 end
 
 
@@ -56,6 +58,8 @@ defimpl Unit, for: Converge.SystemdUnitStopped do
 					""")
 		end
 	end
+
+	def package_dependencies(_release), do: ["systemd"]
 end
 
 
@@ -103,6 +107,8 @@ defimpl Unit, for: Converge.SystemdUnitEnabled do
 		|> String.split("\n")
 		|> List.last
 	end
+
+	def package_dependencies(_release), do: ["systemd"]
 end
 
 
@@ -122,6 +128,8 @@ defimpl Unit, for: Converge.SystemdUnitDisabled do
 	def meet(u, _ctx) do
 		{_, 0} = System.cmd("systemctl", ["disable", "--", u.name], stderr_to_stdout: true)
 	end
+
+	def package_dependencies(_release), do: ["systemd"]
 end
 
 
@@ -183,4 +191,6 @@ defimpl Unit, for: Converge.EtcSystemdUnitFiles do
 					not FileUtil.symlink?(path) and File.regular?(path)
 			end)
 	end
+
+	def package_dependencies(_release), do: ["systemd"]
 end

@@ -1,5 +1,5 @@
 alias Gears.FileUtil
-alias Converge.{Unit, Runner, FilePresent, Util}
+alias Converge.{Unit, Runner, FilePresent}
 
 defmodule Converge.GPGSimpleKeyring do
 	@moduledoc """
@@ -28,6 +28,8 @@ defimpl Unit, for: Converge.GPGSimpleKeyring do
 		content = Enum.join(u.keys)
 		%FilePresent{path: u.path, content: content, mode: u.mode, immutable: u.immutable, user: u.user, group: u.group}
 	end
+
+	def package_dependencies(_), do: []
 end
 
 defimpl Inspect, for: Converge.GPGSimpleKeyring do
@@ -88,7 +90,6 @@ defimpl Unit, for: Converge.GPGKeybox do
 	end
 
 	defp get_keybox_content(keys) do
-		maybe_install_gnug2()
 		keybox_file = FileUtil.temp_path("converge-gpg2-keybox")
 		# Create an empty keybox, because `keys` may be empty
 		create_empty_keybox(keybox_file)
@@ -101,18 +102,6 @@ defimpl Unit, for: Converge.GPGKeybox do
 		content = File.read!(keybox_file)
 		FileUtil.rm_f!(keybox_file)
 		content
-	end
-
-	defp maybe_install_gnug2() do
-		unless File.exists?("/usr/bin/gpg2") and File.exists?("/usr/bin/faketime") do
-			Util.update_package_index()
-		end
-		unless File.exists?("/usr/bin/gpg2") do
-			Util.install_package("gnupg2")
-		end
-		unless File.exists?("/usr/bin/faketime") do
-			Util.install_package("faketime")
-		end
 	end
 
 	defp create_empty_keybox(keybox_file) do
@@ -153,6 +142,8 @@ defimpl Unit, for: Converge.GPGKeybox do
 			"--primary-keyring", keybox_file,
 		]
 	end
+
+	def package_dependencies(_release), do: ["faketime", "gnupg2"]
 end
 
 defimpl Inspect, for: Converge.GPGKeybox do

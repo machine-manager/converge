@@ -42,15 +42,9 @@ defimpl Unit, for: Converge.Sysfs do
 		|> Enum.into(%{})
 	end
 
-	defp sysfs_content_to_value("kernel/mm/transparent_hugepage/enabled", value) do
-		get_bracketed_word(value)
-	end
-	defp sysfs_content_to_value("kernel/mm/transparent_hugepage/defrag", value) do
-		get_bracketed_word(value)
-	end
-	defp sysfs_content_to_value(_key, value) do
-		value |> String.replace_suffix("\n", "")
-	end
+	defp sysfs_content_to_value("kernel/mm/transparent_hugepage/enabled", value), do: get_bracketed_word(value)
+	defp sysfs_content_to_value("kernel/mm/transparent_hugepage/defrag", value),  do: get_bracketed_word(value)
+	defp sysfs_content_to_value(_key, value),                                     do: String.replace_suffix(value, "\n", "")
 
 	defp get_bracketed_word(s) do
 		Regex.run(~r/\[(\w+)\]/, s, capture: :all_but_first) |> hd
@@ -74,4 +68,6 @@ defimpl Unit, for: Converge.Sysfs do
 
 	defp value_to_string(value) when is_binary(value),  do: value
 	defp value_to_string(value) when is_integer(value), do: to_string(value)
+
+	def package_dependencies(_release), do: ["sysfsutils"]
 end

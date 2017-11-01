@@ -129,7 +129,9 @@ defimpl Unit, for: Converge.Fstab do
 
 	# Returns a string containing an fstab with the entries given
 	defp entries_to_fstab(entries) do
-		table = entries |> Enum.map(&entry_to_row/1)
+		table = Enum.map(entries, &entry_to_row/1)
 		TableFormatter.format(table, padding: 2) |> IO.iodata_to_binary()
 	end
+
+	def package_dependencies(_), do: []
 end

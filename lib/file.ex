@@ -1,4 +1,4 @@
-alias Converge.{Unit, UnitError, UserUtil, GroupUtil}
+alias Converge.{Unit, UnitError, UserUtil, GroupUtil, ThingPresent}
 alias Gears.{FileUtil, IOUtil}
 
 import Record, only: [defrecordp: 2, extract: 2]
@@ -102,6 +102,8 @@ defmodule Converge.ThingPresent do
 		end
 		group_info
 	end
+
+	def package_dependencies(_release), do: ["coreutils", "e2fsprogs"]
 end
 
 
@@ -155,6 +157,8 @@ defimpl Unit, for: Converge.DirectoryPresent do
 	defp as_octal_string(num) do
 		inspect(num, base: :octal) |> String.split("o") |> List.last
 	end
+
+	def package_dependencies(release), do: ThingPresent.package_dependencies(release)
 end
 
 defimpl Inspect, for: Converge.DirectoryPresent do
@@ -234,6 +238,8 @@ defimpl Unit, for: Converge.FilePresent do
 			end
 		end
 	end
+
+	def package_dependencies(release), do: ThingPresent.package_dependencies(release)
 end
 
 defimpl Inspect, for: Converge.FilePresent do
@@ -316,6 +322,8 @@ defimpl Unit, for: Converge.SymlinkPresent do
 			_ -> false
 		end
 	end
+
+	def package_dependencies(release), do: ThingPresent.package_dependencies(release)
 end
 
 
@@ -338,6 +346,8 @@ defimpl Unit, for: Converge.FileMissing do
 	def meet(u, _) do
 		remove_existing(u.path)
 	end
+
+	def package_dependencies(release), do: ThingPresent.package_dependencies(release)
 end
 
 
@@ -381,4 +391,6 @@ defimpl Unit, for: Converge.DirectoryEmpty do
 				end
 		end
 	end
+
+	def package_dependencies(release), do: ThingPresent.package_dependencies(release)
 end

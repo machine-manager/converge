@@ -33,7 +33,7 @@ defmodule Converge.UserUtil do
 	end
 
 	def crypted_password_is_locked(crypted_password) do
-		crypted_password |> String.starts_with?("!")
+		String.starts_with?(crypted_password, "!")
 	end
 
 	defp passwd_line_to_tuple(line) do
@@ -119,6 +119,8 @@ defimpl Unit, for: Converge.UserAuthorizedKeys do
 		|> Enum.map(fn key -> "#{key}\n" end)
 		|> Enum.join
 	end
+
+	def package_dependencies(_release), do: []
 end
 
 
@@ -245,6 +247,8 @@ defimpl Unit, for: Converge.UserPresent do
 	defp authorized_keys_unit(u) do
 		%UserAuthorizedKeys{name: u.name, authorized_keys: u.authorized_keys}
 	end
+
+	def package_dependencies(_release), do: ["passwd"]
 end
 
 
@@ -284,6 +288,8 @@ defimpl Unit, for: Converge.UserDisabled do
 			{^no_such_user_error, 6} -> raise(UnitError, "User #{inspect u.name} does not exist")
 		end
 	end
+
+	def package_dependencies(_release), do: ["passwd"]
 end
 
 
@@ -309,6 +315,8 @@ defimpl Unit, for: Converge.UserMissing do
 	def meet(u, _) do
 		{"", 0} = System.cmd("userdel", ["--", u.name])
 	end
+
+	def package_dependencies(_release), do: ["passwd"]
 end
 
 
@@ -385,6 +393,11 @@ defimpl Unit, for: Converge.RegularUsersPresent do
 			crypted_password: user.crypted_password,
 			authorized_keys:  user.authorized_keys,
 		}
+	end
+
+	def package_dependencies(release) do
+		Converge.Unit.Converge.UserPresent.package_dependencies(release) ++
+		Converge.Unit.Converge.UserDisabled.package_dependencies(release)
 	end
 end
 

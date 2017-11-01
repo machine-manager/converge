@@ -15,6 +15,8 @@ defimpl Unit, for: Converge.TestHelpers.FailsToConvergeUnit do
 
 	def meet(_, _) do
 	end
+
+	def package_dependencies(_), do: []
 end
 
 
@@ -33,6 +35,8 @@ defimpl Unit, for: Converge.TestHelpers.AlreadyConvergedUnit do
 	def meet(_, _) do
 		assert false, "unreachable"
 	end
+
+	def package_dependencies(_), do: []
 end
 
 
@@ -65,6 +69,8 @@ defimpl Unit, for: Converge.TestHelpers.ConvergeableUnit do
 			{true, met_count}
 		end)
 	end
+
+	def package_dependencies(_), do: []
 end
 
 

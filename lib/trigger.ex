@@ -24,6 +24,8 @@ defimpl Unit, for: Converge.AfterMeet do
 			1 -> u.trigger.(ctx)
 		end
 	end
+
+	def package_dependencies(_release), do: []
 end
 
 
@@ -48,4 +50,6 @@ defimpl Unit, for: Converge.BeforeMeet do
 		end
 		Runner.converge(u.unit, ctx)
 	end
+
+	def package_dependencies(_release), do: []
 end

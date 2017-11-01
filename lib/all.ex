@@ -23,6 +23,8 @@ defimpl Unit, for: Converge.All do
 			Runner.converge(unit, ctx)
 		end
 	end
+
+	def package_dependencies(_), do: []
 end
 
 defimpl Inspect, for: Converge.All do
