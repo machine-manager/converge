@@ -50,5 +50,5 @@ defimpl Unit, for: Converge.Grub do
 		|> StringUtil.remove_empty_lines
 	end
 
-	def package_dependencies(_release), do: ["grub2-common"]
+	def package_dependencies(_, _release), do: ["grub2-common"]
 end

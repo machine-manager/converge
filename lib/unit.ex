@@ -11,9 +11,13 @@ defprotocol Converge.Unit do
 
 	@doc """
 	Takes a Linux distribution release name as an atom and returns a list of
-	packages the unit requires to be installed beforehand.
+	packages the unit requires to function.
+
+	The implementation must not vary results based on the values in the unit
+	struct: callers can call package_dependencies with a dummy struct that
+	is missing all keys (even ones listed in @enforce_keys).
 	"""
-	def package_dependencies(release)
+	def package_dependencies(u, release)
 end
 
 defmodule Converge.UnitError do

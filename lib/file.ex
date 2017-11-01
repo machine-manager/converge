@@ -158,7 +158,7 @@ defimpl Unit, for: Converge.DirectoryPresent do
 		inspect(num, base: :octal) |> String.split("o") |> List.last
 	end
 
-	def package_dependencies(release), do: ThingPresent.package_dependencies(release)
+	def package_dependencies(_, release), do: ThingPresent.package_dependencies(release)
 end
 
 defimpl Inspect, for: Converge.DirectoryPresent do
@@ -239,7 +239,7 @@ defimpl Unit, for: Converge.FilePresent do
 		end
 	end
 
-	def package_dependencies(release), do: ThingPresent.package_dependencies(release)
+	def package_dependencies(_, release), do: ThingPresent.package_dependencies(release)
 end
 
 defimpl Inspect, for: Converge.FilePresent do
@@ -323,7 +323,7 @@ defimpl Unit, for: Converge.SymlinkPresent do
 		end
 	end
 
-	def package_dependencies(release), do: ThingPresent.package_dependencies(release)
+	def package_dependencies(_, release), do: ThingPresent.package_dependencies(release)
 end
 
 
@@ -347,7 +347,7 @@ defimpl Unit, for: Converge.FileMissing do
 		remove_existing(u.path)
 	end
 
-	def package_dependencies(release), do: ThingPresent.package_dependencies(release)
+	def package_dependencies(_, release), do: ThingPresent.package_dependencies(release)
 end
 
 
@@ -392,5 +392,5 @@ defimpl Unit, for: Converge.DirectoryEmpty do
 		end
 	end
 
-	def package_dependencies(release), do: ThingPresent.package_dependencies(release)
+	def package_dependencies(_, release), do: ThingPresent.package_dependencies(release)
 end

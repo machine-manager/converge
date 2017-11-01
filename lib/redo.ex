@@ -38,7 +38,7 @@ defimpl Unit, for: Converge.Redo do
 
 	defp absolute_path?(p), do: String.starts_with?(p, "/")
 
-	def package_dependencies(_release), do: []
+	def package_dependencies(_, _release), do: []
 end
 
 
@@ -70,5 +70,5 @@ defimpl Unit, for: Converge.RedoAfterMeet do
 		}
 	end
 
-	def package_dependencies(_release), do: []
+	def package_dependencies(_, _release), do: []
 end

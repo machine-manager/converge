@@ -69,5 +69,5 @@ defimpl Unit, for: Converge.Sysfs do
 	defp value_to_string(value) when is_binary(value),  do: value
 	defp value_to_string(value) when is_integer(value), do: to_string(value)
 
-	def package_dependencies(_release), do: ["sysfsutils"]
+	def package_dependencies(_, _release), do: ["sysfsutils"]
 end

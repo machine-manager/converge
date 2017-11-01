@@ -75,5 +75,5 @@ defimpl Unit, for: Converge.Sysctl do
 	defp value_to_string(value) when is_integer(value), do: to_string(value)
 	defp value_to_string(value) when is_list(value),    do: Enum.map(value, &value_to_string/1) |> Enum.join("\t")
 
-	def package_dependencies(_release), do: ["procps"]
+	def package_dependencies(_, _release), do: ["procps"]
 end

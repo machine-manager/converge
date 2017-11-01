@@ -25,7 +25,7 @@ defimpl Unit, for: Converge.AfterMeet do
 		end
 	end
 
-	def package_dependencies(_release), do: []
+	def package_dependencies(_, _release), do: []
 end
 
 
@@ -51,5 +51,5 @@ defimpl Unit, for: Converge.BeforeMeet do
 		Runner.converge(u.unit, ctx)
 	end
 
-	def package_dependencies(_release), do: []
+	def package_dependencies(_, _release), do: []
 end

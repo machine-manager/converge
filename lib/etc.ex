@@ -22,5 +22,5 @@ defimpl Unit, for: Converge.EtcCommitted do
 		{_, 0} = System.cmd("etckeeper", ["commit", message])
 	end
 
-	def package_dependencies(_release), do: ["etckeeper", "git"]
+	def package_dependencies(_, _release), do: ["etckeeper", "git"]
 end

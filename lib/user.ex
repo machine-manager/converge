@@ -120,7 +120,7 @@ defimpl Unit, for: Converge.UserAuthorizedKeys do
 		|> Enum.join
 	end
 
-	def package_dependencies(_release), do: []
+	def package_dependencies(_, _release), do: []
 end
 
 
@@ -248,7 +248,7 @@ defimpl Unit, for: Converge.UserPresent do
 		%UserAuthorizedKeys{name: u.name, authorized_keys: u.authorized_keys}
 	end
 
-	def package_dependencies(_release), do: ["passwd"]
+	def package_dependencies(_, _release), do: ["passwd"]
 end
 
 
@@ -289,7 +289,7 @@ defimpl Unit, for: Converge.UserDisabled do
 		end
 	end
 
-	def package_dependencies(_release), do: ["passwd"]
+	def package_dependencies(_, _release), do: ["passwd"]
 end
 
 
@@ -316,7 +316,7 @@ defimpl Unit, for: Converge.UserMissing do
 		{"", 0} = System.cmd("userdel", ["--", u.name])
 	end
 
-	def package_dependencies(_release), do: ["passwd"]
+	def package_dependencies(_, _release), do: ["passwd"]
 end
 
 
@@ -395,9 +395,9 @@ defimpl Unit, for: Converge.RegularUsersPresent do
 		}
 	end
 
-	def package_dependencies(release) do
-		Converge.Unit.Converge.UserPresent.package_dependencies(release) ++
-		Converge.Unit.Converge.UserDisabled.package_dependencies(release)
+	def package_dependencies(_, release) do
+		Converge.Unit.package_dependencies(%{__struct__: UserPresent}, release) ++
+		Converge.Unit.package_dependencies(%{__struct__: UserDisabled}, release)
 	end
 end
 

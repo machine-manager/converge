@@ -29,7 +29,7 @@ defimpl Unit, for: Converge.GPGSimpleKeyring do
 		%FilePresent{path: u.path, content: content, mode: u.mode, immutable: u.immutable, user: u.user, group: u.group}
 	end
 
-	def package_dependencies(_), do: []
+	def package_dependencies(_, _release), do: []
 end
 
 defimpl Inspect, for: Converge.GPGSimpleKeyring do
@@ -143,7 +143,7 @@ defimpl Unit, for: Converge.GPGKeybox do
 		]
 	end
 
-	def package_dependencies(_release), do: ["faketime", "gnupg2"]
+	def package_dependencies(_, _release), do: ["faketime", "gnupg2"]
 end
 
 defimpl Inspect, for: Converge.GPGKeybox do

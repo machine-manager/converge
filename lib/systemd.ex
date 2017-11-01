@@ -28,7 +28,7 @@ defimpl Unit, for: Converge.SystemdUnitStarted do
 		end
 	end
 
-	def package_dependencies(_release), do: ["systemd"]
+	def package_dependencies(_, _release), do: ["systemd"]
 end
 
 
@@ -59,7 +59,7 @@ defimpl Unit, for: Converge.SystemdUnitStopped do
 		end
 	end
 
-	def package_dependencies(_release), do: ["systemd"]
+	def package_dependencies(_, _release), do: ["systemd"]
 end
 
 
@@ -108,7 +108,7 @@ defimpl Unit, for: Converge.SystemdUnitEnabled do
 		|> List.last
 	end
 
-	def package_dependencies(_release), do: ["systemd"]
+	def package_dependencies(_, _release), do: ["systemd"]
 end
 
 
@@ -129,7 +129,7 @@ defimpl Unit, for: Converge.SystemdUnitDisabled do
 		{_, 0} = System.cmd("systemctl", ["disable", "--", u.name], stderr_to_stdout: true)
 	end
 
-	def package_dependencies(_release), do: ["systemd"]
+	def package_dependencies(_, _release), do: ["systemd"]
 end
 
 
@@ -192,5 +192,5 @@ defimpl Unit, for: Converge.EtcSystemdUnitFiles do
 			end)
 	end
 
-	def package_dependencies(_release), do: ["systemd"]
+	def package_dependencies(_, _release), do: ["systemd"]
 end

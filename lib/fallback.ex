@@ -25,5 +25,5 @@ defimpl Unit, for: Converge.Fallback do
 		end
 	end
 
-	def package_dependencies(_), do: []
+	def package_dependencies(_, _release), do: []
 end

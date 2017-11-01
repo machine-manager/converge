@@ -24,7 +24,7 @@ defimpl Unit, for: Converge.All do
 		end
 	end
 
-	def package_dependencies(_), do: []
+	def package_dependencies(_, _release), do: []
 end
 
 defimpl Inspect, for: Converge.All do

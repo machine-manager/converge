@@ -133,5 +133,5 @@ defimpl Unit, for: Converge.Fstab do
 		TableFormatter.format(table, padding: 2) |> IO.iodata_to_binary()
 	end
 
-	def package_dependencies(_), do: []
+	def package_dependencies(_, _release), do: []
 end

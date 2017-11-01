@@ -19,7 +19,7 @@ defimpl Unit, for: Converge.PackageCacheEmptied do
 		{_, 0} = System.cmd("apt-get", ["clean"])
 	end
 
-	def package_dependencies(_release), do: ["apt"]
+	def package_dependencies(_, _release), do: ["apt"]
 end
 
 
@@ -65,7 +65,7 @@ defimpl Unit, for: Converge.DanglingPackagesPurged do
 		]
 	end
 
-	def package_dependencies(_release), do: ["dpkg", "apt"]
+	def package_dependencies(_, _release), do: ["dpkg", "apt"]
 end
 
 
@@ -89,7 +89,7 @@ defimpl Unit, for: Converge.PackagesMarkedAutoInstalled do
 		{_, 0} = System.cmd("apt-mark", ["auto", "--"] ++ (u.names |> Enum.into([])))
 	end
 
-	def package_dependencies(_release), do: ["apt"]
+	def package_dependencies(_, _release), do: ["apt"]
 end
 
 
@@ -113,7 +113,7 @@ defimpl Unit, for: Converge.PackagesMarkedManualInstalled do
 		{_, 0} = System.cmd("apt-mark", ["manual", "--"] ++ (u.names |> Enum.into([])))
 	end
 
-	def package_dependencies(_release), do: ["apt"]
+	def package_dependencies(_, _release), do: ["apt"]
 end
 
 
@@ -146,9 +146,9 @@ defimpl Unit, for: Converge.PackageRoots do
 		]}
 	end
 
-	def package_dependencies(release) do
-		Converge.Unit.Converge.PackagesMarkedManualInstalled.package_dependencies(release) ++
-		Converge.Unit.Converge.PackagesMarkedAutoInstalled.package_dependencies(release)
+	def package_dependencies(_, release) do
+		Converge.Unit.package_dependencies(%{__struct__: PackagesMarkedAutoInstalled}, release) ++
+		Converge.Unit.package_dependencies(%{__struct__: PackagesMarkedManualInstalled}, release)
 	end
 end
 
@@ -179,7 +179,7 @@ defimpl Unit, for: Converge.PackagePurged do
 		{_, 0} = System.cmd("apt-get", ["remove", "--purge", "-y", "--", u.name])
 	end
 
-	def package_dependencies(_release), do: ["dpkg", "apt"]
+	def package_dependencies(_, _release), do: ["dpkg", "apt"]
 end
 
 
@@ -270,7 +270,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 	end
 
 	# make_deb requires ar from binutils
-	def package_dependencies(_release), do: ["binutils", "dpkg", "apt"]
+	def package_dependencies(_, _release), do: ["binutils", "dpkg", "apt"]
 end
 
 
@@ -305,7 +305,7 @@ defimpl Unit, for: Converge.BootstrapPackageInstalled do
 		Util.install_package(deb_path)
 	end
 
-	def package_dependencies(_release), do: ["apt"]
+	def package_dependencies(_, _release), do: ["apt"]
 end
 
 
@@ -344,7 +344,7 @@ defimpl Unit, for: Converge.NoPackagesUnavailableInSource do
 		|> Enum.reject(fn package -> package =~ u.whitelist_regexp end)
 	end
 
-	def package_dependencies(_release), do: ["aptitude"]
+	def package_dependencies(_, _release), do: ["aptitude"]
 end
 
 
@@ -383,5 +383,5 @@ defimpl Unit, for: Converge.NoPackagesNewerThanInSource do
 		|> Enum.reject(fn {package, _} -> package =~ u.whitelist_regexp end)
 	end
 
-	def package_dependencies(_release), do: ["apt-show-versions"]
+	def package_dependencies(_, _release), do: ["apt-show-versions"]
 end
