@@ -96,7 +96,10 @@ defmodule Converge.Util do
 	def update_package_index() do
 		# `stderr_to_stdout: true` so that this message is not shown:
 		# "AppStream cache update completed, but some metadata was ignored due to errors."
-		{_, 0} = System.cmd("apt-get", ["update"], stderr_to_stdout: true)
+		case System.cmd("apt-get", ["update"], stderr_to_stdout: true) do
+			{_, 0}      -> nil
+			{out, code} -> raise("apt-get update returned exit code #{code} and output #{inspect out}")
+		end
 	end
 
 	@doc """
