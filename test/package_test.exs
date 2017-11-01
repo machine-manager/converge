@@ -144,6 +144,7 @@ defmodule Converge.BootstrapPackageInstalledTest do
 		p = %PackagePurged{name: "dummy"}
 		Runner.converge(p, TestingContext.get_context())
 
+		# test
 		b = %BootstrapPackageInstalled{name: "dummy", deb_content: File.read!(Path.join(__DIR__, "packages/dummy_1.0.1.deb"))}
 		Runner.converge(b, TestingContext.get_context())
 	end

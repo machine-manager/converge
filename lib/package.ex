@@ -1,5 +1,5 @@
 alias Gears.{FileUtil, StringUtil}
-alias Converge.{Unit, Util, Runner, All, UnitError}
+alias Converge.{FilePresent, Unit, Util, Runner, All, UnitError}
 
 defmodule Converge.PackageCacheEmptied do
 	@moduledoc """
@@ -298,9 +298,10 @@ defimpl Unit, for: Converge.BootstrapPackageInstalled do
 		end
 	end
 
-	def meet(u, _) do
+	def meet(u, ctx) do
 		deb_path = FileUtil.temp_path("Converge.BootstrapPackageInstalled", "deb")
-		File.write!(deb_path, u.deb_content)
+		f = %FilePresent{path: deb_path, content: u.deb_content, mode: 0o600}
+		Runner.converge(f, ctx)
 		Util.install_package(deb_path)
 	end
 
