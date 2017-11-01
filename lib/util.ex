@@ -115,7 +115,8 @@ defmodule Converge.Util do
 	end
 
 	def install_package(name) do
-		{_, 0} = System.cmd("apt-get", get_apt_install_args() ++ ["install", "--", name], env: get_noninteractive_apt_env())
+		args = get_apt_install_args() ++ ["install", "--", name]
+		{_, 0} = System.cmd("apt-get", args, stderr_to_stdout: true, env: get_noninteractive_apt_env())
 	end
 
 	def get_noninteractive_apt_env() do
