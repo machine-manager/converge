@@ -24,9 +24,9 @@ defmodule Converge.Util do
 		|> String.replace_suffix("\n", "")
 		|> String.split("\n")
 		|> Enum.map(fn line ->
-			case line |> String.split(~r/:?\s+/, parts: 3) do
-				[label, number, "kB"] -> {label, (number |> String.to_integer) * 1024}
-				[label, number]       -> {label,  number |> String.to_integer}
+			case String.split(line, ~r/:?\s+/, parts: 3) do
+				[label, number, "kB"] -> {label, String.to_integer(number) * 1024}
+				[label, number]       -> {label, String.to_integer(number)}
 			end
 		end)
 		|> Enum.into(%{})
@@ -52,7 +52,7 @@ defmodule Converge.Util do
 			cpu_mhz:           float(info["CPU MHz"]),
 			cpu_max_mhz:       float(info["CPU max MHz"]),
 			cpu_min_mhz:       float(info["CPU min MHz"]),
-			flags:             info["Flags"] |> String.split(" "),
+			flags:             String.split(info["Flags"], " "),
 		}
 	end
 
@@ -109,7 +109,7 @@ defmodule Converge.Util do
 		{out, status} = System.cmd("dpkg-query", ["--status", "--", name], stderr_to_stdout: true)
 		case status do
 			0 ->
-				control = out |> String.split("\n")
+				control = String.split(out, "\n")
 				# https://anonscm.debian.org/cgit/dpkg/dpkg.git/tree/lib/dpkg/pkg-namevalue.c#n52
 				# http://manpages.ubuntu.com/manpages/precise/man1/dpkg.1.html
 				get_control_line(control, "Status") == "install ok installed"

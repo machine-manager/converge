@@ -81,7 +81,7 @@ defimpl Unit, for: Converge.SystemdUnitEnabled do
 		# Executing /lib/systemd/systemd-sysv-install is-enabled chrony
 		# enabled
 		# """
-		case {code, out |> get_last_line} do
+		case {code, get_last_line(out)} do
 			{0, "enabled"}  -> true
 			{1, "disabled"} -> false
 			_               -> raise_error(u, code, out)
@@ -176,11 +176,12 @@ defimpl Unit, for: Converge.EtcSystemdUnitFiles do
 	end
 
 	defp remove_other_service_files_units(keep_basenames) do
-		current_basenames = get_regular_service_file_basenames() |> MapSet.new
-		keep_basenames    = keep_basenames                       |> MapSet.new
+		keep_basenames    = MapSet.new(keep_basenames)
+		current_basenames = MapSet.new(get_regular_service_file_basenames())
 		remove_basenames  = MapSet.difference(current_basenames, keep_basenames)
-		remove_basenames
-		|> Enum.map(fn basename -> %FileMissing{path: Path.join(@etc_units, basename)} end)
+		for basename <- remove_basenames do
+			%FileMissing{path: Path.join(@etc_units, basename)}
+		end
 	end
 
 	defp get_regular_service_file_basenames() do

@@ -30,8 +30,8 @@ defimpl Converge.Reporter, for: Converge.TerminalReporter do
 					parent_unit  = hd(stack)
 					# If parent_unit isn't in state.parents yet, we are the first child
 					# of that parent and we'll need to print a newline.
-					first_child? = state.parents |> MapSet.member?(parent_unit) |> Kernel.not
-					new_state    = %{state | parents: state.parents |> MapSet.put(parent_unit)}
+					first_child? = not MapSet.member?(state.parents, parent_unit)
+					new_state    = %{state | parents: MapSet.put(state.parents, parent_unit)}
 					{first_child?, new_state}
 				end)
 		end
@@ -44,7 +44,7 @@ defimpl Converge.Reporter, for: Converge.TerminalReporter do
 		end
 		IO.write(
 			"""
-			#{colorize(r, color, which |> Atom.to_string)} \
+			#{colorize(r, color, Atom.to_string(which))} \
 			#{indent(depth)}\
 			#{inspect u, safe: false, syntax_colors: syntax_colors()}\
 			""")
@@ -52,7 +52,7 @@ defimpl Converge.Reporter, for: Converge.TerminalReporter do
 
 	def close(r, u, result) do
 		{had_children, depth} = Agent.get(r.pid, fn(state) -> {
-			state.parents |> MapSet.member?(u),
+			MapSet.member?(state.parents, u),
 			length(state.stack) - 1
 		} end)
 		case had_children do
@@ -69,13 +69,13 @@ defimpl Converge.Reporter, for: Converge.TerminalReporter do
 		Agent.update(r.pid, fn(state) ->
 			%{state |
 				stack:   tl(state.stack),
-				parents: state.parents |> MapSet.delete(u)
+				parents: MapSet.delete(state.parents, u)
 			}
 		end)
 	end
 
 	defp indent(depth) do
-		"|  " |> String.duplicate(depth)
+		String.duplicate("|  ", depth)
 	end
 
 	defp colorize(r, escape, string) do

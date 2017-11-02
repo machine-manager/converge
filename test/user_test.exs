@@ -6,7 +6,7 @@ defmodule Converge.UserUtilTest do
 
 	test ~s(UserUtil.get_users includes "root") do
 		users = UserUtil.get_users()
-		assert users |> Map.has_key?("root")
+		assert Map.has_key?(users, "root")
 	end
 
 	test "UserUtil.get_users values include all the expected keys" do
@@ -184,13 +184,9 @@ defmodule Converge.RegularUsersPresentTest do
 		uid_min = UserUtil.get_uid_min()
 		uid_max = UserUtil.get_uid_max()
 		UserUtil.get_users()
-		|> Enum.filter(fn {_, user} ->
-				user.uid >= uid_min &&
-				user.uid <= uid_max end)
-		|> Enum.filter(fn {name, _} ->
-				name |> String.starts_with?("converge-") |> Kernel.not end)
-		|> Enum.map(fn {name, user} ->
-				%Converge.User{name: name, home: user.home, shell: user.shell} end)
+		|> Enum.filter(fn {_, user} -> user.uid >= uid_min && user.uid <= uid_max end)
+		|> Enum.filter(fn {name, _} -> not String.starts_with?(name, "converge-") end)
+		|> Enum.map(fn {name, user} -> %Converge.User{name: name, home: user.home, shell: user.shell} end)
 	end
 
 	test "raises UnitError if given a UID below the range of regular users" do

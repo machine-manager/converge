@@ -83,7 +83,7 @@ defmodule Converge.GroupUtil do
 		{gid, ""} = Integer.parse(gid_s)
 		members = case members_s do
 			"" -> []
-			s  -> s |> String.split(",")
+			s  -> String.split(s, ",")
 		end
 		{name, %{gid: gid, members: members}}
 	end
@@ -170,17 +170,18 @@ defimpl Unit, for: Converge.UserPresent do
 				wanted = u
 					|> Map.take([:uid, :gid, :comment, :home, :shell, :locked])
 					|> without_nil_values
-				current = user |> Map.take(Map.keys(wanted))
+				current = Map.take(user, Map.keys(wanted))
 				current == wanted
 		end and Runner.met?(authorized_keys_unit(u), ctx)
 	end
 
 	def meet(u, ctx) do
 		ensure_password_and_locked_consistency(u)
-		exists = UserUtil.get_users() |> Map.has_key?(u.name)
-		case exists do
-			true  -> meet_modify(u)
-			false -> meet_add(u)
+		exists = Map.has_key?(UserUtil.get_users(), u.name)
+		if exists do
+			meet_modify(u)
+		else
+			meet_add(u)
 		end
 		Runner.converge(authorized_keys_unit(u), ctx)
 	end
@@ -307,9 +308,8 @@ end
 
 defimpl Unit, for: Converge.UserMissing do
 	def met?(u, _ctx) do
-		UserUtil.get_users()
-		|> Map.has_key?(u.name)
-		|> Kernel.not
+		users = UserUtil.get_users()
+		not Map.has_key?(users, u.name)
 	end
 
 	def meet(u, _) do

@@ -86,7 +86,7 @@ defimpl Unit, for: Converge.PackagesMarkedAutoInstalled do
 	end
 
 	def meet(u, _ctx) do
-		{_, 0} = System.cmd("apt-mark", ["auto", "--"] ++ (u.names |> Enum.into([])))
+		{_, 0} = System.cmd("apt-mark", ["auto", "--" | Enum.into(u.names, [])])
 	end
 
 	def package_dependencies(_, _release), do: ["apt"]
@@ -110,7 +110,7 @@ defimpl Unit, for: Converge.PackagesMarkedManualInstalled do
 	end
 
 	def meet(u, _ctx) do
-		{_, 0} = System.cmd("apt-mark", ["manual", "--"] ++ (u.names |> Enum.into([])))
+		{_, 0} = System.cmd("apt-mark", ["manual", "--" | Enum.into(u.names, [])])
 	end
 
 	def package_dependencies(_, _release), do: ["apt"]
@@ -252,7 +252,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 				# https://anonscm.debian.org/cgit/dpkg/dpkg.git/tree/lib/dpkg/pkg-namevalue.c#n52
 				# http://manpages.ubuntu.com/manpages/precise/man1/dpkg.1.html
 				installed = Util.get_control_line(control, "Status") == "install ok installed"
-				same_depends = depends == u.depends |> Enum.join(", ")
+				same_depends = depends == Enum.join(u.depends, ", ")
 				installed and same_depends
 			_ -> false
 		end

@@ -37,7 +37,7 @@ defimpl Inspect, for: Converge.GPGSimpleKeyring do
 	import Gears.StringUtil, only: [counted_noun: 3]
 
 	def inspect(u, opts) do
-		count = u.keys |> length
+		count = length(u.keys)
 		concat([
 			color("%Converge.GPGSimpleKeyring{", :map, opts),
 			color("path: ",      :atom, opts),
@@ -151,7 +151,7 @@ defimpl Inspect, for: Converge.GPGKeybox do
 	import Gears.StringUtil, only: [counted_noun: 3]
 
 	def inspect(u, opts) do
-		count = u.keys |> length
+		count = length(u.keys)
 		concat([
 			color("%Converge.GPGKeybox{", :map, opts),
 			color("path: ",      :atom, opts),
