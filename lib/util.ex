@@ -94,11 +94,11 @@ defmodule Converge.Util do
 	end
 
 	def wait_for_apt_lock() do
-		{_, 0} = System.cmd("bash", ["-c", ~s(while fuser /var/lib/apt/lists/lock > /dev/null 2>&1; do echo "Waiting for apt lock..." >&2; sleep 1; done)])
+		{_, 0} = System.cmd("bash", ["-c", ~s(while fuser --silent /var/lib/apt/lists/lock > /dev/null 2>&1; do echo "Waiting for apt lock..." >&2; sleep 1; done)])
 	end
 
 	def wait_for_dpkg_lock() do
-		{_, 0} = System.cmd("bash", ["-c", ~s(while fuser /var/lib/dpkg/lock > /dev/null 2>&1; do echo "Waiting for dpkg lock..." >&2; sleep 1; done)])
+		{_, 0} = System.cmd("bash", ["-c", ~s(while fuser --silent /var/lib/dpkg/lock > /dev/null 2>&1; do echo "Waiting for dpkg lock..." >&2; sleep 1; done)])
 	end
 
 	@doc """
