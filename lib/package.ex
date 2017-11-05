@@ -42,7 +42,7 @@ end
 
 defimpl Unit, for: Converge.DanglingPackagesPurged do
 	def met?(_, _ctx) do
-		{_,   0} = System.cmd("dpkg", ["--configure", "-a"])
+		Util.dpkg_configure_pending()
 		{out, 0} = System.cmd("apt-get", get_purge_args() ++ ["--simulate"])
 		actions = StringUtil.grep(out, ~r"^Purg ")
 		case actions do
@@ -52,7 +52,7 @@ defimpl Unit, for: Converge.DanglingPackagesPurged do
 	end
 
 	def meet(_, _) do
-		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
+		Util.dpkg_configure_pending()
 		{_, 0} = System.cmd("apt-get", get_purge_args() ++ ["-y"])
 	end
 
@@ -175,7 +175,7 @@ defimpl Unit, for: Converge.PackagePurged do
 	end
 
 	def meet(u, _) do
-		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
+		Util.dpkg_configure_pending()
 		{_, 0} = System.cmd("apt-get", ["remove", "--purge", "-y", "--", u.name])
 	end
 
@@ -202,7 +202,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 	end
 
 	def meet(u, _) do
-		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
+		Util.dpkg_configure_pending()
 		# Make sure amd64 machines also have access to i386 packages
 		{_, 0} = System.cmd("dpkg", ["--add-architecture", "i386"])
 		Util.update_package_index()
@@ -260,7 +260,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 
 	# Returns `true` if `apt-get -f install` doesn't need to do anything.
 	defp met_nothing_to_fix?() do
-		{_,   0} = System.cmd("dpkg", ["--configure", "-a"])
+		Util.dpkg_configure_pending()
 		{out, 0} = System.cmd("apt-get", ["--simulate", "--fix-broken", "install"])
 		actions = StringUtil.grep(out, ~r"^(Inst|Conf|Remv) ")
 		case actions do

@@ -101,6 +101,15 @@ defmodule Converge.Util do
 		{_, 0} = System.cmd("bash", ["-c", ~s(while fuser /var/lib/dpkg/lock > /dev/null 2>&1; do echo "Waiting for dpkg lock..." >&2; sleep 1; done)])
 	end
 
+	@doc """
+	Call this before you do anything else with dpkg (it can require it),
+	because the last dpkg run may have been aborted and left packages in
+	an unconfigured state.
+	"""
+	def dpkg_configure_pending() do
+		{_, 0} = System.cmd("dpkg", ["--configure", "-a"])
+	end
+
 	def update_package_index() do
 		# `stderr_to_stdout: true` so that this message is not shown:
 		# "AppStream cache update completed, but some metadata was ignored due to errors."
