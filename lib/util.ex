@@ -93,6 +93,14 @@ defmodule Converge.Util do
 		out |> String.trim_trailing("\n") |> String.split("\n") |> MapSet.new
 	end
 
+	def wait_for_apt_lock() do
+		{_, 0} = System.cmd("bash", ["-c", ~s(while fuser /var/lib/apt/lists/lock > /dev/null 2>&1; do echo "Waiting for apt lock..." >&2; sleep 1; done)])
+	end
+
+	def wait_for_dpkg_lock() do
+		{_, 0} = System.cmd("bash", ["-c", ~s(while fuser /var/lib/dpkg/lock > /dev/null 2>&1; do echo "Waiting for dpkg lock..." >&2; sleep 1; done)])
+	end
+
 	def update_package_index() do
 		# `stderr_to_stdout: true` so that this message is not shown:
 		# "AppStream cache update completed, but some metadata was ignored due to errors."

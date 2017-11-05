@@ -81,4 +81,12 @@ defmodule Converge.UtilTest do
 	test "marker" do
 		assert Util.marker("demo") == "/tmp/converge/markers/Elixir.Converge.UtilTest/demo"
 	end
+
+	test "wait_for_apt_lock" do
+		Util.wait_for_apt_lock()
+	end
+
+	test "wait_for_dpkg_lock" do
+		Util.wait_for_dpkg_lock()
+	end
 end
