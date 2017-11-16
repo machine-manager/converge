@@ -235,14 +235,18 @@ defimpl Unit, for: Converge.UserPresent do
 			|> oper_if(true,          ["--home-dir", u.home])
 			|> oper_if(true,          ["--create-home"])
 			|> elem(0)
-		{out, 0} = System.cmd("useradd", args ++ ["--", u.name], stderr_to_stdout: true)
-		if not (out == "" or out ==
-				"""
-				useradd: warning: the home directory already exists.
-				Not copying any file from skel directory into it.
-				""") do
-			raise(UnitError, "Unexpected output from useradd: #{inspect out}")
-		end
+		# We don't check the output of useradd because it can say a lot of things, e.g.:
+		# 
+		# useradd: warning: the home directory already exists.
+		# Not copying any file from skel directory into it.
+		#
+		# or
+		#
+		# sent invalidate(passwd) request, exiting
+		# sent invalidate(group) request, exiting
+		# sent invalidate(passwd) request, exiting
+		# sent invalidate(group) request, exiting
+		{_, 0} = System.cmd("useradd", args ++ ["--", u.name], stderr_to_stdout: true)
 	end
 
 	defp authorized_keys_unit(u) do
