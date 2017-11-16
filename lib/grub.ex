@@ -15,7 +15,7 @@ defmodule Converge.Grub do
 
 	`gfxpayload` is `GRUB_GFXPAYLOAD_LINUX`.
 	"""
-	defstruct timeout: 3, cmdline_normal_and_recovery: "", cmdline_normal_only: "", gfxpayload: nil
+	defstruct timeout: 3, cmdline_normal_and_recovery: "", cmdline_normal_only: "", gfxpayload: nil, disable_os_prober: nil
 end
 
 defimpl Unit, for: Converge.Grub do
@@ -27,6 +27,9 @@ defimpl Unit, for: Converge.Grub do
 	GRUB_CMDLINE_LINUX=<%= inspect(u.cmdline_normal_and_recovery) %>
 	<%= if u.gfxpayload != nil do %>
 	GRUB_GFXPAYLOAD_LINUX=<%= u.gfxpayload %>
+	<% end %>
+	<%= if u.disable_os_prober != nil do %>
+	GRUB_DISABLE_OS_PROBER=<%= u.disable_os_prober %>
 	<% end %>
 	"""
 
