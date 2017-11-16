@@ -289,7 +289,13 @@ defimpl Unit, for: Converge.UserDisabled do
 		], stderr_to_stdout: true)
 		no_such_user_error = ~s(usermod: user '#{u.name}' does not exist\n)
 		case {out, status} do
-			{"",                  0} -> nil
+			# Don't check the output here because it can output things like:
+			#
+			# sent invalidate(passwd) request, exiting
+			# sent invalidate(group) request, exiting
+			# sent invalidate(passwd) request, exiting
+			# sent invalidate(group) request, exiting
+			{_,                   0} -> nil
 			{^no_such_user_error, 6} -> raise(UnitError, "User #{inspect u.name} does not exist")
 		end
 	end
