@@ -5,17 +5,17 @@ defmodule Converge.Grub do
 	@moduledoc """
 	Writes grub configuration to /etc/default/grub and runs `update-grub`.
 
-	Options in `cmdline_normal_and_recovery` are used for both normal and
-	recovery boot (i.e. `GRUB_CMDLINE_LINUX`).
+	The list of options in `cmdline_normal_and_recovery` are used for both normal
+	and recovery boot (i.e. `GRUB_CMDLINE_LINUX`).
 
-	Options in `cmdline_normal_only` are used for only for normal non-recovery
-	boot (i.e. `GRUB_CMDLINE_LINUX_DEFAULT`).
+	The list of options in `cmdline_normal_only` are used for only for normal
+	non-recovery boot (i.e. `GRUB_CMDLINE_LINUX_DEFAULT`).
 
 	`timeout` is `GRUB_TIMEOUT`.
 
 	`gfxpayload` is `GRUB_GFXPAYLOAD_LINUX`.
 	"""
-	defstruct timeout: 3, cmdline_normal_and_recovery: "", cmdline_normal_only: "", gfxpayload: nil, disable_os_prober: nil
+	defstruct timeout: 3, cmdline_normal_and_recovery: [], cmdline_normal_only: [], gfxpayload: nil, disable_os_prober: nil
 end
 
 defimpl Unit, for: Converge.Grub do
@@ -23,8 +23,8 @@ defimpl Unit, for: Converge.Grub do
 	GRUB_DEFAULT=0
 	GRUB_TIMEOUT=<%= u.timeout %>
 	GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
-	GRUB_CMDLINE_LINUX_DEFAULT=<%= inspect(u.cmdline_normal_only) %>
-	GRUB_CMDLINE_LINUX=<%= inspect(u.cmdline_normal_and_recovery) %>
+	GRUB_CMDLINE_LINUX_DEFAULT=<%= inspect(Enum.join(u.cmdline_normal_only, " ")) %>
+	GRUB_CMDLINE_LINUX=<%= inspect(Enum.join(u.cmdline_normal_and_recovery, " ")) %>
 	<%= if u.gfxpayload != nil do %>
 	GRUB_GFXPAYLOAD_LINUX=<%= u.gfxpayload %>
 	<% end %>

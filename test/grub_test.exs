@@ -14,13 +14,13 @@ defmodule Converge.GrubTest do
 	end
 
 	test "some options" do
-		u = %Grub{timeout: 4, cmdline_normal_and_recovery: "quiet", gfxpayload: "640x480"}
+		u = %Grub{timeout: 4, cmdline_normal_and_recovery: ["quiet", "consoleblank=0"], gfxpayload: "640x480"}
 		Runner.converge(u, TestingContext.get_context())
 		cleanup()
 	end
 
 	test "some more options" do
-		u = %Grub{timeout: 4, cmdline_normal_and_recovery: "quiet", gfxpayload: "640x480", disable_os_prober: true}
+		u = %Grub{timeout: 4, cmdline_normal_and_recovery: ["quiet"], gfxpayload: "640x480", disable_os_prober: true}
 		Runner.converge(u, TestingContext.get_context())
 		cleanup()
 	end
