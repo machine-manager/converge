@@ -208,7 +208,22 @@ defmodule Converge.FileMissingTest do
 		# test
 		m = %FileMissing{path: Path.join(p, "link")}
 		Runner.converge(m, TestingContext.get_context())
-		assert File.exists?(target)
+		assert FileUtil.exists?(target)
+	end
+
+	test "can remove a dangling symlink" do
+		p = FileUtil.temp_dir("converge-test")
+
+		# setup
+		target = Path.join(p, "target")
+		link   = Path.join(p, "link")
+		u = %SymlinkPresent{path: link, target: target}
+		Runner.converge(u, TestingContext.get_context())
+
+		# test
+		m = %FileMissing{path: link}
+		Runner.converge(m, TestingContext.get_context())
+		assert not FileUtil.exists?(link)
 	end
 end
 
@@ -287,6 +302,6 @@ defmodule Converge.DirectoryEmptyTest do
 		# test
 		u = %DirectoryEmpty{path: p}
 		Runner.converge(u, TestingContext.get_context())
-		assert File.exists?(target)
+		assert FileUtil.exists?(target)
 	end
 end

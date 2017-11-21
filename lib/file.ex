@@ -330,7 +330,8 @@ end
 defmodule Converge.FileMissing do
 	@moduledoc """
 	A file at `path` does not exist.  Converging may remove a file or empty
-	directory.
+	directory.  If pointing to a symlink, will remove the symlink, not the
+	target.
 	"""
 	@enforce_keys [:path]
 	defstruct path: nil
@@ -340,7 +341,7 @@ defimpl Unit, for: Converge.FileMissing do
 	import Converge.ThingPresent
 
 	def met?(u, _ctx) do
-		not File.exists?(u.path)
+		not FileUtil.exists?(u.path)
 	end
 
 	def meet(u, _) do
