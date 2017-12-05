@@ -107,7 +107,7 @@ defmodule Converge.Util do
 	an unconfigured state.
 	"""
 	def dpkg_configure_pending() do
-		{_, 0} = System.cmd("dpkg", ["--configure", "-a"], env: get_noninteractive_apt_env(), stderr_to_stdout: true)
+		{_, 0} = System.cmd("dpkg", ["--force-confdef", "--force-confold", "--configure", "-a"], env: get_noninteractive_apt_env(), stderr_to_stdout: true)
 	end
 
 	def update_package_index() do
