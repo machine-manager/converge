@@ -107,13 +107,10 @@ defmodule Converge.Util do
 	an unconfigured state.
 	"""
 	def dpkg_configure_pending() do
-		IO.puts("dpkg_configure_pending")
 		{_, 0} = System.cmd("dpkg", ["--force-confdef", "--force-confold", "--configure", "-a"], env: get_noninteractive_apt_env(), stderr_to_stdout: true)
-		IO.puts("dpkg_configure_pending done")
 	end
 
 	def update_package_index() do
-		IO.puts("update_package_index")
 		# `stderr_to_stdout: true` so that this message is not shown:
 		# "AppStream cache update completed, but some metadata was ignored due to errors."
 		case System.cmd("apt-get", ["update"], stderr_to_stdout: true) do
