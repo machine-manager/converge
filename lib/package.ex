@@ -53,7 +53,8 @@ defimpl Unit, for: Converge.DanglingPackagesPurged do
 
 	def meet(_, _) do
 		Util.dpkg_configure_pending()
-		{_, 0} = System.cmd("apt-get", get_purge_args() ++ ["-y"])
+		{_, 0} = System.cmd("apt-get", get_purge_args() ++ ["-y"],
+		                    env: Util.get_noninteractive_apt_env(), stderr_to_stdout: true)
 	end
 
 	defp get_purge_args() do
@@ -176,7 +177,8 @@ defimpl Unit, for: Converge.PackagePurged do
 
 	def meet(u, _) do
 		Util.dpkg_configure_pending()
-		{_, 0} = System.cmd("apt-get", ["remove", "--purge", "-y", "--", u.name])
+		{_, 0} = System.cmd("apt-get", ["remove", "--purge", "-y", "--", u.name],
+		                    env: Util.get_noninteractive_apt_env(), stderr_to_stdout: true)
 	end
 
 	def package_dependencies(_, _release), do: ["dpkg", "apt"]
