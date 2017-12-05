@@ -262,7 +262,6 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 
 	# Returns `true` if `apt-get -f install` doesn't need to do anything.
 	defp met_nothing_to_fix?() do
-		Util.dpkg_configure_pending()
 		{out, 0} = System.cmd("apt-get", ["--simulate", "--fix-broken", "install"])
 		actions = StringUtil.grep(out, ~r"^(Inst|Conf|Remv) ")
 		case actions do
