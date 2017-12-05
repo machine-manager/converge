@@ -206,7 +206,8 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 	def meet(u, _) do
 		Util.dpkg_configure_pending()
 		# Make sure amd64 machines also have access to i386 packages
-		{_, 0} = System.cmd("dpkg", ["--add-architecture", "i386"])
+		{_, 0} = System.cmd("dpkg", ["--add-architecture", "i386"],
+		                    env: Util.get_noninteractive_apt_env(), stderr_to_stdout: true)
 		Util.update_package_index()
 
 		# capture stderr because apt outputs
