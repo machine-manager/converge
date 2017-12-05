@@ -212,6 +212,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		# capture stderr because apt outputs
 		# "N: Ignoring file '50unattended-upgrades.ucf-dist' in directory '/etc/apt/apt.conf.d/'
 		#  as it has an invalid filename extension"
+		IO.puts("apt-get")
 		{_, 0} = System.cmd("apt-get", Util.get_apt_install_args() ++ ["install", "--", make_deb(u)],
 		                    env: Util.get_noninteractive_apt_env(), stderr_to_stdout: true)
 	end
@@ -233,6 +234,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 
 	@spec make_deb(%Converge.MetaPackageInstalled{}) :: String.t
 	defp make_deb(u) do
+		IO.puts("make_deb")
 		temp = FileUtil.temp_dir(u.name)
 		control_tar_gz = Path.join(temp, "control.tar.gz")
 
@@ -241,6 +243,7 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 
 		deb = Path.join(temp, "metapackage.deb")
 		Debpress.write_control_tar_gz(control_tar_gz, Debpress.control_file(make_control(u)), %{})
+		IO.puts("write_deb")
 		Debpress.write_deb(deb, control_tar_gz, data_tar_gz)
 		deb
 	end
