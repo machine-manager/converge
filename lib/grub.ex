@@ -13,9 +13,9 @@ defmodule Converge.Grub do
 
 	`timeout` is `GRUB_TIMEOUT`.
 
-	`gfxmode` is `GRUB_GFXMODE`.
+	`gfxmode` is `GRUB_GFXMODE` (screen resolution for the grub bootloader).
 
-	`gfxpayload` is `GRUB_GFXPAYLOAD_LINUX`.
+	`gfxpayload` is `GRUB_GFXPAYLOAD_LINUX` (screen resolution for linux).
 	"""
 	defstruct timeout: 3, cmdline_normal_and_recovery: [], cmdline_normal_only: [], gfxmode: nil, gfxpayload: nil, disable_os_prober: nil
 end
