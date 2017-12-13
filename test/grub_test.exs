@@ -20,7 +20,7 @@ defmodule Converge.GrubTest do
 	end
 
 	test "some more options" do
-		u = %Grub{timeout: 4, cmdline_normal_and_recovery: ["quiet"], gfxpayload: "640x480", disable_os_prober: true}
+		u = %Grub{timeout: 4, cmdline_normal_and_recovery: ["quiet"], gfxmode: "640x480", gfxpayload: "640x480", disable_os_prober: true}
 		Runner.converge(u, TestingContext.get_context())
 		cleanup()
 	end

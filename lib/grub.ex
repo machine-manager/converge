@@ -13,9 +13,11 @@ defmodule Converge.Grub do
 
 	`timeout` is `GRUB_TIMEOUT`.
 
+	`gfxmode` is `GRUB_GFXMODE`.
+
 	`gfxpayload` is `GRUB_GFXPAYLOAD_LINUX`.
 	"""
-	defstruct timeout: 3, cmdline_normal_and_recovery: [], cmdline_normal_only: [], gfxpayload: nil, disable_os_prober: nil
+	defstruct timeout: 3, cmdline_normal_and_recovery: [], cmdline_normal_only: [], gfxmode: nil, gfxpayload: nil, disable_os_prober: nil
 end
 
 defimpl Unit, for: Converge.Grub do
@@ -25,6 +27,9 @@ defimpl Unit, for: Converge.Grub do
 	GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
 	GRUB_CMDLINE_LINUX_DEFAULT=<%= inspect(Enum.join(u.cmdline_normal_only, " ")) %>
 	GRUB_CMDLINE_LINUX=<%= inspect(Enum.join(u.cmdline_normal_and_recovery, " ")) %>
+	<%= if u.gfxmode != nil do %>
+	GRUB_GFXMODE=<%= u.gfxmode %>
+	<% end %>
 	<%= if u.gfxpayload != nil do %>
 	GRUB_GFXPAYLOAD_LINUX=<%= u.gfxpayload %>
 	<% end %>
