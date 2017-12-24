@@ -21,9 +21,13 @@ defimpl Unit, for: Converge.Sysctl do
 
 	def meet(u, ctx) do
 		Runner.converge(make_unit(u), ctx)
-		# Always run this after converging the FilePresent unit; just because the
+		# Always set values after converging the FilePresent unit; just because the
 		# file was up-to-date does not mean the correct values were in the kernel.
-		{_, 0} = System.cmd("service", ["procps", "restart"])
+		#
+		# Just do what /etc/init.d/procps does because `systemctl restart procps`
+		# doesn't always wait long enough for the values to be loaded before we
+		# check them.
+		{_, 0} = System.cmd("/sbin/sysctl", ["-q", "--system"])
 	end
 
 	# Are our desired values loaded in the kernel?
@@ -41,7 +45,7 @@ defimpl Unit, for: Converge.Sysctl do
 
 	# Returns a map of all kernel parameters with their current values, as strings
 	defp sysctl_a() do
-		{out, 0} = System.cmd("sysctl", ["-a"], stderr_to_stdout: true)
+		{out, 0} = System.cmd("/sbin/sysctl", ["-a"], stderr_to_stdout: true)
 		out
 		|> String.replace_suffix("\n", "")
 		|> String.split("\n")
