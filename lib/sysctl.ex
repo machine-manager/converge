@@ -33,7 +33,7 @@ defimpl Unit, for: Converge.Sysctl do
 	# Are our desired values loaded in the kernel?
 	defp met_values_in_kernel?(u) do
 		desired_parameters_s = stringify_values(u.parameters)
-		current_parameters_s = sysctl_a() |> Map.take(desired_parameters_s |> Map.keys)
+		current_parameters_s = Map.take(sysctl_a(), Map.keys(desired_parameters_s))
 		current_parameters_s == desired_parameters_s
 	end
 
