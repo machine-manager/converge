@@ -30,6 +30,8 @@ defimpl Unit, for: Converge.Sysctl do
 	defp met_values_in_kernel?(u) do
 		desired_parameters_s = stringify_values(u.parameters)
 		current_parameters_s = Map.take(sysctl_a(), Map.keys(desired_parameters_s))
+		IO.puts("current: #{inspect current_parameters_s}")
+		IO.puts("desired: #{inspect desired_parameters_s}")
 		current_parameters_s == desired_parameters_s
 	end
 
