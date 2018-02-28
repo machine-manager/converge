@@ -177,7 +177,7 @@ defmodule Converge.NoPackagesNewerThanInSourceTest do
 
 	test "NoPackagesNewerThanInSource can raise UnitError" do
 		{_, 0} = System.cmd("wget", ["-q", "http://ftp.us.debian.org/debian/pool/main/d/dstat/dstat_0.7.3-1_all.deb", "-O", "/tmp/dstat.deb"])
-		{_, 0} = System.cmd("dpkg", ["-i", "/tmp/dstat.deb"])
+		{_, 0} = System.cmd("dpkg", ["-i", "/tmp/dstat.deb"], stderr_to_stdout: true)
 
 		u = %NoPackagesNewerThanInSource{whitelist_regexp: ~r/^$/}
 		assert_raise UnitError, ~r/installed packages that are newer than available in package sources/,
