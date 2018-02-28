@@ -7,6 +7,11 @@ defmodule Converge.Runner.SystemdUnitStartedTest do
 	use ExUnit.Case
 
 	test "SystemdUnitStarted" do
+		# setup
+		u = %SystemdUnitStopped{name: "chrony.service"}
+		Runner.converge(u, TestingContext.get_context())
+
+		# test
 		u = %SystemdUnitStarted{name: "chrony.service"}
 		Runner.converge(u, TestingContext.get_context())
 	end
@@ -22,14 +27,18 @@ defmodule Converge.Runner.SystemdUnitStoppedTest do
 	use ExUnit.Case
 
 	test "SystemdUnitStopped" do
+		# test
 		u = %SystemdUnitStopped{name: "chrony.service"}
+		Runner.converge(u, TestingContext.get_context())
+
+		# cleanup
+		u = %SystemdUnitStarted{name: "chrony.service"}
 		Runner.converge(u, TestingContext.get_context())
 	end
 
 	test "SystemdUnitStopped on a nonexistent unit" do
 		u = %SystemdUnitStopped{name: "nonexistent.service"}
-		# systemd unit doesn't need to exist because of the met? check
-		Runner.converge(u, TestingContext.get_context())
+		assert_raise(UnitError, ~r/Failed to stop/, fn -> Runner.converge(u, TestingContext.get_context()) end)
 	end
 end
 
