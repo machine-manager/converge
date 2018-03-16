@@ -30,7 +30,31 @@ defimpl Unit, for: Converge.Sysctl do
 	defp met_values_in_kernel?(u) do
 		desired_parameters_s = stringify_values(u.parameters)
 		current_parameters_s = Map.take(sysctl_a(), Map.keys(desired_parameters_s))
-		current_parameters_s == desired_parameters_s
+		case current_parameters_s == desired_parameters_s do
+			true  -> true
+			false ->
+				{_surplus, altered, missing, _same} = map_difference(desired_parameters_s, current_parameters_s)
+				raise(UnitError, "Unexpected sysctl values in kernel: {altered, missing} = #{inspect({altered, missing})}")
+		end
+	end
+
+	# Copied from elixir/lib/ex_unit/lib/ex_unit/diff.ex; see LICENSE.Elixir
+	def map_difference(map1, map2) do
+		{surplus, altered, same} =
+			Enum.reduce(map1, {[], [], []}, fn {key, val1}, {surplus, altered, same} ->
+				case Map.fetch(map2, key) do
+					{:ok, ^val1} -> {surplus,                 altered,                         [{key, val1} | same]}
+					{:ok, val2}  -> {surplus,                 [{key, {val1, val2}} | altered], same}
+					:error       -> {[{key, val1} | surplus], altered,                         same}
+				end
+			end)
+
+		missing =
+			Enum.reduce(map2, [], fn {key, _} = pair, acc ->
+				if Map.has_key?(map1, key), do: acc, else: [pair | acc]
+			end)
+
+		{surplus, altered, missing, same}
 	end
 
 	defp stringify_values(parameters) do
