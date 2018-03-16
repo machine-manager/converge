@@ -26,6 +26,26 @@ defimpl Unit, for: Converge.SysctlKernelValue do
 	def package_dependencies(_, _release), do: []
 end
 
+defimpl Inspect, for: Converge.SysctlKernelValue do
+	import Inspect.Algebra
+	import Gears.StringUtil, only: [counted_noun: 3]
+
+	def inspect(u, opts) do
+		concat([
+			color("%Converge.SysctlKernelValue{", :map, opts),
+			color("key: ",      :atom, opts),
+			to_doc(u.key,              opts),
+			color(", ",         :map,  opts),
+			color("value: ",    :atom, opts),
+			to_doc(u.value,            opts),
+			color(", ",         :map,  opts),
+			color("sysctl_a: ", :atom, opts),
+			counted_noun(Map.size(u.sysctl_a), "key", "keys"),
+			color("}",          :map,  opts)
+		])
+	end
+end
+
 
 defmodule Converge.Sysctl do
 	@moduledoc """
