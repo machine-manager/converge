@@ -1,5 +1,31 @@
 alias Gears.TableFormatter
-alias Converge.{Unit, Runner, FilePresent}
+alias Converge.{Unit, All, UnitError, Runner, FilePresent, SysctlKernelValue}
+
+# Sub-unit used to make it easy to see which sysctl value failed to converge.
+defmodule Converge.SysctlKernelValue do
+	@moduledoc false
+	@enforce_keys [:sysctl_a, :key, :value]
+	defstruct sysctl_a: nil, key: nil, value: nil
+
+	def value_to_string(value) when is_binary(value),  do: value
+	def value_to_string(value) when is_integer(value), do: to_string(value)
+	def value_to_string(value) when is_list(value),    do: Enum.map(value, &value_to_string/1) |> Enum.join("\t")
+end
+
+defimpl Unit, for: Converge.SysctlKernelValue do
+	import SysctlKernelValue, only: [value_to_string: 1]
+
+	def met?(u, _ctx) do
+		u.sysctl_a[u.key] == value_to_string(u.value)
+	end
+
+	def meet(_, _ctx) do
+		raise(UnitError, "cannot meet; should have been handled by parent unit")
+	end
+
+	def package_dependencies(_, _release), do: []
+end
+
 
 defmodule Converge.Sysctl do
 	@moduledoc """
@@ -15,28 +41,16 @@ defmodule Converge.Sysctl do
 end
 
 defimpl Unit, for: Converge.Sysctl do
+	import SysctlKernelValue, only: [value_to_string: 1]
+
 	def met?(u, ctx) do
-		met_values_in_kernel?(u) and Runner.met?(make_unit(u), ctx)
+		Runner.met?(%All{units: [file_unit(u)] ++ sysctl_kernel_values(u)}, ctx)
 	end
 
-	def meet(u, ctx) do
-		Runner.converge(make_unit(u), ctx)
-		# Always run this after converging the FilePresent unit; just because the
-		# file was up-to-date does not mean the correct values were in the kernel.
-		{_, 0} = System.cmd("service", ["procps", "restart"])
-	end
-
-	# Are our desired values loaded in the kernel?
-	defp met_values_in_kernel?(u) do
-		desired_parameters_s = stringify_values(u.parameters)
-		current_parameters_s = Map.take(sysctl_a(), Map.keys(desired_parameters_s))
-		current_parameters_s == desired_parameters_s
-	end
-
-	defp stringify_values(parameters) do
-		parameters
-		|> Enum.map(fn {k, v} -> {k, value_to_string(v)} end)
-		|> Enum.into(%{})
+	defp sysctl_kernel_values(u) do
+		Enum.map(u.parameters, fn {key, value} ->
+			%SysctlKernelValue{sysctl_a: sysctl_a(), key: key, value: value}
+		end)
 	end
 
 	# Returns a map of all kernel parameters with their current values, as strings
@@ -55,7 +69,14 @@ defimpl Unit, for: Converge.Sysctl do
 		|> Enum.into(%{})
 	end
 
-	defp make_unit(u) do
+	def meet(u, ctx) do
+		Runner.converge(file_unit(u), ctx)
+		# Always run this after converging the FilePresent unit; just because the
+		# file was up-to-date does not mean the correct values were in the kernel.
+		{_, 0} = System.cmd("service", ["procps", "restart"])
+	end
+
+	defp file_unit(u) do
 		%FilePresent{path: "/etc/sysctl.conf", content: parameters_to_sysctl(u.parameters), mode: 0o644}
 	end
 
@@ -70,10 +91,6 @@ defimpl Unit, for: Converge.Sysctl do
 	defp parameter_to_row({key, value}) do
 		[key, "=", value_to_string(value)]
 	end
-
-	defp value_to_string(value) when is_binary(value),  do: value
-	defp value_to_string(value) when is_integer(value), do: to_string(value)
-	defp value_to_string(value) when is_list(value),    do: Enum.map(value, &value_to_string/1) |> Enum.join("\t")
 
 	def package_dependencies(_, _release), do: ["procps"]
 end
