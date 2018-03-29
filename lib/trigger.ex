@@ -18,7 +18,7 @@ defimpl Unit, for: Converge.AfterMeet do
 		# met? calls), call Runner.converge to ensure that the trigger is not run
 		# if the wrapped unit fails to converge.
 		Runner.converge(u.unit, ctx)
-		{:arity, arity} = :erlang.fun_info(u.trigger, :arity)
+		{:arity, arity} = Function.info(u.trigger, :arity)
 		case arity do
 			0 -> u.trigger.()
 			1 -> u.trigger.(ctx)
@@ -43,7 +43,7 @@ defimpl Unit, for: Converge.BeforeMeet do
 	end
 
 	def meet(u, ctx) do
-		{:arity, arity} = :erlang.fun_info(u.trigger, :arity)
+		{:arity, arity} = Function.info(u.trigger, :arity)
 		case arity do
 			0 -> u.trigger.()
 			1 -> u.trigger.(ctx)
