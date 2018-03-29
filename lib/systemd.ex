@@ -12,7 +12,7 @@ end
 defimpl Unit, for: Converge.SystemdUnitStarted do
 	def met?(u, _ctx) do
 		# Exit code 0 if active, 3 if inactive or missing
-		{_, code} = System.cmd("systemctl", ["status", "--", u.name])
+		{_, code} = System.cmd("systemctl", ["status", "--", u.name], stderr_to_stdout: true)
 		code == 0
 	end
 
@@ -43,7 +43,7 @@ end
 defimpl Unit, for: Converge.SystemdUnitStopped do
 	def met?(u, _ctx) do
 		# Exit code 0 if active, 3 if inactive or missing
-		{_, code} = System.cmd("systemctl", ["status", "--", u.name])
+		{_, code} = System.cmd("systemctl", ["status", "--", u.name], stderr_to_stdout: true)
 		code == 3
 	end
 
