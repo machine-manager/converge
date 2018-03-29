@@ -8,7 +8,8 @@
 
 set -eu -o pipefail
 
-remote=sandlin
+remote=$1
+shift
 elixir=$HOME/opt/elixir
 hex=$HOME/code/erlang/hex
 converge=$HOME/code/erlang/converge
@@ -21,7 +22,7 @@ converge=$HOME/code/erlang/converge
 #    its clock is in the future
 MIX_ENV=test mix compile
 
-rsync -a --delete --delete-excluded --exclude=.git \
+rsync -az --delete --delete-excluded --exclude=.git \
 	"$elixir" \
 	"$hex" \
 	"$converge" \
