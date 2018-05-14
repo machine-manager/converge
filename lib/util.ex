@@ -226,6 +226,13 @@ defmodule Converge.Util do
 		File.read!(Path.expand(filename))
 	end
 
+	def architecture_for_tags(tags) do
+		case tag_value(tags, "arch") do
+			nil   -> "amd64"
+			other -> other
+		end
+	end
+
 	def tag_value!(tags, prefix) do
 		case tag_value(tags, prefix) do
 			nil   -> raise(TagValueError, "No tag with prefix #{inspect prefix} in #{inspect tags}")
