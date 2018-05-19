@@ -138,8 +138,8 @@ defmodule Converge.EtcSystemdUnitFiles do
 	Ensures that the given converge units (which must have a path starting with
 	"/etc/systemd/system") are all met and that any other regular (non-symlink)
 	.service files in /etc/systemd/system not created by those converge units
-	are *not* present.  If any files were added/changed/removed, this then runs
-	`systemctl daemon-reload`.
+	are *not* present (with the exception of units listed in `keep_units`).
+	If any files were added/changed/removed, runs `systemctl daemon-reload`.
 
 	This is used to ensure that leftover .service files are not left around in
 	/etc/systemd/system.
@@ -147,8 +147,8 @@ defmodule Converge.EtcSystemdUnitFiles do
 	This does not enable or start any units because it wouldn't know what to do
 	with instantiated services (those with an '@' in the filename).
 	"""
-	@enforce_keys [:units]
-	defstruct units: nil
+	@enforce_keys [:units, :keep_units]
+	defstruct units: nil, keep_units: []
 end
 
 defimpl Unit, for: Converge.EtcSystemdUnitFiles do
@@ -168,7 +168,7 @@ defimpl Unit, for: Converge.EtcSystemdUnitFiles do
 				raise(RuntimeError, "Unit #{inspect unit} has path that does not start with #{@etc_units}")
 			end
 			Path.basename(unit.path)
-		end
+		end ++ u.keep_units
 		%AfterMeet{
 			unit:    %All{units: u.units ++ remove_other_service_files_units(keep_basenames)},
 			trigger: fn -> {_, 0} = System.cmd("systemctl", ["daemon-reload"]) end,

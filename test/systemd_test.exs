@@ -67,9 +67,12 @@ defmodule Converge.Runner.EtcSystemdUnitFiles do
 	use ExUnit.Case
 
 	test "EtcSystemdUnitFiles" do
-		u = %EtcSystemdUnitFiles{units: [
-			%FilePresent{path: "/etc/systemd/system/deleteme.service", mode: 0o644, content: ""},
-		]}
+		u = %EtcSystemdUnitFiles{
+			units: [
+				%FilePresent{path: "/etc/systemd/system/deleteme.service", mode: 0o644, content: ""},
+			],
+			keep_units: []
+		}
 		Runner.converge(u, TestingContext.get_context())
 
 		u = %EtcSystemdUnitFiles{units: []}
@@ -77,11 +80,16 @@ defmodule Converge.Runner.EtcSystemdUnitFiles do
 	end
 
 	test "EtcSystemdUnitFiles with invalid path in unit" do
-		u = %EtcSystemdUnitFiles{units: [
-			%FilePresent{path: "/tmp/etc/systemd/system/deleteme.service", mode: 0o644, content: ""},
-		]}
+		u = %EtcSystemdUnitFiles{
+			units: [
+				%FilePresent{path: "/tmp/etc/systemd/system/deleteme.service", mode: 0o644, content: ""},
+			],
+			keep_units: []
+		}
 		assert_raise RuntimeError, ~r/ has path that does not start with /, fn ->
 			Runner.converge(u, TestingContext.get_context())
 		end
 	end
+
+	# TODO: keep_units test
 end
