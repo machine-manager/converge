@@ -289,10 +289,26 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 	end
 
 	defp list_installed_packages() do
-		{out, 0} = System.cmd("dpkg-query", ["-f", "${Status} ${binary:Package}\n", "-W"])
+		default_arch = get_default_architecture()
+		{out, 0}     = System.cmd("dpkg-query", ["-f", "${Status} ${binary:Package}\n", "-W"])
 		out
 		|> StringUtil.grep(~r/^install ok installed /)
 		|> Enum.map(fn line -> Regex.run(~r/\Ainstall ok installed (\S+)\z/, line, capture: :all_but_first) |> hd end)
+		|> Enum.flat_map(fn package -> all_packages_names(package, default_arch) end)
+	end
+
+	defp get_default_architecture() do
+		{out, 0} = System.cmd("dpkg", ["--print-architecture"])
+		String.trim_trailing(out)
+	end
+
+	# For "package:amd64", if we're on amd64, return ["package:amd64", "package"],
+	# otherwise just ["package:amd64"]
+	defp all_packages_names(package, default_arch) do
+		case String.split(package, ":") do
+			[name, arch] when arch == default_arch -> [package, name]
+			_                                      -> [package]
+		end
 	end
 
 	# Returns `true` if `apt-get -f install` doesn't need to do anything.
