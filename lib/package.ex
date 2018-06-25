@@ -289,10 +289,10 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 	end
 
 	defp list_installed_packages() do
-		{out, 0} = System.cmd("dpkg", ["-l"])
+		{out, 0} = System.cmd("dpkg-query", ["-f", "${Status} ${binary:Package}\n", "-W"])
 		out
-		|> StringUtil.grep(~r/^ii\s+/)
-		|> Enum.map(fn line -> Regex.run(~r/\Aii\s+(\S+)\s+/, line, capture: :all_but_first) |> hd end)
+		|> StringUtil.grep(~r/^install ok installed /)
+		|> Enum.map(fn line -> Regex.run(~r/\Ainstall ok installed (\S+)\z/, line, capture: :all_but_first) |> hd end)
 	end
 
 	# Returns `true` if `apt-get -f install` doesn't need to do anything.
