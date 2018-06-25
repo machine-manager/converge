@@ -200,6 +200,7 @@ end
 defimpl Unit, for: Converge.MetaPackageInstalled do
 	def met?(u, _ctx) do
 		met_identical_package_installed?(u) and
+		all_packages_installed?(u) and
 		met_nothing_to_fix?()
 	end
 
@@ -215,6 +216,8 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 		#  as it has an invalid filename extension"
 		{_, 0} = System.cmd("apt-get", Util.get_apt_install_args() ++ ["install", "--", make_deb(u)],
 		                    env: Util.get_noninteractive_apt_env(), stderr_to_stdout: true)
+
+		check_all_packages_installed(u)
 	end
 
 	@spec make_control(%Converge.MetaPackageInstalled{}) :: %Debpress.Control{}
@@ -259,6 +262,37 @@ defimpl Unit, for: Converge.MetaPackageInstalled do
 				installed and same_depends
 			_ -> false
 		end
+	end
+
+	defp all_packages_installed?(u) do
+		package_difference(u) == MapSet.new([])
+	end
+
+	defp check_all_packages_installed(u) do
+		not_installed = package_difference(u)
+		if not_installed != MapSet.new([]) do
+			raise(UnitError,
+				"""
+				Installed metapackage but these packages were not installed: \
+				#{inspect MapSet.to_list(not_installed)}; avoid installing \
+				aliases, or packages that both conflict and provide another \
+				package.
+				""")
+		end
+	end
+
+	defp package_difference(u) do
+		MapSet.difference(
+			MapSet.new(u.depends),
+			MapSet.new(list_installed_packages())
+		)
+	end
+
+	defp list_installed_packages() do
+		{out, 0} = System.cmd("dpkg", ["-l"])
+		out
+		|> StringUtil.grep(~r/^ii\s+/)
+		|> Enum.map(fn line -> Regex.run(~r/\Aii\s+(\S+)\s+/, line, capture: :all_but_first) |> hd end)
 	end
 
 	# Returns `true` if `apt-get -f install` doesn't need to do anything.
