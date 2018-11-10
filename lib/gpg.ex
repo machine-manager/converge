@@ -132,6 +132,8 @@ defimpl Unit, for: Converge.GPGKeybox do
 			"--ignore-time-conflict",
 			# This also avoids creating a $homedir/trustdb.gpg
 			"--trust-model", "always",
+			# Avoid trying to open /dev/tty
+			"--no-tty",
 			# This avoids starting gpg-agent and creating a $homdir/S.gpg-agent and $homedir/private-keys-v1.d/
 			"--no-autostart",
 			"--no-auto-check-trustdb",
