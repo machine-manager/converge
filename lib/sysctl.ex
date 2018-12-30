@@ -40,7 +40,7 @@ defimpl Inspect, for: Converge.SysctlKernelValue do
 			to_doc(u.value,            opts),
 			color(", ",         :map,  opts),
 			color("sysctl_a: ", :atom, opts),
-			counted_noun(Map.size(u.sysctl_a), "key", "keys"),
+			counted_noun(Kernel.map_size(u.sysctl_a), "key", "keys"),
 			color("}",          :map,  opts)
 		])
 	end
